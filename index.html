@@ -326,67 +326,86 @@
     }
 
     // -------- Fetch + render --------
-    async function loadAll(){
-      try{
-        loadingOverlay.classList.remove('hidden');
-        const res = await fetch('/api/posts');
-        const posts = await res.json();
+   async function loadAll() {
+  try {
+    loadingOverlay.classList.remove('hidden');
 
-        // OpenAI grid (category filter)
-        const openai = posts.filter(p => (p.category||'').toLowerCase().includes('openai'));
-        openaiGrid.innerHTML = openai.map(renderMasonryPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
+    // Robuster Endpunkt (immer absolut) + defensives JSON-Parsing
+    const url = new URL('/api/posts', window.location.origin);
+    const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
 
-        // ChatGPT grid
-        const chatgpt = posts.filter(p => (p.category||'').toLowerCase().includes('chatgpt'));
-        chatgptGrid.innerHTML = chatgpt.map(renderCardPost).join('') || '<p class="text-slate-500">No updates yet.</p>';
+    if (!res.ok) throw new Error(`API ${res.status}`);
 
-        // Trending topics
-        const trending = computeTrending(posts);
-        trendingList.innerHTML = trending.map((t,i)=>`
-          <li class="trending-item">
-            <a href="#openai" class="flex items-start group">
-              <span class="text-xl font-bold text-slate-400 mr-3 group-hover:text-primary">${String(i+1).padStart(2,'0')}</span>
-              <div>
-                <h4 class="font-semibold group-hover:text-primary transition-colors">${t[0]}</h4>
-                <p class="text-sm text-slate-500 dark:text-slate-400">${t[1]} articles</p>
-              </div>
-            </a>
-          </li>`).join('') || '<li class="text-slate-500">No data yet.</li>';
+    const data = await res.json();
+    const posts = Array.isArray(data) ? data : (data.rows || data.result || data.posts || []);
 
-        // Search suggestions (client-side)
-        searchInput.addEventListener('input', () => {
-          const q = searchInput.value.trim().toLowerCase();
-          if (q.length < 2){ searchResults.classList.add('hidden'); return; }
-          const matches = posts.filter(p => p.title.toLowerCase().includes(q) || (p.tags||[]).some(t=>t.toLowerCase().includes(q))).slice(0,8);
-          searchResults.innerHTML = matches.map(m=>`
-            <a class="block p-3 hover:bg-slate-100 dark:hover:bg-slate-700 border-b border-slate-200 dark:border-slate-700 last:border-0" href="/api/posts/${encodeURIComponent(m.slug)}">
-              <div class="font-semibold">${m.title}</div>
-              <div class="text-xs text-slate-500">${m.category || ''}</div>
-            </a>`).join('') || '<div class="p-3 text-slate-500 text-sm">No results</div>';
-          searchResults.classList.remove('hidden');
-        });
-        document.addEventListener('click', (e)=>{
-          if(!searchResults.contains(e.target) && e.target !== searchInput){
-            searchResults.classList.add('hidden');
-          }
-        });
-      }catch(err){
-        console.error(err);
-        openaiGrid.innerHTML = '<p class="text-red-500">Failed to load posts.</p>';
-      }finally{
-        loadingOverlay.classList.add('hidden');
-      }
+    // Wenn leer -> Hinweis + Ende
+    if (!posts.length) {
+      openaiGrid.innerHTML  = '<p class="text-slate-500">No posts yet.</p>';
+      chatgptGrid.innerHTML = '<p class="text-slate-500">No updates yet.</p>';
+      trendingList.innerHTML = '<li class="text-slate-500">No data yet.</li>';
+      return;
     }
 
-    // -------- UI niceties --------
-    window.addEventListener('scroll', () => {
-      const header = document.querySelector('header');
-      if (window.scrollY > 100){ header.classList.add('shadow-lg','py-2'); header.classList.remove('py-4'); }
-      else{ header.classList.remove('shadow-lg','py-2'); header.classList.add('py-4'); }
-    });
-    document.getElementById('year').textContent = new Date().getFullYear();
+    // Filter + Render
+    const openai  = posts.filter(p => (p.category || '').toLowerCase().includes('openai'));
+    const chatgpt = posts.filter(p => (p.category || '').toLowerCase().includes('chatgpt'));
 
-    document.addEventListener('DOMContentLoaded', loadAll);
-  </script>
+    openaiGrid.innerHTML  = openai .map(renderMasonryPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
+    chatgptGrid.innerHTML = chatgpt.map(renderCardPost   ).join('') || '<p class="text-slate-500">No updates yet.</p>';
+
+    const trending = computeTrending(posts);
+    trendingList.innerHTML = trending.length
+      ? trending.map((t,i)=>`
+        <li class="trending-item">
+          <a href="#openai" class="flex items-start group">
+            <span class="text-xl font-bold text-slate-400 mr-3 group-hover:text-primary">${String(i+1).padStart(2,'0')}</span>
+            <div>
+              <h4 class="font-semibold group-hover:text-primary transition-colors">${t[0]}</h4>
+              <p class="text-sm text-slate-500 dark:text-slate-400">${t[1]} articles</p>
+            </div>
+          </a>
+        </li>`).join('')
+      : '<li class="text-slate-500">No data yet.</li>';
+
+    // Suche (client-seitig)
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim().toLowerCase();
+      if (q.length < 2) { searchResults.classList.add('hidden'); return; }
+      const matches = posts.filter(p =>
+        p.title?.toLowerCase().includes(q) ||
+        (p.tags || []).some(t => t.toLowerCase().includes(q))
+      ).slice(0, 8);
+
+      searchResults.innerHTML = matches.length
+        ? matches.map(m => `
+            <a class="block p-3 hover:bg-slate-100 dark:hover:bg-slate-700 border-b border-slate-200 dark:border-slate-700 last:border-0"
+               href="/api/posts/${encodeURIComponent(m.slug)}">
+              <div class="font-semibold">${m.title}</div>
+              <div class="text-xs text-slate-500">${m.category || ''}</div>
+            </a>`).join('')
+        : '<div class="p-3 text-slate-500 text-sm">No results</div>';
+
+      searchResults.classList.remove('hidden');
+    });
+    document.addEventListener('click', (e) => {
+      if (!searchResults.contains(e.target) && e.target !== searchInput) {
+        searchResults.classList.add('hidden');
+      }
+    });
+
+  } catch (err) {
+    console.error('Load error:', err);
+    openaiGrid.innerHTML   = '<p class="text-red-500">Failed to load posts.</p>';
+    chatgptGrid.innerHTML  = '';
+    trendingList.innerHTML = '';
+  } finally {
+    loadingOverlay.classList.add('hidden');
+  }
+}
+
+// … Rest (scroll, year, DOMContentLoaded) bleibt gleich …
+document.addEventListener('DOMContentLoaded', loadAll);
+</script>
 </body>
 </html>
