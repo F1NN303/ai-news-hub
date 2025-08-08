@@ -5,7 +5,7 @@ module.exports = async (req, res) => {
   try {
     if (req.method === 'GET') {
       const { rows } = await query(`
-        SELECT id, title, slug, excerpt, content, category, tags, author, image_url, created_at
+        SELECT id, title, slug, excerpt, content, category, tags, author, hero_image, published_at
         FROM public.posts
         ORDER BY id DESC
       `);
@@ -20,7 +20,8 @@ module.exports = async (req, res) => {
         category = 'AI Industry',
         tags = [],
         author = 'AI News Hub',
-        image_url = null
+        hero_image = null,
+        published_at = null
       } = req.body || {};
 
       if (!title || !slug) {
@@ -28,8 +29,8 @@ module.exports = async (req, res) => {
       }
 
       const { rows } = await query(`
-        INSERT INTO public.posts (title, slug, excerpt, content, category, tags, author, image_url)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+        INSERT INTO public.posts (title, slug, excerpt, content, category, tags, author, hero_image, published_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,COALESCE($9, now()))
         ON CONFLICT (slug) DO UPDATE SET
           title=EXCLUDED.title,
           excerpt=EXCLUDED.excerpt,
@@ -37,9 +38,10 @@ module.exports = async (req, res) => {
           category=EXCLUDED.category,
           tags=EXCLUDED.tags,
           author=EXCLUDED.author,
-          image_url=EXCLUDED.image_url
+          hero_image=EXCLUDED.hero_image,
+          published_at=EXCLUDED.published_at
         RETURNING *
-      `, [title, slug, excerpt, content, category, tags, author, image_url]);
+      `, [title, slug, excerpt, content, category, tags, author, hero_image, published_at]);
 
       return res.status(201).json(rows[0]);
     }
