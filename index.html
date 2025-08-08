@@ -94,7 +94,7 @@
       <div class="flex items-center justify-between">
         <a class="flex items-center" href="#">
           <span class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center mr-3">
-            <i class="fas fa-brain text-white text-lg"></i>
+            <i class="fa-solid fa-brain text-white text-lg"></i>
           </span>
           <span class="text-2xl font-bold bg-clip-text text-transparent gradient-bg">AI News Hub</span>
         </a>
@@ -109,17 +109,17 @@
         <div class="flex items-center gap-4">
           <div class="relative">
             <input id="search-input" type="text" placeholder="Search…" class="pl-10 pr-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-sm w-40 md:w-64 focus:outline-none focus:ring-2 focus:ring-primary" />
-            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
             <div id="search-results" class="absolute left-0 mt-2 w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl z-20 hidden"></div>
           </div>
 
           <button id="theme-toggle" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700">
-            <i class="fas fa-sun block dark:hidden text-yellow-500"></i>
-            <i class="fas fa-moon hidden dark:block text-slate-200"></i>
+            <i class="fa-solid fa-sun block dark:hidden text-yellow-500"></i>
+            <i class="fa-solid fa-moon hidden dark:block text-slate-200"></i>
           </button>
 
           <button class="md:hidden text-slate-700 dark:text-slate-300">
-            <i class="fas fa-bars text-xl"></i>
+            <i class="fa-solid fa-bars text-xl"></i>
           </button>
         </div>
       </div>
@@ -165,9 +165,17 @@
           <div id="chatgpt-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"><!-- filled by JS --></div>
         </section>
 
-        <!-- Industry / Research (optional anchors for smooth scroll) -->
-        <div class="mb-2" id="industry"></div>
-        <div class="mb-2" id="research"></div>
+        <!-- Industry (dynamic) -->
+        <section class="mb-12" id="industry">
+          <h2 class="text-3xl font-bold mb-6 pb-2 border-b-2 border-indigo-500 inline-block">AI Industry</h2>
+          <div id="industry-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"><!-- filled by JS --></div>
+        </section>
+
+        <!-- Research (dynamic) -->
+        <section class="mb-12" id="research">
+          <h2 class="text-3xl font-bold mb-6 pb-2 border-b-2 border-fuchsia-500 inline-block">Research & Innovation</h2>
+          <div id="research-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"><!-- filled by JS --></div>
+        </section>
       </div>
 
       <!-- Sidebar -->
@@ -183,7 +191,7 @@
           <section class="bg-gradient-to-r from-primary to-secondary rounded-xl shadow-lg p-6 text-white">
             <h3 class="text-xl font-bold mb-2">AI Insights Newsletter</h3>
             <p class="text-blue-100 mb-4">Get the latest AI news, research summaries, and industry analysis delivered weekly.</p>
-            <form onsubmit="event.preventDefault(); alert('Thanks! (demo)');">
+            <form onsubmit="event.preventDefault();">
               <input type="email" required placeholder="Your email address" class="w-full px-4 py-3 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-white" />
               <button type="submit" class="mt-3 w-full bg-white text-primary font-semibold py-3 rounded-lg hover:bg-slate-100 transition">Subscribe</button>
             </form>
@@ -194,10 +202,10 @@
           <section class="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6">
             <h3 class="text-xl font-bold mb-4">Connect With Us</h3>
             <div class="flex gap-4">
-              <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-primary hover:text-white transition"><i class="fab fa-x-twitter"></i></a>
-              <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-blue-700 hover:text-white transition"><i class="fab fa-linkedin-in"></i></a>
-              <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition"><i class="fab fa-facebook-f"></i></a>
-              <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-gradient-to-r from-purple-500 to-pink-500 hover:text-white transition"><i class="fab fa-instagram"></i></a>
+              <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-primary hover:text-white transition"><i class="fa-brands fa-x-twitter text-slate-600 dark:text-slate-200"></i></a>
+              <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-blue-700 hover:text-white transition"><i class="fa-brands fa-linkedin-in text-slate-600 dark:text-slate-200"></i></a>
+              <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition"><i class="fa-brands fa-facebook-f text-slate-600 dark:text-slate-200"></i></a>
+              <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-gradient-to-r from-purple-500 to-pink-500 hover:text-white transition"><i class="fa-brands fa-instagram text-slate-600 dark:text-slate-200"></i></a>
             </div>
           </section>
         </div>
@@ -212,7 +220,7 @@
         <div>
           <div class="flex items-center mb-4">
             <div class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center mr-3">
-              <i class="fas fa-brain text-white text-lg"></i>
+              <i class="fa-solid fa-brain text-white text-lg"></i>
             </div>
             <h2 class="text-2xl font-bold">AI News Hub</h2>
           </div>
@@ -270,33 +278,76 @@
 
     // -------- Helpers --------
     const byId = id => document.getElementById(id);
-    const loadingOverlay = byId('loading-overlay');
+    const esc = str => String(str || '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s]));
     const openaiGrid   = byId('openai-grid');
     const chatgptGrid  = byId('chatgpt-grid');
+    const industryGrid = byId('industry-grid');
+    const researchGrid = byId('research-grid');
     const trendingList = byId('trending-list');
     const searchInput  = byId('search-input');
     const searchResults= byId('search-results');
+    const grids = [openaiGrid, chatgptGrid, industryGrid, researchGrid];
 
     const fmtDate = (iso) => new Date(iso || Date.now()).toISOString().slice(0,10);
+
+    const deriveCategory = (p) => {
+      if (p.category) return p.category;
+      const s = (p.slug || '').toLowerCase();
+      if (s.includes('openai')) return 'OpenAI News';
+      if (s.includes('chatgpt')) return 'ChatGPT Updates';
+      if (s.includes('research') || s.includes('innovation')) return 'Research & Innovation';
+      return 'AI Industry';
+    };
+
+    const categoryToId = {
+      'OpenAI News': 'openai',
+      'ChatGPT Updates': 'chatgpt',
+      'AI Industry': 'industry',
+      'Research & Innovation': 'research'
+    };
+
+    function showSkeletons(){
+      const skeleton = `
+        <div class="animate-pulse">
+          <div class="bg-slate-200 dark:bg-slate-700 h-48 w-full mb-4"></div>
+          <div class="h-4 bg-slate-200 dark:bg-slate-700 mb-2"></div>
+          <div class="h-4 bg-slate-200 dark:bg-slate-700 w-1/2"></div>
+        </div>`;
+      grids.forEach(g => g.innerHTML = skeleton.repeat(3));
+    }
+
+    function showToast(msg){
+      const t = document.createElement('div');
+      t.textContent = msg;
+      t.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow';
+      document.body.appendChild(t);
+      setTimeout(()=>t.remove(),4000);
+    }
+
+    function computeTrendingByCategory(groups){
+      return Object.entries(groups)
+        .map(([cat,list]) => [cat, list.length])
+        .sort((a,b)=>b[1]-a[1]);
+    }
 
     function renderMasonryPost(p){
       return `
       <div class="masonry-item">
         <article class="post-card bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-lg">
           <div class="relative">
-            <img src="${p.image_url || 'https://picsum.photos/800/400'}" alt="${p.title}" class="w-full h-56 object-cover">
+            <img width="800" height="450" src="${p.image_url || 'https://picsum.photos/800/400'}" alt="${esc(p.title)}" loading="lazy" class="w-full h-56 object-cover">
             ${p.tags?.includes('Release') ? '<span class="absolute top-4 right-4 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">New</span>' : ''}
           </div>
           <div class="p-6">
             <div class="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-3">
-              <span>${fmtDate(p.published_at)}</span><span class="mx-2">•</span><span>${p.author || 'AI News Hub'}</span>
+              <span>${fmtDate(p.published_at)}</span><span class="mx-2">•</span><span>${esc(p.author || 'AI News Hub')}</span>
             </div>
-            <h3 class="text-xl font-bold mb-3">${p.title}</h3>
-            <p class="text-slate-600 dark:text-slate-300 mb-4">${p.excerpt || ''}</p>
+            <h3 class="text-xl font-bold mb-3">${esc(p.title)}</h3>
+            <p class="text-slate-600 dark:text-slate-300 mb-4">${esc(p.excerpt || '')}</p>
             <div class="flex flex-wrap gap-2 mb-4">
-              ${(p.tags || []).map(t => `<span class="tag bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded">${t}</span>`).join('')}
+              ${(p.tags || []).map(t => `<span class="tag bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs px-2 py-1 rounded">${esc(t)}</span>`).join('')}
             </div>
-            <a href="/api/posts/${encodeURIComponent(p.slug)}" class="text-primary font-semibold hover:underline inline-flex items-center">Read more <i class="fas fa-arrow-right ml-2 text-sm"></i></a>
+            <a href="/post.html?slug=${encodeURIComponent(p.slug)}" class="text-primary font-semibold hover:underline inline-flex items-center">Read more <i class="fa-solid fa-arrow-right ml-2 text-sm"></i></a>
           </div>
         </article>
       </div>`;
@@ -306,106 +357,88 @@
       return `
       <article class="post-card bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-lg">
         <div class="relative">
-          <img src="${p.image_url || 'https://picsum.photos/800/400'}" alt="${p.title}" class="w-full h-48 object-cover">
+            <img width="800" height="450" src="${p.image_url || 'https://picsum.photos/800/400'}" alt="${esc(p.title)}" loading="lazy" class="w-full h-48 object-cover">
         </div>
         <div class="p-6">
           <div class="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-3">
-            <span>${fmtDate(p.published_at)}</span><span class="mx-2">•</span><span>${p.author || 'AI News Hub'}</span>
+            <span>${fmtDate(p.published_at)}</span><span class="mx-2">•</span><span>${esc(p.author || 'AI News Hub')}</span>
           </div>
-          <h3 class="text-xl font-bold mb-3">${p.title}</h3>
-          <p class="text-slate-600 dark:text-slate-300 mb-4">${p.excerpt || ''}</p>
-          <a href="/api/posts/${encodeURIComponent(p.slug)}" class="text-primary font-semibold hover:underline inline-flex items-center">Read more <i class="fas fa-arrow-right ml-2 text-sm"></i></a>
+          <h3 class="text-xl font-bold mb-3">${esc(p.title)}</h3>
+          <p class="text-slate-600 dark:text-slate-300 mb-4">${esc(p.excerpt || '')}</p>
+          <a href="/post.html?slug=${encodeURIComponent(p.slug)}" class="text-primary font-semibold hover:underline inline-flex items-center">Read more <i class="fa-solid fa-arrow-right ml-2 text-sm"></i></a>
         </div>
       </article>`;
     }
 
-    function computeTrending(posts){
-      const counts = new Map();
-      posts.forEach(p => (p.tags || []).forEach(t => counts.set(t, (counts.get(t)||0)+1)));
-      return [...counts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5);
-    }
-
     // -------- Fetch + render --------
-   async function loadAll() {
-  try {
-    loadingOverlay.classList.remove('hidden');
+    async function loadAll() {
+      showSkeletons();
+      try {
+        const url = new URL('/api/posts', window.location.origin);
+        const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) throw new Error(`API ${res.status}`);
 
-    // Robuster Endpunkt (immer absolut) + defensives JSON-Parsing
-    const url = new URL('/api/posts', window.location.origin);
-    const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        const posts = Array.isArray(data) ? data : (data.rows || data.result || data.posts || []);
+        if (!posts.length) throw new Error('No posts');
 
-    if (!res.ok) throw new Error(`API ${res.status}`);
+        const groups = {
+          'OpenAI News': [],
+          'ChatGPT Updates': [],
+          'AI Industry': [],
+          'Research & Innovation': []
+        };
 
-    const data = await res.json();
-    const posts = Array.isArray(data) ? data : (data.rows || data.result || data.posts || []);
+        posts.forEach(p => {
+          const cat = deriveCategory(p);
+          p.category = cat;
+          groups[cat].push(p);
+        });
 
-    // Wenn leer -> Hinweis + Ende
-    if (!posts.length) {
-      openaiGrid.innerHTML  = '<p class="text-slate-500">No posts yet.</p>';
-      chatgptGrid.innerHTML = '<p class="text-slate-500">No updates yet.</p>';
-      trendingList.innerHTML = '<li class="text-slate-500">No data yet.</li>';
-      return;
+        openaiGrid.innerHTML   = groups['OpenAI News'].map(renderMasonryPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
+        chatgptGrid.innerHTML  = groups['ChatGPT Updates'].map(renderCardPost).join('') || '<p class="text-slate-500">No updates yet.</p>';
+        industryGrid.innerHTML = groups['AI Industry'].map(renderCardPost).join('') || '<p class="text-slate-500">No news yet.</p>';
+        researchGrid.innerHTML = groups['Research & Innovation'].map(renderCardPost).join('') || '<p class="text-slate-500">No research yet.</p>';
+
+        const trending = computeTrendingByCategory(groups);
+        trendingList.innerHTML = trending.length
+          ? trending.map(([cat,count]) =>
+              `<li class="flex items-center justify-between">
+                 <a href="#${categoryToId[cat]}" class="hover:text-primary">${cat}</a>
+                 <span class="ml-3 bg-slate-200 dark:bg-slate-700 text-xs px-2 py-1 rounded-full">${count}</span>
+               </li>`).join('')
+          : '<li class="text-slate-500">No data yet.</li>';
+
+        searchInput.addEventListener('input', () => {
+          const q = searchInput.value.trim().toLowerCase();
+          if (q.length < 2) { searchResults.classList.add('hidden'); return; }
+          const matches = posts.filter(p => p.title?.toLowerCase().includes(q)).slice(0,8);
+          searchResults.innerHTML = matches.length
+            ? matches.map(m => `
+              <a class="block p-3 hover:bg-slate-100 dark:hover:bg-slate-700 border-b border-slate-200 dark:border-slate-700 last:border-0" href="/post.html?slug=${encodeURIComponent(m.slug)}">
+                <div class="font-semibold">${esc(m.title)}</div>
+                <div class="text-xs text-slate-500">${esc(m.category)}</div>
+              </a>`).join('')
+            : '<div class="p-3 text-slate-500 text-sm">No results</div>';
+          searchResults.classList.remove('hidden');
+        });
+        document.addEventListener('click', (e) => {
+          if (!searchResults.contains(e.target) && e.target !== searchInput) {
+            searchResults.classList.add('hidden');
+          }
+        });
+
+      } catch (err) {
+        console.error('Load error:', err);
+        showToast('Failed to load posts.');
+        grids.forEach(g => g.innerHTML = '<p class="text-red-500">Failed to load posts.</p>');
+        trendingList.innerHTML = '';
+      }
     }
 
-    // Filter + Render
-    const openai  = posts.filter(p => (p.category || '').toLowerCase().includes('openai'));
-    const chatgpt = posts.filter(p => (p.category || '').toLowerCase().includes('chatgpt'));
+    byId('year').textContent = new Date().getFullYear();
 
-    openaiGrid.innerHTML  = openai .map(renderMasonryPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
-    chatgptGrid.innerHTML = chatgpt.map(renderCardPost   ).join('') || '<p class="text-slate-500">No updates yet.</p>';
-
-    const trending = computeTrending(posts);
-    trendingList.innerHTML = trending.length
-      ? trending.map((t,i)=>`
-        <li class="trending-item">
-          <a href="#openai" class="flex items-start group">
-            <span class="text-xl font-bold text-slate-400 mr-3 group-hover:text-primary">${String(i+1).padStart(2,'0')}</span>
-            <div>
-              <h4 class="font-semibold group-hover:text-primary transition-colors">${t[0]}</h4>
-              <p class="text-sm text-slate-500 dark:text-slate-400">${t[1]} articles</p>
-            </div>
-          </a>
-        </li>`).join('')
-      : '<li class="text-slate-500">No data yet.</li>';
-
-    // Suche (client-seitig)
-    searchInput.addEventListener('input', () => {
-      const q = searchInput.value.trim().toLowerCase();
-      if (q.length < 2) { searchResults.classList.add('hidden'); return; }
-      const matches = posts.filter(p =>
-        p.title?.toLowerCase().includes(q) ||
-        (p.tags || []).some(t => t.toLowerCase().includes(q))
-      ).slice(0, 8);
-
-      searchResults.innerHTML = matches.length
-        ? matches.map(m => `
-            <a class="block p-3 hover:bg-slate-100 dark:hover:bg-slate-700 border-b border-slate-200 dark:border-slate-700 last:border-0"
-               href="/api/posts/${encodeURIComponent(m.slug)}">
-              <div class="font-semibold">${m.title}</div>
-              <div class="text-xs text-slate-500">${m.category || ''}</div>
-            </a>`).join('')
-        : '<div class="p-3 text-slate-500 text-sm">No results</div>';
-
-      searchResults.classList.remove('hidden');
-    });
-    document.addEventListener('click', (e) => {
-      if (!searchResults.contains(e.target) && e.target !== searchInput) {
-        searchResults.classList.add('hidden');
-      }
-    });
-
-  } catch (err) {
-    console.error('Load error:', err);
-    openaiGrid.innerHTML   = '<p class="text-red-500">Failed to load posts.</p>';
-    chatgptGrid.innerHTML  = '';
-    trendingList.innerHTML = '';
-  } finally {
-    loadingOverlay.classList.add('hidden');
-  }
-}
-
-// … Rest (scroll, year, DOMContentLoaded) bleibt gleich …
-document.addEventListener('DOMContentLoaded', loadAll);
+    document.addEventListener('DOMContentLoaded', loadAll);
 </script>
 </body>
 </html>

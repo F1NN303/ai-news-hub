@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI News Hub – Post</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        integrity="sha512-1ycn6IcaQQ40/8+N+7T3G8V4Y2gq6VvZc3fQ3z+T+5J5WwBf0n8C2b9lqvVwkbQfF8b1b9nZQv2w3qG1rNQ6Qw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <main class="max-w-3xl mx-auto px-4 py-8">
+    <a href="/" class="text-sky-600 hover:underline"><i class="fa-solid fa-arrow-left mr-2"></i>Back</a>
+    <article id="article" class="mt-6">
+      <div id="loading" class="text-slate-500">Loading…</div>
+    </article>
+  </main>
+
+  <script>
+    (async function () {
+      const el = document.getElementById('article');
+      const loading = document.getElementById('loading');
+      const params = new URLSearchParams(location.search);
+      const slug = params.get('slug');
+
+      if (!slug) {
+        el.innerHTML = '<p class="text-red-600">Missing slug.</p>';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/posts/${encodeURIComponent(slug)}`, { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) throw new Error('Not found');
+        const post = await res.json();
+
+        document.title = `AI News Hub – ${post.title || 'Post'}`;
+        const img = post.image_url ? `<img src="${post.image_url}" alt="${post.title || ''}" class="w-full h-auto rounded-lg mb-6">` : '';
+
+        el.innerHTML = `
+          <h1 class="text-3xl md:text-4xl font-bold mb-4">${post.title || ''}</h1>
+          <div class="text-sm text-slate-500 mb-6">${new Date().toISOString().slice(0,10)} • ${post.author || 'AI News Hub'}</div>
+          ${img}
+          <div class="prose prose-slate max-w-none">
+            <p>${post.content || post.excerpt || 'Full article content coming soon.'}</p>
+          </div>
+        `;
+      } catch (e) {
+        console.error(e);
+        el.innerHTML = '<p class="text-red-600">Failed to load the post.</p>';
+      } finally {
+        loading?.remove();
+      }
+    })();
+  </script>
+</body>
+</html>
