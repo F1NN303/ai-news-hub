@@ -1,4 +1,4 @@
-// /api/posts/index.js
+
 const { query } = require('../../lib/db');
 
 module.exports = async (req, res) => {
