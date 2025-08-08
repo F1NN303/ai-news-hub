@@ -387,34 +387,38 @@
 
         const data = await res.json();
         const posts = Array.isArray(data) ? data : (data.rows || data.result || data.posts || []);
-        if (!posts.length) throw new Error('No posts');
 
-        const groups = {
-          'OpenAI News': [],
-          'ChatGPT Updates': [],
-          'AI Industry': [],
-          'Research & Innovation': []
-        };
+        if (!posts.length) {
+          grids.forEach(g => g.innerHTML = '<p class="text-slate-500">No posts yet.</p>');
+          trendingList.innerHTML = '<li class="text-slate-500">No data yet.</li>';
+        } else {
+          const groups = {
+            'OpenAI News': [],
+            'ChatGPT Updates': [],
+            'AI Industry': [],
+            'Research & Innovation': []
+          };
 
-        posts.forEach(p => {
-          const cat = deriveCategory(p);
-          p.category = cat;
-          groups[cat].push(p);
-        });
+          posts.forEach(p => {
+            const cat = deriveCategory(p);
+            p.category = cat;
+            groups[cat].push(p);
+          });
 
-        openaiGrid.innerHTML   = groups['OpenAI News'].map(renderMasonryPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
-        chatgptGrid.innerHTML  = groups['ChatGPT Updates'].map(renderCardPost).join('') || '<p class="text-slate-500">No updates yet.</p>';
-        industryGrid.innerHTML = groups['AI Industry'].map(renderCardPost).join('') || '<p class="text-slate-500">No news yet.</p>';
-        researchGrid.innerHTML = groups['Research & Innovation'].map(renderCardPost).join('') || '<p class="text-slate-500">No research yet.</p>';
+          openaiGrid.innerHTML   = groups['OpenAI News'].map(renderMasonryPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
+          chatgptGrid.innerHTML  = groups['ChatGPT Updates'].map(renderCardPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
+          industryGrid.innerHTML = groups['AI Industry'].map(renderCardPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
+          researchGrid.innerHTML = groups['Research & Innovation'].map(renderCardPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
 
-        const trending = computeTrendingByCategory(groups);
-        trendingList.innerHTML = trending.length
-          ? trending.map(([cat,count]) =>
-              `<li class="flex items-center justify-between">
+          const trending = computeTrendingByCategory(groups);
+          trendingList.innerHTML = trending.length
+            ? trending.map(([cat,count]) =>
+                `<li class="flex items-center justify-between">
                  <a href="#${categoryToId[cat]}" class="hover:text-primary">${cat}</a>
                  <span class="ml-3 bg-slate-200 dark:bg-slate-700 text-xs px-2 py-1 rounded-full">${count}</span>
                </li>`).join('')
-          : '<li class="text-slate-500">No data yet.</li>';
+            : '<li class="text-slate-500">No data yet.</li>';
+        }
 
         searchInput.addEventListener('input', () => {
           const q = searchInput.value.trim().toLowerCase();
