@@ -1,8 +1,9 @@
 const db = require('../../db');
 
 module.exports = async (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Type','application/json');
   const { id } = req.query || {};
+  if (!db.hasDb()) return res.status(404).end(JSON.stringify({ error: 'Not found' }));
   try {
     let row;
     if (/^\d+$/.test(id)) {
@@ -13,7 +14,6 @@ module.exports = async (req, res) => {
     if (!row) return res.status(404).end(JSON.stringify({ error: 'Not found' }));
     res.status(200).end(JSON.stringify(row));
   } catch (e) {
-    console.error(e);
-    res.status(500).end(JSON.stringify({ error: 'Server error' }));
+    console.error(e); res.status(500).end(JSON.stringify({ error: 'Server error' }));
   }
 };
