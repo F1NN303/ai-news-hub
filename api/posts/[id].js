@@ -1,19 +1,34 @@
-const db = require('../../db');
+const db = require('../../lib/db');
 
 module.exports = async (req, res) => {
-  res.setHeader('Content-Type','application/json');
-  const { id } = req.query || {};
-  if (!db.hasDb()) return res.status(404).end(JSON.stringify({ error: 'Not found' }));
+  const id = req.query.id;
   try {
-    let row;
-    if (/^\d+$/.test(id)) {
-      row = (await db.query(`SELECT * FROM posts WHERE id=$1`, [Number(id)])).rows[0];
-    } else {
-      row = (await db.query(`SELECT * FROM posts WHERE slug=$1`, [id])).rows[0];
+    if (req.method === 'GET') {
+      const { rows } = await db.query('SELECT * FROM posts WHERE id = $1', [id]);
+      if (!rows[0]) return res.status(404).json({ error: 'Not found' });
+      return res.status(200).json(rows[0]);
     }
-    if (!row) return res.status(404).end(JSON.stringify({ error: 'Not found' }));
-    res.status(200).end(JSON.stringify(row));
-  } catch (e) {
-    console.error(e); res.status(500).end(JSON.stringify({ error: 'Server error' }));
+    if (req.method === 'PUT') {
+      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      const fields = ['title','excerpt','content','category','tags','cover_image','author'];
+      const set=[], params=[];
+      fields.forEach(f => { if (body[f] !== undefined) { params.push(body[f]); set.push(`${f}=$${params.length}`); }});
+      if (!set.length) return res.status(400).json({ error: 'No fields to update' });
+      params.push(id);
+      const { rows } = await db.query(
+        `UPDATE posts SET ${set.join(', ')}, updated_at = now() WHERE id = $${params.length} RETURNING *`,
+        params
+      );
+      return res.status(200).json(rows[0]);
+    }
+    if (req.method === 'DELETE') {
+      await db.query('DELETE FROM posts WHERE id = $1', [id]);
+      return res.status(204).end();
+    }
+    res.setHeader('Allow', ['GET','PUT','DELETE']);
+    res.status(405).json({ error: 'Method Not Allowed' });
+  } catch (err) {
+    console.error(`/api/posts/${id} error:`, err);
+    res.status(500).json({ error: 'Internal error', detail: err.message });
   }
 };
