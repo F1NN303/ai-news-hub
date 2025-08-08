@@ -4,7 +4,11 @@ module.exports = async (req, res) => {
   const id = req.query.id;
   try {
     if (req.method === 'GET') {
-      const { rows } = await db.query('SELECT * FROM posts WHERE id = $1', [id]);
+      const isNumeric = /^\d+$/.test(id);
+      const query = isNumeric
+        ? 'SELECT * FROM posts WHERE id = $1'
+        : 'SELECT * FROM posts WHERE slug = $1';
+      const { rows } = await db.query(query, [id]);
       if (!rows[0]) return res.status(404).json({ error: 'Not found' });
       return res.status(200).json(rows[0]);
     }
