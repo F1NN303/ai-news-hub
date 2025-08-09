@@ -28,6 +28,7 @@ test('POST /api/comments allows authenticated users', async () => {
   delete require.cache[require.resolve('../lib/auth')];
   delete require.cache[require.resolve('../lib/cookies')];
   delete require.cache[require.resolve('../lib/requireUser')];
+  delete require.cache[require.resolve('../lib/csrf')];
   delete require.cache[require.resolve('../api/comments/index.js')];
   const { newDb } = require('pg-mem');
   const mem = newDb();
@@ -44,10 +45,12 @@ test('POST /api/comments allows authenticated users', async () => {
 
   const { signJWT } = require('../lib/auth');
   const { signSessionToken } = require('../lib/cookies');
+  const { signCsrfToken } = require('../lib/csrf');
   const token = await signJWT({ sub: '1' });
-  const cookie = `session=${signSessionToken(token)}`;
+  const csrfToken = 'c1';
+  const cookie = `session=${signSessionToken(token)}; csrf=${signCsrfToken(csrfToken)}`;
   const handler = require('../api/comments/index.js');
-  const req = { method: 'POST', headers: { cookie }, body: { post_id: 1, content: 'Nice article' } };
+  const req = { method: 'POST', headers: { cookie, 'x-csrf-token': csrfToken }, body: { post_id: 1, content: 'Nice article' } };
   let statusCode; let jsonBody;
   const res = {
     status(code) { statusCode = code; return this; },

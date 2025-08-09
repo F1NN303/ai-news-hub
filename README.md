@@ -63,5 +63,22 @@ curl http://localhost:3000/api/admin/users -b cookies.txt
 4. After deployment, ensure [docs/db-migration.sql](docs/db-migration.sql) has been run on
    your Neon database so the required tables and admin user exist.
 
-With the environment variables configured, login in production creates a signed `session`
-cookie that guards admin endpoints like `/api/admin/users`.
+### Production behavior
+
+With the environment variables configured, logging in in production creates a signed `session`
+cookie that protects admin endpoints such as `/api/admin/users`. Calling `/api/auth/logout`
+clears the `session` cookie using the same attributes. Ensure `SESSION_SECRET` is configured
+in your environment so the cookie cannot be tampered with.
+
+## CSRF protection
+
+Mutation endpoints (`/api/auth/login`, `/api/auth/signup`, `/api/comments`, and `/api/admin/*` routes)
+requiree a valid CSRF token. A random token is issued in a `csrf` cookie that is
+signed with `SESSION_SECRET`. Clients must echo the token in the `X-CSRF-Token`
+header when making POST/PUT/DELETE requests.
+
+## Rate limiting
+
+The login API applies a small in‑memory rate limiter to throttle repeated attempts by
+IP address and email. After several failed attempts within a short window the endpoint
+responds with HTTP 429 to slow down brute‑force attacks.
