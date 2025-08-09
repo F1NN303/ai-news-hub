@@ -45,7 +45,7 @@
       try {
         const res = await fetch(`/api/comments?post_id=${postId}`);
         if (!res.ok) throw new Error('API error');
-        const comments = await res.json();
+        const comments = (await res.json()).reverse();
         const list = document.getElementById('comment-list');
         list.innerHTML = comments.length
           ? comments.map(c => `
@@ -99,6 +99,24 @@
         if (!res.ok) throw new Error('API error');
         const p = await res.json();
         const date = new Date(p.published_at || Date.now()).toLocaleDateString();
+
+        let authHtml = '';
+        try {
+          const meRes = await fetch('/api/auth/me');
+          if (meRes.ok) {
+            currentUser = await meRes.json();
+            authHtml = `
+            <form id="comment-form" class="space-y-2">
+              <textarea id="comment-content" class="w-full border rounded p-2" required></textarea>
+              <button type="submit" class="bg-primary text-white px-4 py-2 rounded">Post Comment</button>
+            </form>`;
+          } else {
+            authHtml = `<a href="/login.html" class="text-primary hover:underline">Log in to comment</a>`;
+          }
+        } catch (err) {
+          authHtml = `<a href="/login.html" class="text-primary hover:underline">Log in to comment</a>`;
+        }
+
         container.innerHTML = `
           <article>
             <h1 class="text-3xl font-bold mb-4">${p.title}</h1>
@@ -109,10 +127,7 @@
           <section class="mt-12">
             <h2 class="text-2xl font-bold mb-4">Comments</h2>
             <div id="comment-list" class="space-y-4 mb-6"></div>
-            <form id="comment-form" class="space-y-2">
-              <textarea id="comment-content" class="w-full border rounded p-2" required></textarea>
-              <button type="submit" class="bg-primary text-white px-4 py-2 rounded">Post Comment</button>
-            </form>
+            ${authHtml}
           </section>`;
         currentPostId = p.id;
         const list = document.getElementById('comment-list');
@@ -129,24 +144,15 @@
           }
         });
         loadComments(currentPostId);
-        setupCommentForm(currentPostId);
+        if (currentUser) {
+          setupCommentForm(currentPostId);
+        }
       } catch (err) {
         container.innerHTML = '<p class="text-red-500">Failed to load article.</p>';
       }
     }
-    async function loadCurrentUser() {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          currentUser = await res.json();
-        }
-      } catch (err) {
-        // ignore
-      }
-    }
     document.addEventListener('DOMContentLoaded', async () => {
       await ensureCsrfCookie();
-      await loadCurrentUser();
       loadPost();
     });
   </script>

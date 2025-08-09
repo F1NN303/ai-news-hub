@@ -15,7 +15,8 @@ module.exports = async (req, res) => {
         FROM comments c
         JOIN users u ON c.user_id = u.id
         WHERE c.post_id = $1
-        ORDER BY c.created_at ASC
+        ORDER BY c.created_at DESC
+        LIMIT 20
       `, [postId]);
       return res.status(200).json(rows);
     }
