@@ -115,8 +115,10 @@
 
           <div id="auth-area" class="flex items-center gap-2">
             <a id="login-link" href="/api/auth/login" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Login</a>
+            <a id="signup-link" href="/api/auth/signup" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign Up</a>
             <div id="user-info" class="hidden items-center gap-2">
               <span id="user-name" class="font-medium"></span>
+              <a id="admin-link" href="/admin.html" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
               <a id="logout-link" href="/api/auth/logout" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Logout</a>
             </div>
           </div>
@@ -458,8 +460,10 @@
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const loginLink = document.getElementById('login-link');
+      const signupLink = document.getElementById('signup-link');
       const userInfo = document.getElementById('user-info');
       const userName = document.getElementById('user-name');
+      const adminLink = document.getElementById('admin-link');
       try {
         const res = await fetch('/api/auth/me');
         if (res.ok) {
@@ -467,6 +471,12 @@
           if (user && (user.name || user.email)) {
             userName.textContent = user.name || user.email;
             loginLink.classList.add('hidden');
+            signupLink.classList.add('hidden');
+            if (user.role === 'admin') {
+              adminLink.classList.remove('hidden');
+            } else {
+              adminLink.classList.add('hidden');
+            }
             userInfo.classList.remove('hidden');
             return;
           }
@@ -475,7 +485,9 @@
         console.error('Auth check failed', err);
       }
       loginLink.classList.remove('hidden');
+      signupLink.classList.remove('hidden');
       userInfo.classList.add('hidden');
+      adminLink.classList.add('hidden');
     });
   </script>
 </body>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard | AI News Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="bg-light dark:bg-dark">
+  <header class="bg-white dark:bg-dark py-4 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 flex items-center justify-between">
+      <h1 class="text-2xl font-bold">Admin Dashboard</h1>
+      <a href="/" class="text-primary hover:underline">Home</a>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-4 space-y-8">
+    <section id="posts-admin">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold">Posts</h2>
+        <button id="create-post" class="px-3 py-2 bg-primary text-white rounded">New Post</button>
+      </div>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b">
+            <th class="p-2">Title</th>
+            <th class="p-2 w-32">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="posts-table"></tbody>
+      </table>
+    </section>
+
+    <section id="users-admin">
+      <h2 class="text-xl font-semibold mb-4">Users</h2>
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b">
+            <th class="p-2">Name</th>
+            <th class="p-2">Email</th>
+            <th class="p-2">Role</th>
+            <th class="p-2 w-32">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-table"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const postsTable = document.getElementById('posts-table');
+    const usersTable = document.getElementById('users-table');
+    const createBtn = document.getElementById('create-post');
+
+    async function loadPosts() {
+      try {
+        const res = await fetch('/api/posts', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load posts');
+        const posts = await res.json();
+        postsTable.innerHTML = posts.map(p => `
+          <tr class="border-b">
+            <td class="p-2">${p.title}</td>
+            <td class="p-2 space-x-2">
+              <button data-id="${p.id}" class="edit-post text-blue-600 hover:underline">Edit</button>
+              <button data-id="${p.id}" class="delete-post text-red-600 hover:underline">Delete</button>
+            </td>
+          </tr>`).join('');
+      } catch (err) {
+        postsTable.innerHTML = `<tr><td class="p-2 text-red-500" colspan="2">${err.message}</td></tr>`;
+      }
+    }
+
+    async function loadUsers() {
+      try {
+        const res = await fetch('/api/admin/users', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load users');
+        const users = await res.json();
+        usersTable.innerHTML = users.map(u => `
+          <tr class="border-b">
+            <td class="p-2">${u.name}</td>
+            <td class="p-2">${u.email}</td>
+            <td class="p-2">
+              <select data-id="${u.id}" class="role-select border rounded p-1">
+                <option value="user" ${u.role === 'user' ? 'selected' : ''}>user</option>
+                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>admin</option>
+              </select>
+            </td>
+            <td class="p-2">
+              <button data-id="${u.id}" class="deactivate-user text-red-600 hover:underline">Deactivate</button>
+            </td>
+          </tr>`).join('');
+      } catch (err) {
+        usersTable.innerHTML = `<tr><td class="p-2 text-red-500" colspan="4">${err.message}</td></tr>`;
+      }
+    }
+
+    createBtn.addEventListener('click', async () => {
+      const title = prompt('Title');
+      const slug = prompt('Slug');
+      if (!title || !slug) return;
+      await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ title, slug })
+      });
+      loadPosts();
+    });
+
+    postsTable.addEventListener('click', async (e) => {
+      const id = e.target.dataset.id;
+      if (e.target.classList.contains('edit-post')) {
+        const title = prompt('New title');
+        if (!title) return;
+        await fetch(`/api/posts/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ title })
+        });
+        loadPosts();
+      }
+      if (e.target.classList.contains('delete-post')) {
+        if (!confirm('Delete post?')) return;
+        await fetch(`/api/posts/${id}`, { method: 'DELETE', credentials: 'include' });
+        loadPosts();
+      }
+    });
+
+    usersTable.addEventListener('change', async (e) => {
+      if (e.target.classList.contains('role-select')) {
+        const id = e.target.dataset.id;
+        const role = e.target.value;
+        await fetch(`/api/admin/users/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ role })
+        });
+      }
+    });
+
+    usersTable.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('deactivate-user')) {
+        const id = e.target.dataset.id;
+        if (!confirm('Deactivate user?')) return;
+        await fetch(`/api/admin/users/${id}`, { method: 'DELETE', credentials: 'include' });
+        loadUsers();
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadPosts();
+      loadUsers();
+    });
+  </script>
+</body>
+</html>
