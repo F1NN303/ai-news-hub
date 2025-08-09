@@ -25,9 +25,12 @@ test('PUT /api/posts/:slug updates by slug', async () => {
   const db = require('../lib/db');
   db.query = (text, params) => pool.query(text, params);
 
+  const auth = require('../lib/auth');
+  auth.verifyToken = async () => ({ sub: '1' });
+
   const handler = require('../api/posts/[id].js');
 
-  const req = { method: 'PUT', query: { id: 'test-slug' }, headers: { cookie: 'session=abc' }, body: { title: 'New Title' } };
+  const req = { method: 'PUT', query: { id: 'test-slug' }, headers: { cookie: 'session=valid' }, body: { title: 'New Title' } };
   let statusCode;
   let jsonBody;
   const res = {
