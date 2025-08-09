@@ -21,6 +21,7 @@
       <input id="email" type="email" placeholder="Email" class="w-full border rounded p-2" required />
       <input id="password" type="password" placeholder="Password" class="w-full border rounded p-2" required />
       <button type="submit" class="w-full bg-primary text-white px-4 py-2 rounded">Create Account</button>
+      <p id="error-message" class="text-red-600"></p>
     </form>
   </main>
   <script>
@@ -32,22 +33,40 @@
     document.addEventListener('DOMContentLoaded', async () => {
       try { await fetch('/api/auth/signup', { credentials: 'include' }); } catch (e) {}
       const form=document.getElementById('signup-form');
+      const errorEl=document.getElementById('error-message');
+      const btn=form.querySelector('button');
       form.addEventListener('submit', async (e)=>{
         e.preventDefault();
+        errorEl.textContent='';
         const name=document.getElementById('name').value.trim();
         const email=document.getElementById('email').value.trim();
         const password=document.getElementById('password').value;
         const csrfToken=getCsrfToken();
-        const res=await fetch('/api/auth/signup',{
-          method:'POST',
-          headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},
-          credentials:'include',
-          body:JSON.stringify({name,email,password})
-        });
-        if(res.ok){
-          window.location.href='/';
-        }else{
-          alert('Signup failed');
+        btn.disabled=true;
+        const originalHTML=btn.innerHTML;
+        btn.innerHTML='<i class="fas fa-spinner fa-spin mr-2"></i> Creating...';
+        try{
+          const res=await fetch('/api/auth/signup',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},
+            credentials:'include',
+            body:JSON.stringify({name,email,password})
+          });
+          if(res.ok){
+            window.location.href='/';
+          }else{
+            let msg='Signup failed';
+            try{
+              const data=await res.json();
+              msg=data.error||msg;
+            }catch{}
+            errorEl.textContent=msg;
+          }
+        }catch{
+          errorEl.textContent='Signup failed';
+        }finally{
+          btn.disabled=false;
+          btn.innerHTML=originalHTML;
         }
       });
     });
