@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI News Hub | Article</title>
+  <meta name="description" content="Read the full article on AI News Hub.">
+  <link rel="canonical" href="/post.html" />
+  <!-- Tailwind & Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary:#0ea5e9; --secondary:#06b6d4; --dark:#0f172a; --light:#f8fafc; --accent:#818cf8;
+    }
+    body{font-family:'Inter',sans-serif;background:#f8fafc;color:#0f172a;transition:background-color .3s,color .3s}
+    .dark body{background:#0f172a;color:#e2e8f0}
+  </style>
+</head>
+<body class="bg-light dark:bg-dark">
+  <main id="post-container" class="max-w-3xl mx-auto p-6"></main>
+  <script>
+    async function loadPost() {
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get('slug');
+      const container = document.getElementById('post-container');
+      if (!slug) {
+        container.innerHTML = '<p class="text-red-500">No article specified.</p>';
+        return;
+      }
+      try {
+        const res = await fetch(`/api/posts/${encodeURIComponent(slug)}`, { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) throw new Error('API error');
+        const p = await res.json();
+        const date = new Date(p.published_at || Date.now()).toLocaleDateString();
+        container.innerHTML = `
+          <article>
+            <h1 class="text-3xl font-bold mb-4">${p.title}</h1>
+            <div class="text-sm text-slate-500 mb-6">${date} &bull; ${p.author || 'AI News Hub'}</div>
+            <img src="${p.hero_image || p.image_url || 'https://picsum.photos/800/400'}" alt="${p.title}" class="w-full mb-6 rounded">
+            <div class="prose dark:prose-invert max-w-none">${p.content || ''}</div>
+          </article>`;
+      } catch (err) {
+        container.innerHTML = '<p class="text-red-500">Failed to load article.</p>';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', loadPost);
+  </script>
+</body>
+</html>
