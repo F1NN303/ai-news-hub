@@ -14,19 +14,22 @@ module.exports = async (req, res) => {
     }
     if (req.method === 'PUT') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-      const fields = ['title','excerpt','content','category','tags','cover_image','author'];
-      const set=[], params=[];
+      const fields = ['title','excerpt','content','category','tags','image_url','author'];
+      const set = [], params = [];
       fields.forEach(f => { if (body[f] !== undefined) { params.push(body[f]); set.push(`${f}=$${params.length}`); }});
       if (!set.length) return res.status(400).json({ error: 'No fields to update' });
       params.push(id);
-      const { rows } = await db.query(
-        `UPDATE posts SET ${set.join(', ')}, updated_at = now() WHERE id = $${params.length} RETURNING *`,
-        params
-      );
+      const isNumeric = /^\d+$/.test(id);
+      const query = `UPDATE posts SET ${set.join(', ')} WHERE ${isNumeric ? 'id' : 'slug'} = $${params.length} RETURNING *`;
+      const { rows } = await db.query(query, params);
       return res.status(200).json(rows[0]);
     }
     if (req.method === 'DELETE') {
-      await db.query('DELETE FROM posts WHERE id = $1', [id]);
+      const isNumeric = /^\d+$/.test(id);
+      const query = isNumeric
+        ? 'DELETE FROM posts WHERE id = $1'
+        : 'DELETE FROM posts WHERE slug = $1';
+      await db.query(query, [id]);
       return res.status(204).end();
     }
     res.setHeader('Allow', ['GET','PUT','DELETE']);
