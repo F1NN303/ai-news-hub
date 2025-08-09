@@ -12,6 +12,16 @@
 5. Copy the script contents into the SQL Editor and execute them to create the `users` and `comments` tables and seed the admin user.
 6. For a fresh database you may alternatively run [`schema.sql`](schema.sql), which contains the full schema and seed data.
 
+### Promote a User
+
+To elevate an existing account to administrator, run this SQL in your database:
+
+```sql
+UPDATE users SET role='admin' WHERE email='user@example.com';
+```
+
+Replace `user@example.com` with the email of the account you want to promote.
+
 ## Running Locally
 
 1. Install dependencies:
@@ -67,6 +77,19 @@ curl http://localhost:3000/api/admin/users \
   -H "X-CSRF-Token: $CSRF"
 ```
 
+### Delete a Comment
+
+Owners can remove their own comments (admins can remove any comment) by sending a `DELETE` request:
+
+```bash
+CSRF=$(grep csrf cookies.txt | awk '{print $7}')
+curl -X DELETE http://localhost:3000/api/comments/123 \
+  -b cookies.txt \
+  -H "X-CSRF-Token: $CSRF"
+```
+
+This endpoint may be rate limited to prevent abuse.
+
 ## Deployment on Vercel
 
 1. Push the repository to your Git host and [import it into Vercel](https://vercel.com/new).
@@ -87,12 +110,12 @@ in your environment so the cookie cannot be tampered with.
 ## CSRF protection
 
 Mutation endpoints (`/api/auth/login`, `/api/auth/signup`, `/api/comments`, and `/api/admin/*` routes)
-requiree a valid CSRF token. A random token is issued in a `csrf` cookie that is
+require a valid CSRF token. A random token is issued in a `csrf` cookie that is
 signed with `SESSION_SECRET`. Clients must echo the token in the `X-CSRF-Token`
 header when making POST/PUT/DELETE requests.
 
 ## Rate limiting
 
-The login API applies a small in‑memory rate limiter to throttle repeated attempts by
-IP address and email. After several failed attempts within a short window the endpoint
-responds with HTTP 429 to slow down brute‑force attacks.
+The login and signup APIs apply a small in‑memory rate limiter to throttle repeated attempts by
+IP address and email. After several failed attempts within a short window these endpoints
+respond with HTTP 429 to slow down brute‑force attacks.
