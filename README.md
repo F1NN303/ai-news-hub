@@ -20,3 +20,16 @@ Copy `.env.example` to `.env` and fill in the values for your setup:
 - `JWKS_URL` – URL of a JSON Web Key Set used to validate JWTs from your auth provider.
 - `JWT_SECRET` – Alternative to `JWKS_URL`; symmetric secret for verifying JWTs locally.
 - `SESSION_SECRET` – Secret used to sign the `session` cookie so that it cannot be tampered with.
+
+## Authentication cookies
+
+Login responses set a signed `session` cookie to persist authentication. The value is
+signed with `SESSION_SECRET` and the cookie is sent with the attributes:
+
+```
+HttpOnly; Secure; SameSite=Strict; Path=/
+```
+
+Calling `/api/auth/logout` clears the `session` cookie using the same attributes.
+Ensure `SESSION_SECRET` is configured in your environment so the cookie cannot be
+tampered with.

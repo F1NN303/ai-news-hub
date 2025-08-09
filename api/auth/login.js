@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
     const signed = signSessionToken(token);
     res.setHeader(
       'Set-Cookie',
-      `session=${signed}; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}; Path=/`
+      `session=${signed}; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}; Path=/`
     );
     return res.status(200).json({ id: user.id, name: user.name, email: user.email, role: user.role });
   } catch (err) {
