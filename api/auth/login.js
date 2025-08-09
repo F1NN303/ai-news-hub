@@ -3,45 +3,9 @@ const bcrypt = require('bcryptjs');
 const { signJWT } = require('../../lib/auth');
 const { signSessionToken } = require('../../lib/cookies');
 const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
+const { createRateLimiter } = require('../../lib/rateLimit');
 
-// simple in-memory rate limiter
-const attempts = new Map();
-const WINDOW_MS = 15 * 60 * 1000;
-const MAX_ATTEMPTS = 5;
-
-function getKey(prefix, value) {
-  return `${prefix}:${value}`;
-}
-
-function isLimited(ip, email) {
-  const now = Date.now();
-  const keys = [getKey('ip', ip), getKey('email', email)];
-  for (const k of keys) {
-    const entry = attempts.get(k);
-    if (entry && now < entry.expires && entry.count >= MAX_ATTEMPTS) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function recordFailure(ip, email) {
-  const now = Date.now();
-  const keys = [getKey('ip', ip), getKey('email', email)];
-  for (const k of keys) {
-    const entry = attempts.get(k);
-    if (!entry || now > entry.expires) {
-      attempts.set(k, { count: 1, expires: now + WINDOW_MS });
-    } else {
-      entry.count++;
-    }
-  }
-}
-
-function clearAttempts(ip, email) {
-  attempts.delete(getKey('ip', ip));
-  attempts.delete(getKey('email', email));
-}
+const limiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 5 });
 
 module.exports = async (req, res) => {
   ensureCsrf(req, res);
@@ -59,7 +23,7 @@ module.exports = async (req, res) => {
   }
 
   const ip = (req.headers['x-forwarded-for'] || '').split(',')[0] || req.socket?.remoteAddress || '';
-  if (isLimited(ip, email)) {
+  if (limiter.isLimited(ip, email)) {
     return res.status(429).json({ error: 'too_many_attempts' });
   }
 
@@ -69,13 +33,13 @@ module.exports = async (req, res) => {
       [email]
     );
     if (rows.length === 0) {
-      recordFailure(ip, email);
+      limiter.recordFailure(ip, email);
       return res.status(401).json({ error: 'invalid_credentials' });
     }
     const user = rows[0];
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
-      recordFailure(ip, email);
+      limiter.recordFailure(ip, email);
       return res.status(401).json({ error: 'invalid_credentials' });
     }
 
@@ -98,7 +62,7 @@ module.exports = async (req, res) => {
     } else {
       res.setHeader('Set-Cookie', cookie);
     }
-    clearAttempts(ip, email);
+    limiter.clear(ip, email);
     return res.status(200).json({ id: user.id, name: user.name, email: user.email, role: user.role });
   } catch (err) {
     console.error('/api/auth/login error:', err);

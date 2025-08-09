@@ -1,6 +1,9 @@
 const db = require('../../lib/db');
 const bcrypt = require('bcryptjs');
 const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
+const { createRateLimiter } = require('../../lib/rateLimit');
+
+const limiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 5 });
 
 module.exports = async (req, res) => {
   ensureCsrf(req, res);
@@ -17,6 +20,11 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'missing_fields' });
   }
 
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0] || req.socket?.remoteAddress || '';
+  if (limiter.isLimited(ip, email)) {
+    return res.status(429).json({ error: 'too_many_attempts' });
+  }
+
   try {
     const hash = await bcrypt.hash(password, 10);
     const { rows } = await db.query(
@@ -24,11 +32,14 @@ module.exports = async (req, res) => {
       [name, email, hash, 'user']
     );
     const user = rows[0];
+    limiter.clear(ip, email);
     return res.status(201).json(user);
   } catch (err) {
     if (err.code === '23505') {
+      limiter.recordFailure(ip, email);
       return res.status(409).json({ error: 'user_exists' });
     }
+    limiter.recordFailure(ip, email);
     console.error('/api/auth/signup error:', err);
     return res.status(500).json({ error: 'SERVER_ERROR' });
   }
