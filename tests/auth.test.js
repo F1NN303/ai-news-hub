@@ -3,64 +3,79 @@ const assert = require('node:assert');
 
 const originalEnv = { ...process.env };
 
-test('login redirects to Stack Auth', async () => {
-  process.env.STACK_AUTH_PROJECT_ID = 'pid';
-  process.env.STACK_AUTH_CLIENT_ID = 'cid';
+// Signup route
+
+test('POST /api/auth/signup creates user with hashed password', async () => {
+  const { newDb } = require('pg-mem');
+  const mem = newDb();
+  const pg = mem.adapters.createPg();
+  const pool = new pg.Pool();
+  await pool.query(`CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT DEFAULT 'user'
+  )`);
+
+  const db = require('../lib/db');
+  db.query = (text, params) => pool.query(text, params);
+
+  const handler = require('../api/auth/signup.js');
+  const req = { method: 'POST', body: { name: 'Bob', email: 'bob@example.com', password: 'secret' } };
+  let statusCode; let jsonBody;
+  const res = {
+    status(code) { statusCode = code; return this; },
+    json(data) { jsonBody = data; return this; },
+    setHeader() {},
+    end() {},
+  };
+  await handler(req, res);
+  assert.strictEqual(statusCode, 201);
+  assert.strictEqual(jsonBody.email, 'bob@example.com');
+  const { rows } = await pool.query('SELECT * FROM users WHERE email=$1', ['bob@example.com']);
+  assert.strictEqual(rows[0].role, 'user');
+  assert.notStrictEqual(rows[0].password_hash, 'secret');
+});
+
+// Login route
+
+test('POST /api/auth/login authenticates and sets cookie', async () => {
+  process.env.JWT_SECRET = 'testsecret';
+  const { newDb } = require('pg-mem');
+  const mem = newDb();
+  const pg = mem.adapters.createPg();
+  const pool = new pg.Pool();
+  await pool.query(`CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT DEFAULT 'user'
+  )`);
+  const bcrypt = require('bcryptjs');
+  const hash = await bcrypt.hash('pw', 10);
+  await pool.query(`INSERT INTO users(name,email,password_hash,role) VALUES('Alice','a@b.c',$1,'user')`, [hash]);
+
+  const db = require('../lib/db');
+  db.query = (text, params) => pool.query(text, params);
 
   const handler = require('../api/auth/login.js');
-  const req = { query: {}, headers: { host: 'example.com', 'x-forwarded-proto': 'https' } };
-  let statusCode; const headers = {};
+  const req = { method: 'POST', body: { email: 'a@b.c', password: 'pw' }, headers: {} };
+  let statusCode; let jsonBody; const headers = {};
   const res = {
-    status(c){ statusCode = c; return this; },
+    status(code) { statusCode = code; return this; },
+    json(data) { jsonBody = data; return this; },
     setHeader(k,v){ headers[k]=v; },
-    end(){},
+    end() {},
   };
-  await handler(req,res);
-  assert.strictEqual(statusCode,302);
-  const loc = headers.Location;
-  const url = new URL(loc);
-  assert.strictEqual(url.origin,'https://api.stack-auth.com');
-  assert.strictEqual(url.pathname,'/api/v1/oauth/authorize');
-  assert.strictEqual(url.searchParams.get('response_type'),'code');
-  assert.strictEqual(url.searchParams.get('provider'),'github');
-  assert.strictEqual(url.searchParams.get('redirect_uri'),'https://example.com/api/auth/callback');
-  assert.strictEqual(url.searchParams.get('client_id'),'cid');
-  assert.strictEqual(url.searchParams.get('project_id'),'pid');
+  await handler(req, res);
+  assert.strictEqual(statusCode, 200);
+  assert.ok(headers['Set-Cookie'].includes('session='));
+  assert.strictEqual(jsonBody.email, 'a@b.c');
 });
 
-test('callback exchanges code and sets cookie', async () => {
-  process.env.STACK_AUTH_PROJECT_ID = 'pid';
-  process.env.STACK_AUTH_CLIENT_ID = 'cid';
-  const handler = require('../api/auth/callback.js');
-  const req = { query:{ code:'abc'}, headers:{ host:'example.com','x-forwarded-proto':'https'} };
-  let statusCode; const headers = {};
-  const res = {
-    status(c){ statusCode = c; return this; },
-    setHeader(k,v){ headers[k]=v; },
-    writeHead(c,h){ statusCode=c; Object.assign(headers,h); return this; },
-    end(){},
-    json(data){ headers.body=data; }
-  };
-
-  const tokenResponse = { access_token:'tok', expires_in:120 };
-  global.fetch = async (url, opts) => {
-    assert.strictEqual(url,'https://api.stack-auth.com/api/v1/oauth/token');
-    const body = JSON.parse(opts.body);
-    assert.strictEqual(body.code,'abc');
-    return { ok:true, json: async () => tokenResponse };
-  };
-
-  await handler(req,res);
-  assert.strictEqual(statusCode,302);
-  assert.strictEqual(headers.Location,'/');
-  assert.match(headers['Set-Cookie'], /session=tok/);
-  assert.match(headers['Set-Cookie'], /Max-Age=120/);
-  assert.match(headers['Set-Cookie'], /HttpOnly/);
-  assert.match(headers['Set-Cookie'], /Secure/);
-  assert.match(headers['Set-Cookie'], /SameSite=Lax/);
-
-  delete global.fetch;
-});
+// Logout route
 
 test('logout clears session cookie', async () => {
   const handler = require('../api/auth/logout.js');
@@ -77,6 +92,8 @@ test('logout clears session cookie', async () => {
   assert.match(headers['Set-Cookie'], /session=/);
   assert.match(headers['Set-Cookie'], /Max-Age=0/);
 });
+
+// restore env
 
 test.after(() => {
   process.env = originalEnv;
