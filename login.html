@@ -20,7 +20,9 @@
       <input id="email" type="email" placeholder="Email" class="w-full border rounded p-2" required />
       <input id="password" type="password" placeholder="Password" class="w-full border rounded p-2" required />
       <button type="submit" class="w-full bg-primary text-white px-4 py-2 rounded">Login</button>
+      <p id="error-message" class="text-red-600"></p>
     </form>
+    <p class="mt-4 text-center"><a href="/signup.html" class="text-primary">Create an account</a></p>
   </main>
   <script>
     function getCsrfToken(){
@@ -31,8 +33,10 @@
     document.addEventListener('DOMContentLoaded', async () => {
       try { await fetch('/api/auth/login', { credentials: 'include' }); } catch (e) {}
       const form=document.getElementById('login-form');
+      const errorEl=document.getElementById('error-message');
       form.addEventListener('submit', async (e)=>{
         e.preventDefault();
+        errorEl.textContent='';
         const email=document.getElementById('email').value.trim();
         const password=document.getElementById('password').value;
         const csrfToken=getCsrfToken();
@@ -45,7 +49,12 @@
         if(res.ok){
           window.location.href='/';
         }else{
-          alert('Login failed');
+          let msg='Login failed';
+          try{
+            const data=await res.json();
+            msg=data.error||msg;
+          }catch{}
+          errorEl.textContent=msg;
         }
       });
     });
