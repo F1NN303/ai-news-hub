@@ -1,9 +1,15 @@
 const db = require('../../lib/db');
 const bcrypt = require('bcryptjs');
+const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
 
 module.exports = async (req, res) => {
+  ensureCsrf(req, res);
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'method_not_allowed' });
+  }
+
+  if (!validateCsrf(req)) {
+    return res.status(403).json({ error: 'invalid_csrf_token' });
   }
 
   const { name, email, password } = req.body || {};

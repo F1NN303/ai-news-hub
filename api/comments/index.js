@@ -1,8 +1,10 @@
 const db = require('../../lib/db');
 const requireUser = require('../../lib/requireUser');
+const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
 
 module.exports = async (req, res) => {
   try {
+    ensureCsrf(req, res);
     if (req.method === 'GET') {
       const postId = req.query && req.query.post_id;
       if (!postId) {
@@ -21,6 +23,9 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
       const user = await requireUser(req, res);
       if (!user) return;
+      if (!validateCsrf(req)) {
+        return res.status(403).json({ error: 'invalid_csrf_token' });
+      }
       const { post_id, content } = req.body || {};
       if (!post_id || !content) {
         return res.status(400).json({ error: 'post_id and content are required' });
