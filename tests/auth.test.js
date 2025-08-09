@@ -42,6 +42,7 @@ test('POST /api/auth/signup creates user with hashed password', async () => {
 
 test('POST /api/auth/login authenticates and sets cookie', async () => {
   process.env.JWT_SECRET = 'testsecret';
+  process.env.SESSION_SECRET = 'cookiesecret';
   const { newDb } = require('pg-mem');
   const mem = newDb();
   const pg = mem.adapters.createPg();
@@ -72,6 +73,10 @@ test('POST /api/auth/login authenticates and sets cookie', async () => {
   await handler(req, res);
   assert.strictEqual(statusCode, 200);
   assert.ok(headers['Set-Cookie'].includes('session='));
+  assert.match(headers['Set-Cookie'], /HttpOnly/);
+  assert.match(headers['Set-Cookie'], /Secure/);
+  assert.match(headers['Set-Cookie'], /SameSite=Strict/);
+  assert.match(headers['Set-Cookie'], /Path=\//);
   assert.strictEqual(jsonBody.email, 'a@b.c');
 });
 
@@ -91,6 +96,10 @@ test('logout clears session cookie', async () => {
   assert.strictEqual(headers.Location,'/');
   assert.match(headers['Set-Cookie'], /session=/);
   assert.match(headers['Set-Cookie'], /Max-Age=0/);
+  assert.match(headers['Set-Cookie'], /HttpOnly/);
+  assert.match(headers['Set-Cookie'], /Secure/);
+  assert.match(headers['Set-Cookie'], /SameSite=Strict/);
+  assert.match(headers['Set-Cookie'], /Path=\//);
 });
 
 // restore env
