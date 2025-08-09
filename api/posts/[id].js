@@ -13,6 +13,12 @@ module.exports = async (req, res) => {
       return res.status(200).json(rows[0]);
     }
     if (req.method === 'PUT') {
+      const cookie = req.headers?.cookie || '';
+      const hasSession = cookie.split(';').some(c => c.trim().startsWith('session='));
+      if (!hasSession) {
+        return res.status(401).json({ error: 'unauthorized' });
+      }
+
       let body;
       try {
         body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -30,6 +36,12 @@ module.exports = async (req, res) => {
       return res.status(200).json(rows[0]);
     }
     if (req.method === 'DELETE') {
+      const cookie = req.headers?.cookie || '';
+      const hasSession = cookie.split(';').some(c => c.trim().startsWith('session='));
+      if (!hasSession) {
+        return res.status(401).json({ error: 'unauthorized' });
+      }
+
       const isNumeric = /^\d+$/.test(id);
       const query = isNumeric
         ? 'DELETE FROM posts WHERE id = $1'

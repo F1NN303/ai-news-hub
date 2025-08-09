@@ -27,7 +27,7 @@ test('PUT /api/posts/:slug updates by slug', async () => {
 
   const handler = require('../api/posts/[id].js');
 
-  const req = { method: 'PUT', query: { id: 'test-slug' }, body: { title: 'New Title' } };
+  const req = { method: 'PUT', query: { id: 'test-slug' }, headers: { cookie: 'session=abc' }, body: { title: 'New Title' } };
   let statusCode;
   let jsonBody;
   const res = {
