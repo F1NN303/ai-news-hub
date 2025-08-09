@@ -113,6 +113,12 @@
             <div id="search-results" class="absolute left-0 mt-2 w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl z-20 hidden"></div>
           </div>
 
+          <div id="login-links" class="flex items-center gap-2">
+            <a href="/api/auth/login?provider=github" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Login</a>
+            <a href="/api/auth/login?provider=google" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Google</a>
+          </div>
+          <a id="logout-link" href="/api/auth/logout" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Logout</a>
+
           <button id="theme-toggle" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700">
             <i class="fa-solid fa-sun block dark:hidden text-yellow-500"></i>
             <i class="fa-solid fa-moon hidden dark:block text-slate-200"></i>
@@ -446,6 +452,20 @@
     byId('year').textContent = new Date().getFullYear();
 
     document.addEventListener('DOMContentLoaded', loadAll);
-</script>
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginLinks = document.getElementById('login-links');
+      const logoutLink = document.getElementById('logout-link');
+      const hasSession = document.cookie.includes('session=');
+      if (hasSession) {
+        loginLinks?.classList.add('hidden');
+        logoutLink?.classList.remove('hidden');
+      } else {
+        loginLinks?.classList.remove('hidden');
+        logoutLink?.classList.add('hidden');
+      }
+    });
+  </script>
 </body>
 </html>
