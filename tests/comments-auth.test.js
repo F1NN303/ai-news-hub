@@ -6,7 +6,7 @@ const originalEnv = { ...process.env };
 // Ensure POST requires session cookie
 
 test('POST /api/comments requires session cookie', async () => {
-  const handler = require('../api/comments/index.js');
+  const handler = require('../api/comments.js');
   const req = { method: 'POST', headers: {}, body: { post_id: 1, content: 'Hello' } };
   let statusCode; let jsonBody;
   const res = {
@@ -29,7 +29,7 @@ test('POST /api/comments allows authenticated users', async () => {
   delete require.cache[require.resolve('../lib/cookies')];
   delete require.cache[require.resolve('../lib/requireUser')];
   delete require.cache[require.resolve('../lib/csrf')];
-  delete require.cache[require.resolve('../api/comments/index.js')];
+  delete require.cache[require.resolve('../api/comments.js')];
   const { newDb } = require('pg-mem');
   const mem = newDb();
   const pg = mem.adapters.createPg();
@@ -49,7 +49,7 @@ test('POST /api/comments allows authenticated users', async () => {
   const token = await signJWT({ sub: '1' });
   const csrfToken = 'c1';
   const cookie = `session=${signSessionToken(token)}; csrf=${signCsrfToken(csrfToken)}`;
-  const handler = require('../api/comments/index.js');
+  const handler = require('../api/comments.js');
   const req = { method: 'POST', headers: { cookie, 'x-csrf-token': csrfToken }, body: { post_id: 1, content: 'Nice article' } };
   let statusCode; let jsonBody;
   const res = {

@@ -11,7 +11,7 @@ async function setup() {
   delete require.cache[require.resolve('../lib/requireUser')];
   delete require.cache[require.resolve('../lib/requireAdmin')];
   delete require.cache[require.resolve('../lib/csrf')];
-  delete require.cache[require.resolve('../api/comments/[id].js')];
+  delete require.cache[require.resolve('../api/comments.js')];
   const { newDb } = require('pg-mem');
   const mem = newDb();
   const pg = mem.adapters.createPg();
@@ -26,7 +26,7 @@ async function setup() {
   const { signJWT } = require('../lib/auth');
   const { signSessionToken } = require('../lib/cookies');
   const { signCsrfToken } = require('../lib/csrf');
-  const handler = require('../api/comments/[id].js');
+  const handler = require('../api/comments.js');
   return { pool, signJWT, signSessionToken, signCsrfToken, handler };
 }
 
