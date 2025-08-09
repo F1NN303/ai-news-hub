@@ -12,7 +12,7 @@
 5. Copy the script contents into the SQL Editor and execute them to create the `users` and `comments` tables and seed the admin user.
 6. For a fresh database you may alternatively run [`schema.sql`](schema.sql), which contains the full schema and seed data.
 
-## Local Development
+## Running Locally
 
 1. Install dependencies:
    ```bash
@@ -31,26 +31,40 @@
 
 ## API Usage
 
+Before making POST requests, obtain a CSRF token and store cookies locally:
+```bash
+curl -c cookies.txt -s http://localhost:3000/api/auth/signup -o /dev/null
+CSRF=$(grep csrf cookies.txt | awk '{print $7}')
+```
+
 ### Sign Up
+Send the token and cookie:
 ```bash
 curl -X POST http://localhost:3000/api/auth/signup \
   -H "Content-Type: application/json" \
-  -d '{"name":"Alice","email":"alice@example.com","password":"password123"}'
+  -H "X-CSRF-Token: $CSRF" \
+  -d '{"name":"Alice","email":"alice@example.com","password":"password123"}' \
+  -b cookies.txt -c cookies.txt
 ```
 
 ### Log In
-Store the session cookie for subsequent requests:
+Refresh the CSRF token and capture the session cookie:
 ```bash
+CSRF=$(grep csrf cookies.txt | awk '{print $7}')
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
+  -H "X-CSRF-Token: $CSRF" \
   -d '{"email":"alice@example.com","password":"password123"}' \
-  -c cookies.txt
+  -b cookies.txt -c cookies.txt
 ```
 
 ### Admin-only Request
-Use the saved cookie to access an endpoint restricted to admins:
+Include the session cookie (and CSRF token if desired) to access restricted endpoints:
 ```bash
-curl http://localhost:3000/api/admin/users -b cookies.txt
+CSRF=$(grep csrf cookies.txt | awk '{print $7}')
+curl http://localhost:3000/api/admin/users \
+  -b cookies.txt \
+  -H "X-CSRF-Token: $CSRF"
 ```
 
 ## Deployment on Vercel
