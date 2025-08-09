@@ -32,9 +32,15 @@ test('PUT /api/posts/:slug returns 400 for invalid JSON', async () => {
   const auth = require('../lib/auth');
   auth.verifyToken = async () => ({ sub: '1' });
 
+  const { signSessionToken } = require('../lib/cookies');
+  const { signCsrfToken } = require('../lib/csrf');
+  const sessionCookie = signSessionToken('valid');
+  const csrfToken = 'c1';
+  const cookie = `session=${sessionCookie}; csrf=${signCsrfToken(csrfToken)}`;
+
   const handler = require('../api/posts/[id].js');
 
-  const req = { method: 'PUT', query: { id: 'test-slug' }, headers: { cookie: 'session=valid' }, body: '{ invalid json' };
+  const req = { method: 'PUT', query: { id: 'test-slug' }, headers: { cookie, 'x-csrf-token': csrfToken }, body: '{ invalid json' };
   let statusCode;
   let jsonBody;
   const res = {
