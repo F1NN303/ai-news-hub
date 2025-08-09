@@ -1,6 +1,7 @@
 // api/posts/index.js
 const { query } = require('../../lib/db');
 const { verifyToken } = require('../../lib/auth');
+const { getSessionToken } = require('../../lib/cookies');
 
 module.exports = async (req, res) => {
   try {
@@ -14,9 +15,7 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'POST') {
-      const cookie = req.headers?.cookie || '';
-      const session = cookie.split(';').find(c => c.trim().startsWith('session='));
-      const token = session && session.split('=')[1];
+      const token = getSessionToken(req);
       const payload = token && await verifyToken(token);
       if (!payload) {
         return res.status(401).json({ error: 'unauthorized' });

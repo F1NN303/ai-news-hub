@@ -1,13 +1,12 @@
 const { verifyToken } = require('../../lib/auth');
+const { getSessionToken } = require('../../lib/cookies');
 
 module.exports = async (req, res) => {
   try {
-    const cookie = req.headers?.cookie || '';
-    const session = cookie.split(';').find(c => c.trim().startsWith('session='));
-    if (!session) {
+    const token = getSessionToken(req);
+    if (!token) {
       return res.status(401).json({ error: 'unauthorized' });
     }
-    const token = session.split('=')[1];
     const payload = await verifyToken(token);
     if (!payload) {
       return res.status(401).json({ error: 'unauthorized' });
