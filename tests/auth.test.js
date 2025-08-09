@@ -6,6 +6,8 @@ const originalEnv = { ...process.env };
 // Signup route
 
 test('POST /api/auth/signup creates user with hashed password', async () => {
+  process.env.SESSION_SECRET = 'cookiesecret';
+  delete require.cache[require.resolve('../lib/csrf')];
   const { newDb } = require('pg-mem');
   const mem = newDb();
   const pg = mem.adapters.createPg();
@@ -22,7 +24,10 @@ test('POST /api/auth/signup creates user with hashed password', async () => {
   db.query = (text, params) => pool.query(text, params);
 
   const handler = require('../api/auth/signup.js');
-  const req = { method: 'POST', body: { name: 'Bob', email: 'bob@example.com', password: 'secret' } };
+  const { signCsrfToken } = require('../lib/csrf');
+  const csrfToken = 't1';
+  const csrfCookie = `csrf=${signCsrfToken(csrfToken)}`;
+  const req = { method: 'POST', body: { name: 'Bob', email: 'bob@example.com', password: 'secret' }, headers: { cookie: csrfCookie, 'x-csrf-token': csrfToken } };
   let statusCode; let jsonBody;
   const res = {
     status(code) { statusCode = code; return this; },
@@ -43,6 +48,7 @@ test('POST /api/auth/signup creates user with hashed password', async () => {
 test('POST /api/auth/login authenticates and sets cookie', async () => {
   process.env.JWT_SECRET = 'testsecret';
   process.env.SESSION_SECRET = 'cookiesecret';
+  delete require.cache[require.resolve('../lib/csrf')];
   const { newDb } = require('pg-mem');
   const mem = newDb();
   const pg = mem.adapters.createPg();
@@ -62,21 +68,27 @@ test('POST /api/auth/login authenticates and sets cookie', async () => {
   db.query = (text, params) => pool.query(text, params);
 
   const handler = require('../api/auth/login.js');
-  const req = { method: 'POST', body: { email: 'a@b.c', password: 'pw' }, headers: {} };
+  const { signCsrfToken } = require('../lib/csrf');
+  const csrfToken = 't2';
+  const csrfCookie = `csrf=${signCsrfToken(csrfToken)}`;
+  const req = { method: 'POST', body: { email: 'a@b.c', password: 'pw' }, headers: { cookie: csrfCookie, 'x-csrf-token': csrfToken } };
   let statusCode; let jsonBody; const headers = {};
   const res = {
     status(code) { statusCode = code; return this; },
     json(data) { jsonBody = data; return this; },
     setHeader(k,v){ headers[k]=v; },
+    getHeader(k){ return headers[k]; },
     end() {},
   };
   await handler(req, res);
   assert.strictEqual(statusCode, 200);
-  assert.ok(headers['Set-Cookie'].includes('session='));
-  assert.match(headers['Set-Cookie'], /HttpOnly/);
-  assert.match(headers['Set-Cookie'], /Secure/);
-  assert.match(headers['Set-Cookie'], /SameSite=Strict/);
-  assert.match(headers['Set-Cookie'], /Path=\//);
+  const setCookie = Array.isArray(headers['Set-Cookie']) ? headers['Set-Cookie'] : [headers['Set-Cookie']];
+  assert.ok(setCookie.some(c => c.includes('session=')));
+  const sessionCookie = setCookie.find(c => c.includes('session='));
+  assert.match(sessionCookie, /HttpOnly/);
+  assert.match(sessionCookie, /Secure/);
+  assert.match(sessionCookie, /SameSite=Strict/);
+  assert.match(sessionCookie, /Path=\//);
   assert.strictEqual(jsonBody.email, 'a@b.c');
 });
 
