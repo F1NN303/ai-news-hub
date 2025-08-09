@@ -166,6 +166,16 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       await ensureCsrfCookie();
+      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      if (res.status !== 200) {
+        window.location.href = '/login.html';
+        return;
+      }
+      const user = await res.json();
+      if (user.role !== 'admin') {
+        window.location.href = '/login.html';
+        return;
+      }
       loadPosts();
       loadUsers();
     });
