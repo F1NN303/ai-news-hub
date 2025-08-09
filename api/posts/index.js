@@ -1,7 +1,6 @@
 // api/posts/index.js
 const { query } = require('../../lib/db');
-const { verifyToken } = require('../../lib/auth');
-const { getSessionToken } = require('../../lib/cookies');
+const requireAdmin = require('../../lib/requireAdmin');
 
 module.exports = async (req, res) => {
   try {
@@ -15,11 +14,8 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'POST') {
-      const token = getSessionToken(req);
-      const payload = token && await verifyToken(token);
-      if (!payload) {
-        return res.status(401).json({ error: 'unauthorized' });
-      }
+      const admin = await requireAdmin(req, res);
+      if (!admin) return;
 
       const {
         title, slug,
