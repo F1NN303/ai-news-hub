@@ -1,4 +1,5 @@
 const base = process.env.STACK_AUTH_BASE_URL || 'https://api.stack-auth.com';
+const { signSessionToken } = require('../../lib/cookies');
 
 module.exports = async (req, res) => {
   const code = req.query.code;
@@ -29,7 +30,8 @@ module.exports = async (req, res) => {
 
     const { access_token, expires_in } = data;
     const maxAge = expires_in || 3600;
-    res.setHeader('Set-Cookie', `session=${access_token}; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}; Path=/`);
+    const signed = signSessionToken(access_token);
+    res.setHeader('Set-Cookie', `session=${signed}; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}; Path=/`);
     res.writeHead(302, { Location: '/' }).end();
   } catch (err) {
     console.error(err);
