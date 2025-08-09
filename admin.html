@@ -53,6 +53,23 @@
     const usersTable = document.getElementById('users-table');
     const createBtn = document.getElementById('create-post');
 
+    function getCsrfToken() {
+      const match = document.cookie.split('; ').find(c => c.startsWith('csrf='));
+      return match ? match.split('=')[1].split('.')[0] : '';
+    }
+
+    async function ensureCsrfCookie() {
+      if (!getCsrfToken()) {
+        await fetch('/api/auth/login', { credentials: 'include' });
+      }
+    }
+
+    function csrfFetch(url, options = {}) {
+      const headers = options.headers || {};
+      headers['X-CSRF-Token'] = getCsrfToken();
+      return fetch(url, { ...options, headers, credentials: 'include' });
+    }
+
     async function loadPosts() {
       try {
         const res = await fetch('/api/posts', { credentials: 'include' });
@@ -99,10 +116,9 @@
       const title = prompt('Title');
       const slug = prompt('Slug');
       if (!title || !slug) return;
-      await fetch('/api/posts', {
+      await csrfFetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ title, slug })
       });
       loadPosts();
@@ -113,17 +129,16 @@
       if (e.target.classList.contains('edit-post')) {
         const title = prompt('New title');
         if (!title) return;
-        await fetch(`/api/posts/${id}`, {
+        await csrfFetch(`/api/posts/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({ title })
         });
         loadPosts();
       }
       if (e.target.classList.contains('delete-post')) {
         if (!confirm('Delete post?')) return;
-        await fetch(`/api/posts/${id}`, { method: 'DELETE', credentials: 'include' });
+        await csrfFetch(`/api/posts/${id}`, { method: 'DELETE' });
         loadPosts();
       }
     });
@@ -132,10 +147,9 @@
       if (e.target.classList.contains('role-select')) {
         const id = e.target.dataset.id;
         const role = e.target.value;
-        await fetch(`/api/admin/users/${id}`, {
+        await csrfFetch(`/api/admin/users/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({ role })
         });
       }
@@ -145,12 +159,13 @@
       if (e.target.classList.contains('deactivate-user')) {
         const id = e.target.dataset.id;
         if (!confirm('Deactivate user?')) return;
-        await fetch(`/api/admin/users/${id}`, { method: 'DELETE', credentials: 'include' });
+        await csrfFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
         loadUsers();
       }
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      await ensureCsrfCookie();
       loadPosts();
       loadUsers();
     });
