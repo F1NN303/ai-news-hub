@@ -1,9 +1,11 @@
 const db = require('../../lib/db');
 const requireAdmin = require('../../lib/requireAdmin');
+const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
 
 module.exports = async (req, res) => {
   const id = req.query.id;
   try {
+    ensureCsrf(req, res);
     if (req.method === 'GET') {
       const isNumeric = /^\d+$/.test(id);
       const query = isNumeric
@@ -16,6 +18,9 @@ module.exports = async (req, res) => {
     if (req.method === 'PUT') {
       const admin = await requireAdmin(req, res);
       if (!admin) return;
+      if (!validateCsrf(req)) {
+        return res.status(403).json({ error: 'invalid_csrf_token' });
+      }
 
       let body;
       try {
@@ -36,6 +41,9 @@ module.exports = async (req, res) => {
     if (req.method === 'DELETE') {
       const admin = await requireAdmin(req, res);
       if (!admin) return;
+      if (!validateCsrf(req)) {
+        return res.status(403).json({ error: 'invalid_csrf_token' });
+      }
 
       const isNumeric = /^\d+$/.test(id);
       const query = isNumeric

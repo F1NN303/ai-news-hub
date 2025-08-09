@@ -1,9 +1,11 @@
 // api/posts/index.js
 const { query } = require('../../lib/db');
 const requireAdmin = require('../../lib/requireAdmin');
+const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
 
 module.exports = async (req, res) => {
   try {
+    ensureCsrf(req, res);
     if (req.method === 'GET') {
       const { rows } = await query(`
         SELECT id, title, slug, excerpt, content, category, tags, author, image_url, published_at
@@ -16,6 +18,9 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
       const admin = await requireAdmin(req, res);
       if (!admin) return;
+      if (!validateCsrf(req)) {
+        return res.status(403).json({ error: 'invalid_csrf_token' });
+      }
 
       const {
         title, slug,
