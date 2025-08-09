@@ -5,7 +5,7 @@ module.exports = async (req, res) => {
   try {
     if (req.method === 'GET') {
       const { rows } = await query(`
-        SELECT id, title, slug, excerpt, content, category, tags, author, image_url, created_at
+        SELECT id, title, slug, excerpt, content, category, tags, author, image_url, published_at
         FROM public.posts
         ORDER BY id DESC
       `);
@@ -38,7 +38,7 @@ module.exports = async (req, res) => {
           tags=EXCLUDED.tags,
           author=EXCLUDED.author,
           image_url=EXCLUDED.image_url
-        RETURNING *
+        RETURNING id, title, slug, excerpt, content, category, tags, author, image_url, published_at
       `, [title, slug, excerpt, content, category, tags, author, image_url]);
 
       return res.status(201).json(rows[0]);

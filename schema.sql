@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS posts (
   category TEXT,
   tags TEXT[],
   author TEXT,
-  hero_image TEXT,
+  image_url TEXT,
   content TEXT,
   published_at TIMESTAMPTZ DEFAULT now()
 );
