@@ -4,9 +4,13 @@
 
 1. Sign in to [Neon](https://neon.tech) and open your project.
 2. Launch the **SQL Editor**.
-3. Copy the contents of [`docs/db-migration.sql`](docs/db-migration.sql) and execute them to create the `users` and `comments` tables and seed an initial admin user.
-4. Replace the placeholder password hash in the migration or update the admin password afterwards.
-5. For a fresh database you may alternatively run [`schema.sql`](schema.sql), which contains the full schema and seed data.
+3. Generate a bcrypt hash for the initial admin password:
+   ```bash
+   node -e "console.log(require('bcryptjs').hashSync('yourpassword', 10))"
+   ```
+4. Replace `PLACEHOLDER_HASH` in [`docs/db-migration.sql`](docs/db-migration.sql) with the generated hash.
+5. Copy the script contents into the SQL Editor and execute them to create the `users` and `comments` tables and seed the admin user.
+6. For a fresh database you may alternatively run [`schema.sql`](schema.sql), which contains the full schema and seed data.
 
 ## Local Development
 
