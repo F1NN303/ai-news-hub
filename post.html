@@ -21,6 +21,9 @@
 <body class="bg-light dark:bg-dark">
   <main id="post-container" class="max-w-3xl mx-auto p-6"></main>
   <script>
+    let currentUser = null;
+    let currentPostId = null;
+
     function getCsrfToken() {
       const match = document.cookie.split('; ').find(c => c.startsWith('csrf='));
       return match ? match.split('=')[1].split('.')[0] : '';
@@ -47,7 +50,12 @@
         list.innerHTML = comments.length
           ? comments.map(c => `
               <div class="border-b pb-2">
-                <div class="text-sm text-slate-500 mb-1">${c.name || 'Anonymous'} &bull; ${new Date(c.created_at).toLocaleString()}</div>
+                <div class="flex items-center justify-between mb-1">
+                  <div class="text-sm text-slate-500">${c.name || 'Anonymous'} &bull; ${new Date(c.created_at).toLocaleString()}</div>
+                  ${currentUser && (currentUser.role === 'admin' || currentUser.id === c.user_id)
+                    ? `<button data-id="${c.id}" class="comment-delete text-xs text-red-500 hover:underline">Delete</button>`
+                    : ''}
+                </div>
                 <div>${c.content}</div>
               </div>`).join('')
           : '<p class="text-slate-500">No comments yet.</p>';
@@ -106,14 +114,39 @@
               <button type="submit" class="bg-primary text-white px-4 py-2 rounded">Post Comment</button>
             </form>
           </section>`;
-        loadComments(p.id);
-        setupCommentForm(p.id);
+        currentPostId = p.id;
+        const list = document.getElementById('comment-list');
+        list.addEventListener('click', async (e) => {
+          const btn = e.target.closest('.comment-delete');
+          if (btn) {
+            const id = btn.dataset.id;
+            const res = await csrfFetch(`/api/comments/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+              loadComments(currentPostId);
+            } else {
+              alert('Failed to delete comment');
+            }
+          }
+        });
+        loadComments(currentPostId);
+        setupCommentForm(currentPostId);
       } catch (err) {
         container.innerHTML = '<p class="text-red-500">Failed to load article.</p>';
       }
     }
+    async function loadCurrentUser() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          currentUser = await res.json();
+        }
+      } catch (err) {
+        // ignore
+      }
+    }
     document.addEventListener('DOMContentLoaded', async () => {
       await ensureCsrfCookie();
+      await loadCurrentUser();
       loadPost();
     });
   </script>
