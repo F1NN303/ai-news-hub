@@ -342,7 +342,7 @@
       <div class="masonry-item">
         <article class="post-card bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-lg">
           <div class="relative">
-            <img src="${p.image_url || 'https://picsum.photos/800/400'}" alt="${p.title}" loading="lazy" class="w-full h-56 object-cover">
+            <img src="${p.hero_image || p.image_url || 'https://picsum.photos/800/400'}" alt="${p.title}" loading="lazy" class="w-full h-56 object-cover">
             ${p.tags?.includes('Release') ? '<span class="absolute top-4 right-4 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">New</span>' : ''}
           </div>
           <div class="p-6">
@@ -364,7 +364,7 @@
       return `
       <article class="post-card bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-lg">
         <div class="relative">
-          <img src="${p.image_url || 'https://picsum.photos/800/400'}" alt="${p.title}" loading="lazy" class="w-full h-48 object-cover">
+          <img src="${p.hero_image || p.image_url || 'https://picsum.photos/800/400'}" alt="${p.title}" loading="lazy" class="w-full h-48 object-cover">
         </div>
         <div class="p-6">
           <div class="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-3">
