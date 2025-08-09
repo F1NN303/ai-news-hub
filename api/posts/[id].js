@@ -1,4 +1,5 @@
 const db = require('../../lib/db');
+const { verifyToken } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
   const id = req.query.id;
@@ -14,8 +15,10 @@ module.exports = async (req, res) => {
     }
     if (req.method === 'PUT') {
       const cookie = req.headers?.cookie || '';
-      const hasSession = cookie.split(';').some(c => c.trim().startsWith('session='));
-      if (!hasSession) {
+      const session = cookie.split(';').find(c => c.trim().startsWith('session='));
+      const token = session && session.split('=')[1];
+      const payload = token && await verifyToken(token);
+      if (!payload) {
         return res.status(401).json({ error: 'unauthorized' });
       }
 
@@ -37,8 +40,10 @@ module.exports = async (req, res) => {
     }
     if (req.method === 'DELETE') {
       const cookie = req.headers?.cookie || '';
-      const hasSession = cookie.split(';').some(c => c.trim().startsWith('session='));
-      if (!hasSession) {
+      const session = cookie.split(';').find(c => c.trim().startsWith('session='));
+      const token = session && session.split('=')[1];
+      const payload = token && await verifyToken(token);
+      if (!payload) {
         return res.status(401).json({ error: 'unauthorized' });
       }
 
