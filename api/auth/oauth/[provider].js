@@ -17,7 +17,10 @@ module.exports = async (req, res) => {
   const baseUrl = `${proto}://${host}`;
   const redirectUri = encodeURIComponent(`${baseUrl}/api/auth/callback`);
   const clientId = process.env.STACK_AUTH_CLIENT_ID || '';
-  const url = `https://api.stack-auth.com/api/v1/oauth/authorize?provider=${encodeURIComponent(provider)}&client_id=${encodeURIComponent(clientId)}&redirect_uri=${redirectUri}&state=${state}`;
+  const url =
+    `https://api.stack-auth.com/api/v1/oauth/authorize?provider=${encodeURIComponent(
+      provider
+    )}&client_id=${encodeURIComponent(clientId)}&redirect_uri=${redirectUri}&state=${state}`;
 
   const cookie = `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Max-Age=600; Path=/`;
   res.setHeader('Set-Cookie', cookie);

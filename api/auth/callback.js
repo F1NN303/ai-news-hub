@@ -8,20 +8,24 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'method_not_allowed' });
   }
 
+  const cookies = Object.fromEntries(
+    (req.headers.cookie || '')
+      .split(';')
+      .filter(Boolean)
+      .map(c => {
+        const i = c.indexOf('=');
+        return [c.slice(0, i).trim(), decodeURIComponent(c.slice(i + 1))];
+      })
+  );
+  const stateCookie = cookies.oauth_state;
+  const clearState = 'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
+
   try {
     const { state, token } = req.query || {};
-    if (!state || !token) {
-      return res.status(400).json({ error: 'invalid_oauth_response' });
-    }
-
-    const cookies = Object.fromEntries((req.headers.cookie || '').split(';').filter(Boolean).map(c => {
-      const i = c.indexOf('=');
-      return [c.slice(0, i).trim(), decodeURIComponent(c.slice(i + 1))];
-    }));
-    const stateCookie = cookies.oauth_state;
-    const clearState = 'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
-    if (!stateCookie || stateCookie !== state) {
-      res.setHeader('Set-Cookie', clearState);
+    if (!state || !token || stateCookie !== state) {
+      if (stateCookie) {
+        res.setHeader('Set-Cookie', clearState);
+      }
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
 
@@ -67,6 +71,7 @@ module.exports = async (req, res) => {
     res.end();
   } catch (err) {
     console.error('/api/auth/callback error:', err);
+    res.setHeader('Set-Cookie', clearState);
     return res.status(400).json({ error: 'invalid_oauth_response' });
   }
 };
