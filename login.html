@@ -22,6 +22,10 @@
       <button type="submit" class="w-full bg-primary text-white px-4 py-2 rounded">Login</button>
       <p id="error-message" class="text-red-600"></p>
     </form>
+    <div class="mt-6 space-y-2">
+      <button data-oauth="/api/auth/oauth/google" class="w-full bg-red-500 text-white px-4 py-2 rounded flex items-center justify-center gap-2"><i class="fab fa-google"></i> Sign in with Google</button>
+      <button data-oauth="/api/auth/oauth/github" class="w-full bg-gray-800 text-white px-4 py-2 rounded flex items-center justify-center gap-2"><i class="fab fa-github"></i> Sign in with GitHub</button>
+    </div>
     <p class="mt-4 text-center"><a href="/signup.html" class="text-primary">Create an account</a></p>
   </main>
   <script>
@@ -35,6 +39,13 @@
       const form=document.getElementById('login-form');
       const errorEl=document.getElementById('error-message');
       const btn=form.querySelector('button');
+      document.querySelectorAll('[data-oauth]').forEach(o=>{
+        o.addEventListener('click',()=>{
+          o.disabled=true;
+          o.innerHTML='<i class="fas fa-spinner fa-spin mr-2"></i> Redirecting...';
+          window.location.href=o.dataset.oauth;
+        });
+      });
       form.addEventListener('submit', async (e)=>{
         e.preventDefault();
         errorEl.textContent='';
