@@ -6,7 +6,6 @@
   <title>AI News Hub | Article</title>
   <meta name="description" content="Read the full article on AI News Hub.">
   <link rel="canonical" href="/post.html" />
-  <meta name="csrf-token" content="">
   <!-- Tailwind & Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -22,7 +21,22 @@
 <body class="bg-light dark:bg-dark">
   <main id="post-container" class="max-w-3xl mx-auto p-6"></main>
   <script>
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    function getCsrfToken() {
+      const match = document.cookie.split('; ').find(c => c.startsWith('csrf='));
+      return match ? match.split('=')[1].split('.')[0] : '';
+    }
+
+    async function ensureCsrfCookie() {
+      if (!getCsrfToken()) {
+        await fetch('/api/auth/login', { credentials: 'include' });
+      }
+    }
+
+    function csrfFetch(url, options = {}) {
+      const headers = options.headers || {};
+      headers['X-CSRF-Token'] = getCsrfToken();
+      return fetch(url, { ...options, headers, credentials: 'include' });
+    }
 
     async function loadComments(postId) {
       try {
@@ -50,13 +64,9 @@
         const textarea = document.getElementById('comment-content');
         const content = textarea.value.trim();
         if (!content) return;
-        const res = await fetch('/api/comments', {
+        const res = await csrfFetch('/api/comments', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken
-          },
-          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ post_id: postId, content })
         });
         if (res.ok) {
@@ -102,7 +112,10 @@
         container.innerHTML = '<p class="text-red-500">Failed to load article.</p>';
       }
     }
-    document.addEventListener('DOMContentLoaded', loadPost);
+    document.addEventListener('DOMContentLoaded', async () => {
+      await ensureCsrfCookie();
+      loadPost();
+    });
   </script>
 </body>
 </html>
