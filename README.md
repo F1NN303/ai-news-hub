@@ -56,8 +56,12 @@ curl http://localhost:3000/api/admin/users -b cookies.txt
 ## Deployment on Vercel
 
 1. Push the repository to your Git host and [import it into Vercel](https://vercel.com/new).
-2. In **Project Settings → Environment Variables**, configure the same variables used locally (`DATABASE_URL`, `JWT_SECRET`, `SESSION_SECRET`, and `JWKS_URL` if used).
-3. Deploy the project. Vercel builds the static files and exposes the `api/` directory as serverless functions.
-4. After deployment, ensure `docs/db-migration.sql` has been run on your Neon database so the required tables and admin user exist.
+2. In **Project Settings → Environment Variables**, configure the same variables used locally
+   (`DATABASE_URL`, `JWT_SECRET`, `SESSION_SECRET`, and `JWKS_URL` if used).
+3. Deploy the project. Vercel builds the static files and exposes the `api/` directory as
+   serverless functions.
+4. After deployment, ensure [docs/db-migration.sql](docs/db-migration.sql) has been run on
+   your Neon database so the required tables and admin user exist.
 
-With the environment variables set, authentication works in production just as in development: login sets a signed `session` cookie, which is checked by admin endpoints such as `/api/admin/users`.
+With the environment variables configured, login in production creates a signed `session`
+cookie that guards admin endpoints like `/api/admin/users`.
