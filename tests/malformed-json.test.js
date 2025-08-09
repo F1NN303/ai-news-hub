@@ -1,0 +1,42 @@
+const test = require('node:test');
+const assert = require('node:assert');
+const { newDb } = require('pg-mem');
+
+test('PUT /api/posts/:slug returns 400 for invalid JSON', async () => {
+  const mem = newDb();
+  const pg = mem.adapters.createPg();
+  const pool = new pg.Pool();
+  await pool.query(`CREATE TABLE posts (
+    id SERIAL PRIMARY KEY,
+    slug TEXT UNIQUE NOT NULL,
+    title TEXT NOT NULL,
+    excerpt TEXT,
+    category TEXT,
+    tags TEXT[],
+    author TEXT,
+    image_url TEXT,
+    content TEXT,
+    published_at TIMESTAMPTZ DEFAULT now()
+  )`);
+  await pool.query(`INSERT INTO posts(slug, title) VALUES('test-slug', 'Old Title')`);
+
+  const db = require('../lib/db');
+  db.query = (text, params) => pool.query(text, params);
+
+  const handler = require('../api/posts/[id].js');
+
+  const req = { method: 'PUT', query: { id: 'test-slug' }, body: '{ invalid json' };
+  let statusCode;
+  let jsonBody;
+  const res = {
+    status(code) { statusCode = code; return this; },
+    json(data) { jsonBody = data; return this; },
+    setHeader() {},
+    end() {}
+  };
+
+  await handler(req, res);
+
+  assert.strictEqual(statusCode, 400);
+  assert.strictEqual(jsonBody.error, 'Invalid JSON');
+});

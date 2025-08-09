@@ -13,7 +13,12 @@ module.exports = async (req, res) => {
       return res.status(200).json(rows[0]);
     }
     if (req.method === 'PUT') {
-      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      let body;
+      try {
+        body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      } catch (err) {
+        return res.status(400).json({ error: 'Invalid JSON' });
+      }
       const fields = ['title','excerpt','content','category','tags','image_url','author'];
       const set = [], params = [];
       fields.forEach(f => { if (body[f] !== undefined) { params.push(body[f]); set.push(`${f}=$${params.length}`); }});
