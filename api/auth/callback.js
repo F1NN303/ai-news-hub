@@ -22,10 +22,12 @@ module.exports = async (req, res) => {
 
   try {
     const { state, token } = req.query || {};
-    if (!state || !token || stateCookie !== state) {
-      if (stateCookie) {
-        res.setHeader('Set-Cookie', clearState);
-      }
+    if (!state || !stateCookie || stateCookie !== state) {
+      res.setHeader('Set-Cookie', clearState);
+      return res.status(400).json({ error: 'invalid_state' });
+    }
+    if (!token) {
+      res.setHeader('Set-Cookie', clearState);
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
 
