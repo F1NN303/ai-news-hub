@@ -14,13 +14,14 @@
 
 ### Promote a User
 
-To elevate an existing account to administrator, run this SQL in your database:
+Users signing in via OAuth are added to the `users` table with `role='user'`. To grant
+administrator privileges, run this SQL in your database:
 
 ```sql
-UPDATE users SET role='admin' WHERE email='user@example.com';
+UPDATE users SET role='admin' WHERE email='example@domain.com';
 ```
 
-Replace `user@example.com` with the email of the account you want to promote.
+Replace `example@domain.com` with the email of the account you want to promote.
 
 ## Running Locally
 
@@ -85,7 +86,11 @@ curl -X POST http://localhost:3000/api/auth/login \
 ```
 
 ### Admin-only Request
-Include the session cookie (and CSRF token if desired) to access restricted endpoints:
+
+Even when using OAuth login, `/api/admin/*` endpoints and post mutation routes
+(`POST /api/posts`, `PUT /api/posts/[id]`, `DELETE /api/posts/[id]`) require the session
+JWT to include `role='admin'`. Include the session cookie (and CSRF token if desired)
+to access restricted endpoints:
 ```bash
 CSRF=$(grep csrf cookies.txt | awk '{print $7}')
 curl http://localhost:3000/api/admin/users \
