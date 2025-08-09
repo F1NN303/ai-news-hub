@@ -13,6 +13,12 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'POST') {
+      const cookie = req.headers?.cookie || '';
+      const hasSession = cookie.split(';').some(c => c.trim().startsWith('session='));
+      if (!hasSession) {
+        return res.status(401).json({ error: 'unauthorized' });
+      }
+
       const {
         title, slug,
         excerpt = '',

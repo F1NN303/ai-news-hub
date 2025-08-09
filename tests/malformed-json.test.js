@@ -25,7 +25,7 @@ test('PUT /api/posts/:slug returns 400 for invalid JSON', async () => {
 
   const handler = require('../api/posts/[id].js');
 
-  const req = { method: 'PUT', query: { id: 'test-slug' }, body: '{ invalid json' };
+  const req = { method: 'PUT', query: { id: 'test-slug' }, headers: { cookie: 'session=abc' }, body: '{ invalid json' };
   let statusCode;
   let jsonBody;
   const res = {
