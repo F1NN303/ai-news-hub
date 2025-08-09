@@ -39,6 +39,22 @@ Replace `user@example.com` with the email of the account you want to promote.
    ```
    The site is available at `http://localhost:3000` and API routes under `http://localhost:3000/api/*`.
 
+## Neon Auth OAuth setup
+
+1. In the Neon Console, enable the **Google** and **GitHub** providers.
+2. Set the following environment variables:
+   - `JWKS_URL` – `https://api.stack-auth.com/api/v1/projects/<project_id>/.well-known/jwks.json`
+   - `STACK_AUTH_PROJECT_ID` – your Neon Auth project ID.
+   - `STACK_AUTH_CLIENT_ID` – OAuth client ID from Neon Auth.
+3. Add trusted domains in Neon Auth:
+   - `http://localhost:3000`
+   - Your production URL
+
+### OAuth routes
+
+- `GET /api/auth/oauth/[provider]` – starts the OAuth flow and redirects to the provider.
+- `GET /api/auth/callback` – handles the OAuth callback and issues the same `session` cookie used by email/password login.
+
 ## API Usage
 
 Before making POST requests, obtain a CSRF token and store cookies locally:
