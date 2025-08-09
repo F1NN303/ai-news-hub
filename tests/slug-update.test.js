@@ -22,6 +22,12 @@ test('PUT /api/posts/:slug updates by slug', async () => {
   )`);
   await pool.query(`INSERT INTO posts(slug, title) VALUES('test-slug', 'Old Title')`);
 
+  await pool.query(`CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    role TEXT
+  )`);
+  await pool.query(`INSERT INTO users(role) VALUES('admin')`);
+
   const db = require('../lib/db');
   db.query = (text, params) => pool.query(text, params);
 

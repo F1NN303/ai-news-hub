@@ -1,6 +1,5 @@
 const db = require('../../lib/db');
-const { verifyToken } = require('../../lib/auth');
-const { getSessionToken } = require('../../lib/cookies');
+const requireAdmin = require('../../lib/requireAdmin');
 
 module.exports = async (req, res) => {
   const id = req.query.id;
@@ -15,11 +14,8 @@ module.exports = async (req, res) => {
       return res.status(200).json(rows[0]);
     }
     if (req.method === 'PUT') {
-      const token = getSessionToken(req);
-      const payload = token && await verifyToken(token);
-      if (!payload) {
-        return res.status(401).json({ error: 'unauthorized' });
-      }
+      const admin = await requireAdmin(req, res);
+      if (!admin) return;
 
       let body;
       try {
@@ -38,11 +34,8 @@ module.exports = async (req, res) => {
       return res.status(200).json(rows[0]);
     }
     if (req.method === 'DELETE') {
-      const token = getSessionToken(req);
-      const payload = token && await verifyToken(token);
-      if (!payload) {
-        return res.status(401).json({ error: 'unauthorized' });
-      }
+      const admin = await requireAdmin(req, res);
+      if (!admin) return;
 
       const isNumeric = /^\d+$/.test(id);
       const query = isNumeric
