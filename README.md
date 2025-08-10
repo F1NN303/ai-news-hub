@@ -75,15 +75,8 @@ curl -X POST http://localhost:3000/api/auth/signup \
 ```
 
 ### Log In
-Refresh the CSRF token and capture the session cookie:
-```bash
-CSRF=$(grep csrf cookies.txt | awk '{print $7}')
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -H "X-CSRF-Token: $CSRF" \
-  -d '{"email":"alice@example.com","password":"password123"}' \
-  -b cookies.txt -c cookies.txt
-```
+Navigate your browser to `/api/auth/login` to be redirected to the Google OAuth
+flow. After completing consent, you'll be returned with a session cookie set.
 
 ### Admin-only Request
 
@@ -130,7 +123,7 @@ in your environment so the cookie cannot be tampered with.
 
 ## CSRF protection
 
-Mutation endpoints (`/api/auth/login`, `/api/auth/signup`, `/api/comments`, and `/api/admin/*` routes)
+Mutation endpoints (`/api/auth/signup`, `/api/comments`, and `/api/admin/*` routes)
 require a valid CSRF token. A random token is issued in a `csrf` cookie that is
 signed with `SESSION_SECRET`. Clients must echo the token in the `X-CSRF-Token`
 header when making POST/PUT/DELETE requests.
