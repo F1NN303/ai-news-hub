@@ -45,20 +45,21 @@ module.exports = async (req, res) => {
     const serverSecret = process.env.STACK_SECRET_KEY;
 
     const tokenRes = await fetch(
-      `https://api.stack-auth.com/api/v1/auth/oauth/token/${provider}`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          client_id: projectId,
-          client_secret: serverSecret,
-          grant_type: 'authorization_code',
-          code,
-          redirect_uri: `${baseUrl}/api/auth/callback`,
-          code_verifier: verifier,
-        }),
-      }
-    );
+  `https://api.stack-auth.com/api/v1/projects/${projectId}/auth/oauth/token`,
+  {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      client_id: projectId,
+      client_secret: serverSecret,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: `${baseUrl}/api/auth/callback`,
+      code_verifier: verifier,
+    }),
+  }
+);
+
     const tokenData = await tokenRes.json();
     console.log('/api/auth/callback: tokenData', tokenData);
     const token = tokenData.token;
