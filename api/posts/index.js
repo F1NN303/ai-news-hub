@@ -2,9 +2,11 @@
 const { query } = require('../../lib/db');
 const requireAdmin = require('../../lib/requireAdmin');
 const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
+const { ensureConfig } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
   try {
+    ensureConfig();
     ensureCsrf(req, res);
     if (req.method === 'GET') {
       const { rows } = await query(`
@@ -57,6 +59,9 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method Not Allowed' });
   } catch (err) {
     console.error(err);
+    if (err.code === 'CONFIG_ERROR') {
+      return res.status(500).json({ error: 'missing_config' });
+    }
     return res.status(500).json({ error: 'SERVER_ERROR' });
   }
 };

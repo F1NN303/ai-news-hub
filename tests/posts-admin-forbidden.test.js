@@ -1,6 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
+const originalEnv = { ...process.env };
+process.env.NEXT_PUBLIC_STACK_PROJECT_ID = 'proj';
+process.env.STACK_SECRET_KEY = 'stacksecret';
+process.env.DATABASE_URL = 'postgres://localhost/test';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
+process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'cookiesecret';
+
 // Ensure non-admin users are forbidden
 
 test('POST /api/posts forbids non-admin users', async (t) => {
@@ -19,8 +26,10 @@ test('POST /api/posts forbids non-admin users', async (t) => {
     db.query = originalQuery;
     auth.verifyToken = originalVerify;
   });
+  const { signSessionToken } = require('../lib/cookies');
+  const signed = signSessionToken('valid');
   const handler = require('../api/posts/index.js');
-  const req = { method: 'POST', headers: { cookie: 'session=valid' }, body: { title: 't', slug: 's' } };
+  const req = { method: 'POST', headers: { cookie: `session=${signed}` }, body: { title: 't', slug: 's' } };
   let statusCode; let jsonBody;
   const res = {
     status(code) { statusCode = code; return this; },
@@ -49,8 +58,10 @@ test('PUT /api/posts/:id forbids non-admin users', async (t) => {
     db.query = originalQuery;
     auth.verifyToken = originalVerify;
   });
+  const { signSessionToken } = require('../lib/cookies');
+  const signed = signSessionToken('valid');
   const handler = require('../api/posts/[id].js');
-  const req = { method: 'PUT', query: { id: '1' }, headers: { cookie: 'session=valid' }, body: { title: 'x' } };
+  const req = { method: 'PUT', query: { id: '1' }, headers: { cookie: `session=${signed}` }, body: { title: 'x' } };
   let statusCode; let jsonBody;
   const res = {
     status(code) { statusCode = code; return this; },
@@ -79,8 +90,10 @@ test('DELETE /api/posts/:id forbids non-admin users', async (t) => {
     db.query = originalQuery;
     auth.verifyToken = originalVerify;
   });
+  const { signSessionToken } = require('../lib/cookies');
+  const signed = signSessionToken('valid');
   const handler = require('../api/posts/[id].js');
-  const req = { method: 'DELETE', query: { id: '1' }, headers: { cookie: 'session=valid' } };
+  const req = { method: 'DELETE', query: { id: '1' }, headers: { cookie: `session=${signed}` } };
   let statusCode; let jsonBody;
   const res = {
     status(code) { statusCode = code; return this; },
@@ -91,4 +104,8 @@ test('DELETE /api/posts/:id forbids non-admin users', async (t) => {
   await handler(req, res);
   assert.strictEqual(statusCode, 403);
   assert.deepStrictEqual(jsonBody, { error: 'forbidden' });
+});
+
+test.after(() => {
+  process.env = originalEnv;
 });

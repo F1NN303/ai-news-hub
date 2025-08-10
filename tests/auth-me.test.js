@@ -1,6 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
+const originalEnv = { ...process.env };
+process.env.NEXT_PUBLIC_STACK_PROJECT_ID = 'proj';
+process.env.STACK_SECRET_KEY = 'stacksecret';
+process.env.DATABASE_URL = 'postgres://localhost/test';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
+process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'cookiesecret';
+
 // Ensure /api/auth/me returns 401 without session
 
 test('GET /api/auth/me requires session cookie', async () => {
@@ -16,6 +23,10 @@ test('GET /api/auth/me requires session cookie', async () => {
   await handler(req, res);
   assert.strictEqual(statusCode, 401);
   assert.deepStrictEqual(jsonBody, { error: 'unauthorized' });
+});
+
+test.after(() => {
+  process.env = originalEnv;
 });
 
 // Ensure /api/auth/me returns user from db
@@ -40,9 +51,11 @@ test('GET /api/auth/me returns user profile', async () => {
   const auth = require('../lib/auth');
   auth.verifyToken = async () => ({ sub: '1' });
 
+  const { signSessionToken } = require('../lib/cookies');
+  const signed = signSessionToken('valid');
   delete require.cache[require.resolve('../api/auth/me.js')];
   const handler = require('../api/auth/me.js');
-  const req = { headers: { cookie: 'session=valid' } };
+  const req = { headers: { cookie: `session=${signed}` } };
   let statusCode; let jsonBody;
   const res = {
     status(code) { statusCode = code; return this; },

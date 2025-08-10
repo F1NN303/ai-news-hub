@@ -1,10 +1,12 @@
 const db = require('../../lib/db');
 const requireAdmin = require('../../lib/requireAdmin');
 const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
+const { ensureConfig } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
   const id = req.query.id;
   try {
+    ensureConfig();
     ensureCsrf(req, res);
     if (req.method === 'GET') {
       const isNumeric = /^\d+$/.test(id);
@@ -56,6 +58,9 @@ module.exports = async (req, res) => {
     res.status(405).json({ error: 'Method Not Allowed' });
   } catch (err) {
     console.error(`/api/posts/${id} error:`, err);
+    if (err.code === 'CONFIG_ERROR') {
+      return res.status(500).json({ error: 'missing_config' });
+    }
     res.status(500).json({ error: 'Internal error', detail: err.message });
   }
 };

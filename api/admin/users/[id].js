@@ -1,14 +1,16 @@
 const db = require('../../../lib/db');
 const requireAdmin = require('../../../lib/requireAdmin');
 const { ensureCsrf, validateCsrf } = require('../../../lib/csrf');
+const { ensureConfig } = require('../../../lib/auth');
 
 module.exports = async (req, res) => {
-  ensureCsrf(req, res);
-  const admin = await requireAdmin(req, res);
-  if (!admin) return;
-
   const id = req.query.id;
   try {
+    ensureConfig();
+    ensureCsrf(req, res);
+    const admin = await requireAdmin(req, res);
+    if (!admin) return;
+
     if (req.method === 'PUT') {
       if (!validateCsrf(req)) {
         return res.status(403).json({ error: 'invalid_csrf_token' });
@@ -41,6 +43,9 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method Not Allowed' });
   } catch (err) {
     console.error(`/api/admin/users/${id} error:`, err);
+    if (err.code === 'CONFIG_ERROR') {
+      return res.status(500).json({ error: 'missing_config' });
+    }
     return res.status(500).json({ error: 'SERVER_ERROR' });
   }
 };

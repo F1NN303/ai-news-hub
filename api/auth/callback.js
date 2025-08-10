@@ -1,5 +1,5 @@
 const db = require('../../lib/db');
-const { verifyToken, signJWT } = require('../../lib/auth');
+const { verifyToken, signJWT, ensureConfig } = require('../../lib/auth');
 const { signSessionToken } = require('../../lib/cookies');
 
 module.exports = async (req, res) => {
@@ -21,6 +21,7 @@ module.exports = async (req, res) => {
   const clearState = 'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
 
   try {
+    ensureConfig();
     const { state, token } = req.query || {};
     if (!state || !stateCookie || stateCookie !== state) {
       res.setHeader('Set-Cookie', clearState);
@@ -74,6 +75,9 @@ module.exports = async (req, res) => {
   } catch (err) {
     console.error('/api/auth/callback error:', err);
     res.setHeader('Set-Cookie', clearState);
+    if (err.code === 'CONFIG_ERROR') {
+      return res.status(500).json({ error: 'missing_config' });
+    }
     return res.status(400).json({ error: 'invalid_oauth_response' });
   }
 };

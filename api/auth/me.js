@@ -1,9 +1,10 @@
-const { verifyToken } = require('../../lib/auth');
+const { verifyToken, ensureConfig } = require('../../lib/auth');
 const { getSessionToken } = require('../../lib/cookies');
 const db = require('../../lib/db');
 
 module.exports = async (req, res) => {
   try {
+    ensureConfig();
     const token = getSessionToken(req);
     if (!token) {
       return res.status(401).json({ error: 'unauthorized' });
@@ -24,6 +25,9 @@ module.exports = async (req, res) => {
     return res.status(200).json(user);
   } catch (err) {
     console.error('/api/auth/me error:', err);
+    if (err.code === 'CONFIG_ERROR') {
+      return res.status(500).json({ error: 'missing_config' });
+    }
     return res.status(500).json({ error: 'SERVER_ERROR' });
   }
 };
