@@ -8,10 +8,16 @@ const { createRateLimiter } = require('../../lib/rateLimit');
 const limiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 5 });
 
 module.exports = async (req, res) => {
+  const to = '/api/auth/oauth/google';
+  if (req.method === 'GET') {
+    res.writeHead(302, { Location: to });
+    return res.end();
+  }
   try {
     ensureConfig();
     ensureCsrf(req, res);
     if (req.method !== 'POST') {
+      res.setHeader('Allow', 'GET, POST');
       return res.status(405).json({ error: 'method_not_allowed' });
     }
 
