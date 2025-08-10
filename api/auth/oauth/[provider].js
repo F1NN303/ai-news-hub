@@ -40,18 +40,18 @@ module.exports = async (req, res) => {
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
     ]);
 
-    const url = new URL('https://api.stack-auth.com/api/v1/oauth/authorize');
-    url.searchParams.set('provider', provider);                 // e.g. "google"
-    url.searchParams.set('client_id', clientId);                // pck_...
-    url.searchParams.set('redirect_uri', redirectUri);
-    url.searchParams.set('state', state);
-    url.searchParams.set('response_type', 'code');
-    url.searchParams.set('scope', 'openid email profile');
-    url.searchParams.set('code_challenge_method', 'S256');
-    url.searchParams.set('code_challenge', codeChallenge);
+    const authorizeUrl = new URL('https://api.stack-auth.com/api/v1/oauth/authorize');
+    authorizeUrl.searchParams.set('provider', provider);         // e.g. "google"
+    authorizeUrl.searchParams.set('client_id', clientId);        // pck_...
+    authorizeUrl.searchParams.set('redirect_uri', redirectUri);
+    authorizeUrl.searchParams.set('state', state);
+    authorizeUrl.searchParams.set('response_type', 'code');
+    authorizeUrl.searchParams.set('scope', 'openid email profile');
+    authorizeUrl.searchParams.set('code_challenge_method', 'S256');
+    authorizeUrl.searchParams.set('code_challenge', codeChallenge);
 
-    console.log('/api/auth/oauth/[provider]: redirect ->', url.toString());
-    res.writeHead(302, { Location: url.toString() });
+    console.log('/api/auth/oauth/[provider]: redirecting to', authorizeUrl.toString());
+    res.writeHead(302, { Location: authorizeUrl.toString() });
     res.end();
   } catch (err) {
     console.error('/api/auth/oauth/[provider] error:', err);
