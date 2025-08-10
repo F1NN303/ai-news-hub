@@ -5,10 +5,10 @@ const originalEnv = { ...process.env };
 
 test('health endpoint returns 500 when config missing', async () => {
   process.env.NEXT_PUBLIC_STACK_PROJECT_ID = 'proj';
-  process.env.JWT_SECRET = 'secret';
+  process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY = 'pub';
   process.env.SESSION_SECRET = 'sess';
   process.env.DATABASE_URL = 'postgres://localhost/test';
-  delete process.env.STACK_SECRET_KEY;
+  delete process.env.STACK_AUTH_SECRET;
   delete require.cache[require.resolve('../lib/auth')];
   delete require.cache[require.resolve('../api/health.js')];
   const handler = require('../api/health.js');

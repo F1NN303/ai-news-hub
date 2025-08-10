@@ -1,6 +1,5 @@
-const db = require('../../lib/db');
-const { verifyToken, signJWT, ensureConfig } = require('../../lib/auth');
-const { signSessionToken } = require('../../lib/cookies');
+const { importJWK, jwtVerify } = require('jose');
+const { ensureConfig, setSessionCookie, upsertUserByOidc } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
@@ -22,54 +21,66 @@ module.exports = async (req, res) => {
 
   try {
     ensureConfig();
-    const { state, token } = req.query || {};
-    if (!state || !stateCookie || stateCookie !== state) {
+    const { token, code, state } = req.query || {};
+    if (!state || !stateCookie || state !== stateCookie) {
       res.setHeader('Set-Cookie', clearState);
       return res.status(400).json({ error: 'invalid_state' });
     }
-    if (!token) {
+
+    let idToken = token;
+    if (code) {
+      const client_id = process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY;
+      const client_secret = process.env.STACK_AUTH_SECRET;
+      const proto = req.headers['x-forwarded-proto'] || 'https';
+      const host = req.headers.host;
+      const redirect_uri = `${proto}://${host}/api/auth/callback`;
+      const resp = await fetch('https://api.stack-auth.com/api/v1/auth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, client_id, client_secret, redirect_uri }),
+      });
+      if (!resp.ok) {
+        res.setHeader('Set-Cookie', clearState);
+        return res.status(400).json({ error: 'token_exchange_failed' });
+      }
+      const data = await resp.json();
+      idToken = data.id_token || data.token;
+    }
+
+    if (!idToken) {
       res.setHeader('Set-Cookie', clearState);
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
 
+    const projectId = process.env.NEXT_PUBLIC_STACK_PROJECT_ID;
     let payload;
     try {
-      payload = await verifyToken(token);
+      const resp = await fetch(
+        `https://api.stack-auth.com/api/v1/projects/${projectId}/.well-known/jwks.json`
+      );
+      const { keys } = await resp.json();
+      const jwk = keys && keys[0];
+      const key = await importJWK(jwk);
+      ({ payload } = await jwtVerify(idToken, key));
     } catch (err) {
-      payload = null;
-    }
-    if (!payload || !payload.sub || !payload.name) {
+      console.error('jwt verify error:', err);
       res.setHeader('Set-Cookie', clearState);
-      return res.status(400).json({ error: 'invalid_oauth_response' });
+      return res.status(400).json({ error: 'invalid_token' });
     }
 
-    const id = parseInt(payload.sub, 10);
-    if (Number.isNaN(id)) {
+    const { sub, email, name, picture } = payload;
+    if (!sub) {
       res.setHeader('Set-Cookie', clearState);
-      return res.status(400).json({ error: 'invalid_oauth_response' });
+      return res.status(400).json({ error: 'invalid_token' });
     }
-    const name = payload.name || '';
-    const email = payload.email || '';
 
-    const { rows } = await db.query(
-      `INSERT INTO users(id, name, email, password_hash, role)
-       VALUES($1,$2,$3,'',$4)
-       ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, email = EXCLUDED.email
-       RETURNING id, name, email, role`,
-      [id, name, email, 'user']
+    const user = await upsertUserByOidc({ sub, email, name, picture });
+    await setSessionCookie(res, { userId: user.id, role: user.role });
+    const prev = res.getHeader('Set-Cookie');
+    res.setHeader(
+      'Set-Cookie',
+      Array.isArray(prev) ? [...prev, clearState] : [prev, clearState]
     );
-    const user = rows[0];
-
-    const jwt = await signJWT({
-      sub: user.id.toString(),
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    });
-    const signed = signSessionToken(jwt);
-    const sessionCookie = `session=${signed}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`;
-
-    res.setHeader('Set-Cookie', [sessionCookie, clearState]);
     res.writeHead(302, { Location: '/' });
     res.end();
   } catch (err) {
@@ -78,6 +89,6 @@ module.exports = async (req, res) => {
     if (err.code === 'CONFIG_ERROR') {
       return res.status(500).json({ error: 'missing_config' });
     }
-    return res.status(400).json({ error: 'invalid_oauth_response' });
+    return res.status(500).json({ error: 'SERVER_ERROR' });
   }
 };
