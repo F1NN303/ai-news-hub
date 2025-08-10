@@ -10,10 +10,19 @@ const limiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 5 });
 module.exports = async (req, res) => {
   try {
     ensureConfig();
-    ensureCsrf(req, res);
+
+    if (req.method === 'GET') {
+      res.writeHead(302, { Location: '/api/auth/oauth/google' });
+      res.end();
+      return;
+    }
+
     if (req.method !== 'POST') {
+      res.setHeader('Allow', 'GET, POST');
       return res.status(405).json({ error: 'method_not_allowed' });
     }
+
+    ensureCsrf(req, res);
 
     if (!validateCsrf(req)) {
       return res.status(403).json({ error: 'invalid_csrf_token' });
