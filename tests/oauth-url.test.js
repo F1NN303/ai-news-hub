@@ -8,14 +8,13 @@ process.env.STACK_SECRET_KEY = 'stacksecret';
 process.env.DATABASE_URL = 'postgres://localhost/test';
 process.env.JWT_SECRET = 'jwt';
 process.env.SESSION_SECRET = 'session';
-process.env.STACK_AUTH_CLIENT_ID = 'client';
 
 test('GET /api/auth/oauth/[provider] redirects with expected params', async () => {
   const handler = require('../api/auth/oauth/[provider].js');
   const req = {
     method: 'GET',
     headers: { 'x-forwarded-proto': 'https', host: 'example.com' },
-    query: { provider: 'github' },
+    query: { provider: 'google' },
   };
   let statusCode; let location; let setCookie;
   const res = {
@@ -30,8 +29,8 @@ test('GET /api/auth/oauth/[provider] redirects with expected params', async () =
   const redirected = new URL(location);
   assert.strictEqual(redirected.origin + redirected.pathname, 'https://api.stack-auth.com/api/v1/oauth/authorize');
   const params = redirected.searchParams;
-  assert.strictEqual(params.get('provider'), 'github');
-  assert.strictEqual(params.get('client_id'), 'client');
+  assert.strictEqual(params.get('provider'), 'google');
+  assert.strictEqual(params.get('client_id'), 'proj');
   assert.strictEqual(params.get('redirect_uri'), 'https://example.com/api/auth/callback');
   const state = params.get('state');
   assert.ok(state);
@@ -39,13 +38,13 @@ test('GET /api/auth/oauth/[provider] redirects with expected params', async () =
   assert.strictEqual(state, cookieState);
 });
 
-test('GET /api/auth/oauth/[provider] requires client id', async () => {
-  delete process.env.STACK_AUTH_CLIENT_ID;
+test('GET /api/auth/oauth/[provider] requires project id', async () => {
+  delete process.env.NEXT_PUBLIC_STACK_PROJECT_ID;
   const handler = require('../api/auth/oauth/[provider].js');
   const req = {
     method: 'GET',
     headers: { 'x-forwarded-proto': 'https', host: 'example.com' },
-    query: { provider: 'github' },
+    query: { provider: 'google' },
   };
   let statusCode; let body;
   const res = {

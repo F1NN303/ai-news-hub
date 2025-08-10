@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'missing_provider' });
     }
 
-    const clientId = process.env.STACK_AUTH_CLIENT_ID;
+    const clientId = process.env.NEXT_PUBLIC_STACK_PROJECT_ID;
     if (!clientId) {
       return res.status(500).json({ error: 'missing_config' });
     }
@@ -23,14 +23,14 @@ module.exports = async (req, res) => {
     const baseUrl = `${proto}://${host}`;
     const redirectUri = `${baseUrl}/api/auth/callback`;
     const url = new URL('https://api.stack-auth.com/api/v1/oauth/authorize');
-    url.searchParams.append('provider', provider);
-    url.searchParams.append('client_id', clientId);
-    url.searchParams.append('redirect_uri', redirectUri);
-    url.searchParams.append('state', state);
+    url.searchParams.set('provider', provider);
+    url.searchParams.set('client_id', clientId);
+    url.searchParams.set('redirect_uri', redirectUri);
+    url.searchParams.set('state', state);
 
     const cookie = `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Max-Age=600; Path=/`;
     res.setHeader('Set-Cookie', cookie);
-    res.writeHead(302, { Location: url.href });
+    res.writeHead(302, { Location: url.toString() });
     res.end();
   } catch (err) {
     console.error('/api/auth/oauth/[provider] error:', err);
