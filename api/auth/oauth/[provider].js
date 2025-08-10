@@ -45,16 +45,22 @@ module.exports = async (req, res) => {
     ]);
 
     // **Richtiger Endpoint (projekt‑scoped, ohne /auth):**
-    const authorizeUrl =
-      `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(projectId)}/oauth/authorize` +
-      `?provider=${encodeURIComponent(provider)}` +
-      `&client_id=${encodeURIComponent(clientId)}` +
-      `&redirect_uri=${redirectUri}` +
-      `&state=${state}` +
-      `&response_type=code` +
-      `&scope=openid%20email%20profile` +
-      `&code_challenge_method=S256` +
-      `&code_challenge=${codeChallenge}`;
+    const authorize = new URL(
+  `https://api.stack-auth.com/api/v1/projects/${process.env.STACK_AUTH_PROJECT_ID}/auth/oauth/authorize`
+);
+authorize.search = new URLSearchParams({
+  provider,                              // "google"
+  client_id: process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY!,
+  redirect_uri: `${origin}/api/auth/callback`,
+  response_type: "code",
+  scope: "openid email profile",
+  code_challenge_method: "S256",
+  code_challenge: challenge,
+  state,
+}).toString();
+
+return Response.redirect(authorize.toString(), 302);
+
 
     console.log('/api/auth/oauth/[provider]: redirecting to', authorizeUrl);
     res.writeHead(302, { Location: authorizeUrl });
