@@ -4,9 +4,9 @@ const { newDb } = require('pg-mem');
 
 const originalEnv = { ...process.env };
 process.env.NEXT_PUBLIC_STACK_PROJECT_ID = 'proj';
-process.env.STACK_SECRET_KEY = 'stacksecret';
+process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY = 'pub';
+process.env.STACK_AUTH_SECRET = 'stacksecret';
 process.env.DATABASE_URL = 'postgres://localhost/test';
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
 process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'cookiesecret';
 
 test('PUT /api/posts/:slug returns 400 for invalid JSON', async () => {
@@ -37,7 +37,7 @@ test('PUT /api/posts/:slug returns 400 for invalid JSON', async () => {
   db.query = (text, params) => pool.query(text, params);
 
   const auth = require('../lib/auth');
-  auth.verifyToken = async () => ({ sub: '1' });
+  auth.verifySessionToken = async () => ({ userId: '1' });
 
   const { signSessionToken } = require('../lib/cookies');
   const { signCsrfToken } = require('../lib/csrf');

@@ -3,9 +3,9 @@ const assert = require('node:assert');
 
 const originalEnv = { ...process.env };
 process.env.NEXT_PUBLIC_STACK_PROJECT_ID = 'proj';
-process.env.STACK_SECRET_KEY = 'stacksecret';
+process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY = 'pub';
+process.env.STACK_AUTH_SECRET = 'stacksecret';
 process.env.DATABASE_URL = 'postgres://localhost/test';
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
 process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'cookiesecret';
 
 // Ensure non-admin users are forbidden
@@ -20,11 +20,11 @@ test('POST /api/posts forbids non-admin users', async (t) => {
     throw new Error('should not query posts');
   };
   const auth = require('../lib/auth');
-  const originalVerify = auth.verifyToken;
-  auth.verifyToken = async () => ({ sub: '1' });
+  const originalVerify = auth.verifySessionToken;
+  auth.verifySessionToken = async () => ({ userId: '1' });
   t.after(() => {
     db.query = originalQuery;
-    auth.verifyToken = originalVerify;
+    auth.verifySessionToken = originalVerify;
   });
   const { signSessionToken } = require('../lib/cookies');
   const signed = signSessionToken('valid');
@@ -52,11 +52,11 @@ test('PUT /api/posts/:id forbids non-admin users', async (t) => {
     throw new Error('should not query posts');
   };
   const auth = require('../lib/auth');
-  const originalVerify = auth.verifyToken;
-  auth.verifyToken = async () => ({ sub: '1' });
+  const originalVerify = auth.verifySessionToken;
+  auth.verifySessionToken = async () => ({ userId: '1' });
   t.after(() => {
     db.query = originalQuery;
-    auth.verifyToken = originalVerify;
+    auth.verifySessionToken = originalVerify;
   });
   const { signSessionToken } = require('../lib/cookies');
   const signed = signSessionToken('valid');
@@ -84,11 +84,11 @@ test('DELETE /api/posts/:id forbids non-admin users', async (t) => {
     throw new Error('should not query posts');
   };
   const auth = require('../lib/auth');
-  const originalVerify = auth.verifyToken;
-  auth.verifyToken = async () => ({ sub: '1' });
+  const originalVerify = auth.verifySessionToken;
+  auth.verifySessionToken = async () => ({ userId: '1' });
   t.after(() => {
     db.query = originalQuery;
-    auth.verifyToken = originalVerify;
+    auth.verifySessionToken = originalVerify;
   });
   const { signSessionToken } = require('../lib/cookies');
   const signed = signSessionToken('valid');

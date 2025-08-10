@@ -4,13 +4,12 @@ const assert = require('node:assert');
 const originalEnv = { ...process.env };
 
 process.env.NEXT_PUBLIC_STACK_PROJECT_ID = 'proj';
-process.env.STACK_SECRET_KEY = 'stacksecret';
+process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY = 'pub';
+process.env.STACK_AUTH_SECRET = 'stacksecret';
 process.env.DATABASE_URL = 'postgres://localhost/test';
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
 process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'cookiesecret';
 
 async function setup() {
-  process.env.JWT_SECRET = 'testsecret';
   process.env.SESSION_SECRET = 'cookiesecret';
   delete require.cache[require.resolve('../lib/auth')];
   delete require.cache[require.resolve('../lib/cookies')];
@@ -29,23 +28,23 @@ async function setup() {
   await pool.query(`INSERT INTO posts (title, slug) VALUES ('Post','post');`);
   const db = require('../lib/db');
   db.query = (text, params) => pool.query(text, params);
-  const { signJWT } = require('../lib/auth');
+  const auth = require('../lib/auth');
+  auth.verifySessionToken = async (token) => ({ userId: token });
   const { signSessionToken } = require('../lib/cookies');
   const { signCsrfToken } = require('../lib/csrf');
   const handler = require('../api/comments.js');
-  return { pool, signJWT, signSessionToken, signCsrfToken, handler };
+  return { pool, signSessionToken, signCsrfToken, handler };
 }
 
 test('DELETE /api/comments/:id allows only owners or admins', async () => {
-  const { pool, signJWT, signSessionToken, signCsrfToken, handler } = await setup();
+  const { pool, signSessionToken, signCsrfToken, handler } = await setup();
 
   await pool.query(`INSERT INTO comments (id, post_id, user_id, content) VALUES (1,1,1,'first');`);
 
   const csrfToken = 'c1';
 
   // non-owner
-  const tokenUser2 = await signJWT({ sub: '2' });
-  const cookieUser2 = `session=${signSessionToken(tokenUser2)}; csrf=${signCsrfToken(csrfToken)}`;
+  const cookieUser2 = `session=${signSessionToken('2')}; csrf=${signCsrfToken(csrfToken)}`;
   const req2 = { method: 'DELETE', query: { id: '1' }, headers: { cookie: cookieUser2, 'x-csrf-token': csrfToken } };
   let status2, body2;
   const res2 = { status(c){status2=c;return this;}, json(d){body2=d;return this;}, setHeader(){}, end(){} };
@@ -56,8 +55,7 @@ test('DELETE /api/comments/:id allows only owners or admins', async () => {
   assert.strictEqual(afterNonOwner.length, 1);
 
   // owner
-  const tokenOwner = await signJWT({ sub: '1' });
-  const cookieOwner = `session=${signSessionToken(tokenOwner)}; csrf=${signCsrfToken(csrfToken)}`;
+  const cookieOwner = `session=${signSessionToken('1')}; csrf=${signCsrfToken(csrfToken)}`;
   const reqOwner = { method: 'DELETE', query: { id: '1' }, headers: { cookie: cookieOwner, 'x-csrf-token': csrfToken } };
   let statusOwner;
   const resOwner = { status(c){statusOwner=c;return this;}, json(){}, setHeader(){}, end(){} };
@@ -68,8 +66,7 @@ test('DELETE /api/comments/:id allows only owners or admins', async () => {
 
   // admin
   await pool.query(`INSERT INTO comments (id, post_id, user_id, content) VALUES (2,1,1,'second');`);
-  const tokenAdmin = await signJWT({ sub: '3' });
-  const cookieAdmin = `session=${signSessionToken(tokenAdmin)}; csrf=${signCsrfToken(csrfToken)}`;
+  const cookieAdmin = `session=${signSessionToken('3')}; csrf=${signCsrfToken(csrfToken)}`;
   const reqAdmin = { method: 'DELETE', query: { id: '2' }, headers: { cookie: cookieAdmin, 'x-csrf-token': csrfToken } };
   let statusAdmin;
   const resAdmin = { status(c){statusAdmin=c;return this;}, json(){}, setHeader(){}, end(){} };

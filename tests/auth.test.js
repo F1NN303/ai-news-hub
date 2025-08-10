@@ -4,9 +4,9 @@ const assert = require('node:assert');
 const originalEnv = { ...process.env };
 
 process.env.NEXT_PUBLIC_STACK_PROJECT_ID = 'proj';
-process.env.STACK_SECRET_KEY = 'stacksecret';
+process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY = 'pub';
+process.env.STACK_AUTH_SECRET = 'stacksecret';
 process.env.DATABASE_URL = 'postgres://localhost/test';
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
 process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'cookiesecret';
 
 // Signup route
@@ -49,54 +49,6 @@ test('POST /api/auth/signup creates user with hashed password', async () => {
   assert.notStrictEqual(rows[0].password_hash, 'secret');
 });
 
-// Login route
-
-test('POST /api/auth/login authenticates and sets cookie', async () => {
-  process.env.JWT_SECRET = 'testsecret';
-  process.env.SESSION_SECRET = 'cookiesecret';
-  delete require.cache[require.resolve('../lib/csrf')];
-  const { newDb } = require('pg-mem');
-  const mem = newDb();
-  const pg = mem.adapters.createPg();
-  const pool = new pg.Pool();
-  await pool.query(`CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    role TEXT DEFAULT 'user'
-  )`);
-  const bcrypt = require('bcryptjs');
-  const hash = await bcrypt.hash('pw', 10);
-  await pool.query(`INSERT INTO users(name,email,password_hash,role) VALUES('Alice','a@b.c',$1,'user')`, [hash]);
-
-  const db = require('../lib/db');
-  db.query = (text, params) => pool.query(text, params);
-
-  const handler = require('../api/auth/login.js');
-  const { signCsrfToken } = require('../lib/csrf');
-  const csrfToken = 't2';
-  const csrfCookie = `csrf=${signCsrfToken(csrfToken)}`;
-  const req = { method: 'POST', body: { email: 'a@b.c', password: 'pw' }, headers: { cookie: csrfCookie, 'x-csrf-token': csrfToken } };
-  let statusCode; let jsonBody; const headers = {};
-  const res = {
-    status(code) { statusCode = code; return this; },
-    json(data) { jsonBody = data; return this; },
-    setHeader(k,v){ headers[k]=v; },
-    getHeader(k){ return headers[k]; },
-    end() {},
-  };
-  await handler(req, res);
-  assert.strictEqual(statusCode, 200);
-  const setCookie = Array.isArray(headers['Set-Cookie']) ? headers['Set-Cookie'] : [headers['Set-Cookie']];
-  assert.ok(setCookie.some(c => c.includes('session=')));
-  const sessionCookie = setCookie.find(c => c.includes('session='));
-  assert.match(sessionCookie, /HttpOnly/);
-  assert.match(sessionCookie, /Secure/);
-  assert.match(sessionCookie, /SameSite=Strict/);
-  assert.match(sessionCookie, /Path=\//);
-  assert.strictEqual(jsonBody.email, 'a@b.c');
-});
 
 // Logout route
 

@@ -53,8 +53,8 @@ Replace `example@domain.com` with the email of the account you want to promote.
 
 ### OAuth routes
 
-- `GET /api/auth/oauth/[provider]` – starts the OAuth flow and redirects to the provider.
-- `GET /api/auth/callback` – handles the OAuth callback and issues the same `session` cookie used by email/password login.
+- `GET /api/auth/login` – redirects to Stack Auth's authorize endpoint.
+- `GET /api/auth/callback` – handles the OAuth callback and issues the `session` cookie.
 
 ## API Usage
 
