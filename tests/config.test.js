@@ -8,7 +8,7 @@ test('health endpoint returns 500 when config missing', async () => {
   process.env.JWT_SECRET = 'secret';
   process.env.SESSION_SECRET = 'sess';
   process.env.DATABASE_URL = 'postgres://localhost/test';
-  delete process.env.STACK_SECRET_KEY;
+  delete process.env.STACK_AUTH_CLIENT_ID;
   delete require.cache[require.resolve('../lib/auth')];
   delete require.cache[require.resolve('../api/health.js')];
   const handler = require('../api/health.js');

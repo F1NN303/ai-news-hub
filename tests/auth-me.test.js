@@ -3,6 +3,7 @@ const assert = require('node:assert');
 
 const originalEnv = { ...process.env };
 process.env.NEXT_PUBLIC_STACK_PROJECT_ID = 'proj';
+process.env.STACK_AUTH_CLIENT_ID = 'client';
 process.env.STACK_SECRET_KEY = 'stacksecret';
 process.env.DATABASE_URL = 'postgres://localhost/test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
