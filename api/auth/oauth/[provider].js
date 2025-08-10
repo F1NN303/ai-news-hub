@@ -20,38 +20,35 @@ module.exports = async (req, res) => {
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const host  = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
-    const redirectUri = `${baseUrl}/api/auth/callback`;
+    const redirectUri = encodeURIComponent(`${baseUrl}/api/auth/callback`);
 
     const clientId =
       process.env.STACK_AUTH_CLIENT_ID ||
       process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY;
 
-    if (!clientId) {
-      return res.status(500).json({ error: 'missing_client_id' });
-    }
-
-    // PKCE + state
-    const codeVerifier  = b64url(crypto.randomBytes(32));
+    // PKCE
+    const codeVerifier = b64url(crypto.randomBytes(32));
     const codeChallenge = b64url(crypto.createHash('sha256').update(codeVerifier).digest());
-    const state         = b64url(crypto.randomBytes(16));
+    const state = b64url(crypto.randomBytes(16));
 
     res.setHeader('Set-Cookie', [
       `pkce_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
     ]);
 
-    const authorizeUrl = new URL('https://api.stack-auth.com/api/v1/oauth/authorize');
-    authorizeUrl.searchParams.set('provider', provider);         // e.g. "google"
-    authorizeUrl.searchParams.set('client_id', clientId);        // pck_...
-    authorizeUrl.searchParams.set('redirect_uri', redirectUri);
-    authorizeUrl.searchParams.set('state', state);
-    authorizeUrl.searchParams.set('response_type', 'code');
-    authorizeUrl.searchParams.set('scope', 'openid email profile');
-    authorizeUrl.searchParams.set('code_challenge_method', 'S256');
-    authorizeUrl.searchParams.set('code_challenge', codeChallenge);
+    const url =
+      `https://api.stack-auth.com/api/v1/auth/oauth/authorize` + // <— richtig
+      `?provider=${encodeURIComponent(provider)}` +
+      `&client_id=${encodeURIComponent(clientId)}` +
+      `&redirect_uri=${redirectUri}` +
+      `&state=${state}` +
+      `&response_type=code` +
+      `&scope=openid%20email%20profile` +
+      `&code_challenge_method=S256` +
+      `&code_challenge=${codeChallenge}`;
 
-    console.log('/api/auth/oauth/[provider]: redirecting to', authorizeUrl.toString());
-    res.writeHead(302, { Location: authorizeUrl.toString() });
+    console.log('/api/auth/oauth/[provider]: redirecting to', url);
+    res.writeHead(302, { Location: url });
     res.end();
   } catch (err) {
     console.error('/api/auth/oauth/[provider] error:', err);
