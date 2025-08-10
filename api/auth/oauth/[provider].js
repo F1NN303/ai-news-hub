@@ -19,11 +19,16 @@ module.exports = async (req, res) => {
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
     const redirectUri = encodeURIComponent(`${baseUrl}/api/auth/callback`);
-    const clientId = process.env.STACK_AUTH_CLIENT_ID || '';
-    const url =
-      `https://api.stack-auth.com/api/v1/oauth/authorize?provider=${encodeURIComponent(
-        provider
-      )}&client_id=${encodeURIComponent(clientId)}&redirect_uri=${redirectUri}&state=${state}`;
+    // NEW: your Stack Auth project id (public) and publishable client key
+const projectId      = process.env.NEXT_PUBLIC_STACK_PROJECT_ID || '';
+const publishableKey = process.env.STACK_AUTH_CLIENT_ID || '';
+
+const url =
+  `https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}` +
+  `?client_id=${encodeURIComponent(projectId)}` +
+  `&client_secret=${encodeURIComponent(publishableKey)}` +
+  `&redirect_uri=${redirectUri}` +   // you already built redirectUri above
+  `&state=${state}`;
 
     const cookie = `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Max-Age=600; Path=/`;
     res.setHeader('Set-Cookie', cookie);
