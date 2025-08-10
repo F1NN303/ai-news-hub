@@ -1,13 +1,9 @@
 const crypto = require('node:crypto');
-const { ensureConfig } = require('../../../lib/auth');
+const { ensureConfig } = require('../../lib/auth');
 
-// helper: base64url (RFC 4648 §5)
+// base64url helper
 function b64url(buf) {
-  return buf
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/g, '');
+  return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/,'');
 }
 
 module.exports = async (req, res) => {
@@ -18,56 +14,49 @@ module.exports = async (req, res) => {
 
   try {
     ensureConfig();
+
     const provider = req.query.provider;
-    if (!provider) {
-      return res.status(400).json({ error: 'missing_provider' });
-    }
+    if (!provider) return res.status(400).json({ error: 'missing_provider' });
 
-    const state = crypto.randomBytes(16).toString('hex');
     const proto = req.headers['x-forwarded-proto'] || 'https';
-    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const host  = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
-    const redirectUri = `${baseUrl}/api/auth/callback`;
 
-    // ⚠️ NEW: PKCE
-    const codeVerifier = b64url(crypto.randomBytes(32));
-    const codeChallenge = b64url(
-      crypto.createHash('sha256').update(codeVerifier).digest()
+    const redirectUri = encodeURIComponent(`${baseUrl}/api/auth/callback`);
+
+    // Stack Auth client id = publishable client key
+    const clientId =
+      process.env.STACK_AUTH_CLIENT_ID ||
+      process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY;
+
+    // --- PKCE ---
+    const codeVerifier  = b64url(crypto.randomBytes(32));
+    const codeChallenge = b64url(crypto.createHash('sha256').update(codeVerifier).digest());
+
+    // store verifier short‑lived for the callback
+    res.setHeader(
+      'Set-Cookie',
+      `oauth_code_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`
     );
 
-    // store verifier in a short‑lived, HttpOnly cookie for the callback to read
-    const pkceCookie =
-      `pkce_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`;
+    const state = b64url(crypto.randomBytes(16));
 
-    // your Stack Auth project + publishable key
-    const projectId = process.env.NEXT_PUBLIC_STACK_PROJECT_ID || '';
-    const publishableId = process.env.STACK_AUTH_CLIENT_ID || '';
+    // Correct Stack Auth authorize endpoint & params
+    const url =
+      `https://api.stack-auth.com/api/v1/auth/oauth/authorize` +
+      `?provider=${encodeURIComponent(provider)}` +
+      `&client_id=${encodeURIComponent(clientId)}` +
+      `&redirect_uri=${redirectUri}` +
+      `&state=${state}` +
+      `&response_type=code` +
+      `&scope=openid%20email%20profile` +
+      `&code_challenge_method=S256` +
+      `&code_challenge=${codeChallenge}`;
 
-    const url = new URL(
-      `https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(
-        provider
-      )}`
-    );
-    url.searchParams.set('client_id', projectId);
-    url.searchParams.set('client_secret', publishableId);
-    url.searchParams.set('redirect_uri', redirectUri);
-    url.searchParams.set('response_type', 'code');
-    url.searchParams.set('grant_type', 'authorization_code');
-    url.searchParams.set('scope', 'openid email profile');
-    url.searchParams.set('code_challenge_method', 'S256');
-    url.searchParams.set('code_challenge', codeChallenge);
-    url.searchParams.set('state', state);
-
-    const cookie =
-      `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Max-Age=600; Path=/`;
-    res.setHeader('Set-Cookie', [pkceCookie, cookie]);
-    res.writeHead(302, { Location: url.toString() });
+    res.writeHead(302, { Location: url });
     res.end();
   } catch (err) {
     console.error('/api/auth/oauth/[provider] error:', err);
-    if (err.code === 'CONFIG_ERROR') {
-      return res.status(500).json({ error: 'missing_config' });
-    }
-    return res.status(500).json({ error: 'SERVER_ERROR' });
+    return res.status(500).json({ error: 'server_error' });
   }
 };
