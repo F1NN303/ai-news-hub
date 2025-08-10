@@ -1,5 +1,4 @@
 const crypto = require('node:crypto');
-const { ensureConfig } = require('../../../lib/auth');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
@@ -8,10 +7,14 @@ module.exports = async (req, res) => {
   }
 
   try {
-    ensureConfig();
     const provider = req.query.provider;
     if (!provider) {
       return res.status(400).json({ error: 'missing_provider' });
+    }
+
+    const clientId = process.env.STACK_AUTH_CLIENT_ID;
+    if (!clientId) {
+      return res.status(500).json({ error: 'missing_config' });
     }
 
     const state = crypto.randomBytes(16).toString('hex');
@@ -19,7 +22,6 @@ module.exports = async (req, res) => {
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
     const redirectUri = `${baseUrl}/api/auth/callback`;
-    const clientId = process.env.STACK_AUTH_CLIENT_ID || '';
     const url = new URL('https://api.stack-auth.com/api/v1/oauth/authorize');
     url.searchParams.append('provider', provider);
     url.searchParams.append('client_id', clientId);
@@ -32,9 +34,6 @@ module.exports = async (req, res) => {
     res.end();
   } catch (err) {
     console.error('/api/auth/oauth/[provider] error:', err);
-    if (err.code === 'CONFIG_ERROR') {
-      return res.status(500).json({ error: 'missing_config' });
-    }
     return res.status(500).json({ error: 'SERVER_ERROR' });
   }
 };

@@ -39,6 +39,27 @@ test('GET /api/auth/oauth/[provider] redirects with expected params', async () =
   assert.strictEqual(state, cookieState);
 });
 
+test('GET /api/auth/oauth/[provider] requires client id', async () => {
+  delete process.env.STACK_AUTH_CLIENT_ID;
+  const handler = require('../api/auth/oauth/[provider].js');
+  const req = {
+    method: 'GET',
+    headers: { 'x-forwarded-proto': 'https', host: 'example.com' },
+    query: { provider: 'github' },
+  };
+  let statusCode; let body;
+  const res = {
+    setHeader() {},
+    writeHead() { return this; },
+    end() {},
+    status(code) { statusCode = code; return this; },
+    json(obj) { body = obj; },
+  };
+  await handler(req, res);
+  assert.strictEqual(statusCode, 500);
+  assert.deepStrictEqual(body, { error: 'missing_config' });
+});
+
 test.after(() => {
   process.env = originalEnv;
 });
