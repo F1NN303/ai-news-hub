@@ -12,25 +12,59 @@ module.exports = async (req, res) => {
     (req.headers.cookie || '')
       .split(';')
       .filter(Boolean)
-      .map(c => {
+      .map((c) => {
         const i = c.indexOf('=');
         return [c.slice(0, i).trim(), decodeURIComponent(c.slice(i + 1))];
       })
   );
   const stateCookie = cookies.oauth_state;
-  const clearState = 'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
+  const verifier =
+    (req.headers.cookie || '')
+      .split(';')
+      .map((v) => v.trim())
+      .find((v) => v.startsWith('pkce_verifier='))
+      ?.split('=')[1] || '';
+  const clearState =
+    'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
+  const clearPkce =
+    'pkce_verifier=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
 
   try {
     ensureConfig();
-    const { state, token } = req.query || {};
+    const { state, code, provider } = req.query || {};
     if (!state || !stateCookie || stateCookie !== state) {
-      res.setHeader('Set-Cookie', clearState);
+      res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_state' });
     }
-    if (!token) {
-      res.setHeader('Set-Cookie', clearState);
+    if (!code) {
+      res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
+
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const baseUrl = `${proto}://${host}`;
+
+    const projectId = process.env.NEXT_PUBLIC_STACK_PROJECT_ID;
+    const serverSecret = process.env.STACK_SECRET_KEY;
+
+    const tokenRes = await fetch(
+      `https://api.stack-auth.com/api/v1/auth/oauth/token/${provider}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          client_id: projectId,
+          client_secret: serverSecret,
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: `${baseUrl}/api/auth/callback`,
+          code_verifier: verifier,
+        }),
+      }
+    );
+    const tokenData = await tokenRes.json();
+    const token = tokenData.token;
 
     let payload;
     try {
@@ -39,13 +73,13 @@ module.exports = async (req, res) => {
       payload = null;
     }
     if (!payload || !payload.sub || !payload.name) {
-      res.setHeader('Set-Cookie', clearState);
+      res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
 
     const id = parseInt(payload.sub, 10);
     if (Number.isNaN(id)) {
-      res.setHeader('Set-Cookie', clearState);
+      res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
     const name = payload.name || '';
@@ -69,12 +103,12 @@ module.exports = async (req, res) => {
     const signed = signSessionToken(jwt);
     const sessionCookie = `session=${signed}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`;
 
-    res.setHeader('Set-Cookie', [sessionCookie, clearState]);
+    res.setHeader('Set-Cookie', [sessionCookie, clearState, clearPkce]);
     res.writeHead(302, { Location: '/' });
     res.end();
   } catch (err) {
     console.error('/api/auth/callback error:', err);
-    res.setHeader('Set-Cookie', clearState);
+    res.setHeader('Set-Cookie', [clearState, clearPkce]);
     if (err.code === 'CONFIG_ERROR') {
       return res.status(500).json({ error: 'missing_config' });
     }
