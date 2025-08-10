@@ -40,16 +40,15 @@ Replace `example@domain.com` with the email of the account you want to promote.
    ```
    The site is available at `http://localhost:3000` and API routes under `http://localhost:3000/api/*`.
 
-## Neon Auth OAuth setup
+## Stack Auth OAuth setup
 
-1. In the Neon Console, enable the **Google** and **GitHub** providers.
+1. In the Stack Auth console, enable the **Google** and **GitHub** providers.
 2. Set the following environment variables:
+   - `NEXT_PUBLIC_STACK_PROJECT_ID` – your Stack Auth project ID (configure in Vercel).
    - `JWKS_URL` – `https://api.stack-auth.com/api/v1/projects/<project_id>/.well-known/jwks.json`
-   - `STACK_AUTH_PROJECT_ID` – your Neon Auth project ID.
-   - `STACK_AUTH_CLIENT_ID` – OAuth client ID from Neon Auth.
-3. Add trusted domains in Neon Auth:
-   - `http://localhost:3000`
-   - Your production URL
+3. In Stack Auth, allow these redirect URIs:
+   - `https://ai-news-hub-eta.vercel.app/api/auth/callback`
+   - `http://localhost:3000/api/auth/callback`
 
 ### OAuth routes
 
