@@ -1,4 +1,4 @@
-const crypto = require('node:crypto');
+const crypto = require('crypto');
 const { ensureConfig } = require('../../lib/auth');
 
 // base64url helper
