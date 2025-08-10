@@ -3,9 +3,10 @@ const assert = require('node:assert');
 const { newDb } = require('pg-mem');
 
 const originalEnv = { ...process.env };
-process.env.NEXT_PUBLIC_STACK_PROJECT_ID = 'proj';
+process.env.STACK_PROJECT_ID = 'proj';
 process.env.STACK_AUTH_CLIENT_ID = 'client';
 process.env.STACK_SECRET_KEY = 'stacksecret';
+process.env.JWKS_URL = 'https://example.com/jwks.json';
 process.env.DATABASE_URL = 'postgres://localhost/test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
 process.env.SESSION_SECRET = process.env.SESSION_SECRET || 'cookiesecret';

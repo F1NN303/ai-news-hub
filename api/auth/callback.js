@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
 
-    const projectId = process.env.NEXT_PUBLIC_STACK_PROJECT_ID;
+    const projectId = process.env.STACK_PROJECT_ID;
     const serverSecret = process.env.STACK_SECRET_KEY;
 
     const tokenRes = await fetch(

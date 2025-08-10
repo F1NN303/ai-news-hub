@@ -4,9 +4,10 @@ const assert = require('node:assert');
 const originalEnv = { ...process.env };
 
 test('health endpoint returns 500 when config missing', async () => {
-  process.env.NEXT_PUBLIC_STACK_PROJECT_ID = 'proj';
+  process.env.STACK_PROJECT_ID = 'proj';
   process.env.JWT_SECRET = 'secret';
   process.env.SESSION_SECRET = 'sess';
+  process.env.JWKS_URL = 'https://example.com/jwks.json';
   process.env.DATABASE_URL = 'postgres://localhost/test';
   delete process.env.STACK_AUTH_CLIENT_ID;
   delete require.cache[require.resolve('../lib/auth')];
