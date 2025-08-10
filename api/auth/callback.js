@@ -18,12 +18,7 @@ module.exports = async (req, res) => {
       })
   );
   const stateCookie = cookies.oauth_state;
-  const verifier =
-    (req.headers.cookie || '')
-      .split(';')
-      .map((v) => v.trim())
-      .find((v) => v.startsWith('pkce_verifier='))
-      ?.split('=')[1] || '';
+  const verifier = cookies.pkce_verifier || '';
   const clearState =
     'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
   const clearPkce =
@@ -32,6 +27,7 @@ module.exports = async (req, res) => {
   try {
     ensureConfig();
     const { state, code, provider } = req.query || {};
+    console.log('/api/auth/callback: query', { state, code, provider });
     if (!state || !stateCookie || stateCookie !== state) {
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_state' });
@@ -64,6 +60,7 @@ module.exports = async (req, res) => {
       }
     );
     const tokenData = await tokenRes.json();
+    console.log('/api/auth/callback: tokenData', tokenData);
     const token = tokenData.token;
 
     let payload;
@@ -104,6 +101,7 @@ module.exports = async (req, res) => {
     const sessionCookie = `session=${signed}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`;
 
     res.setHeader('Set-Cookie', [sessionCookie, clearState, clearPkce]);
+    console.log('/api/auth/callback: set session cookie for user', user.id);
     res.writeHead(302, { Location: '/' });
     res.end();
   } catch (err) {

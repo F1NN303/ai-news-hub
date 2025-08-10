@@ -30,9 +30,9 @@
     }
 
     async function ensureCsrfCookie() {
-      if (!getCsrfToken()) {
-        await fetch('/api/auth/login', { credentials: 'include' });
-      }
+        if (!getCsrfToken()) {
+          await fetch('/api/auth/signup', { credentials: 'include' });
+        }
     }
 
     function csrfFetch(url, options = {}) {

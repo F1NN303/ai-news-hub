@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { ensureConfig } = require('../../lib/auth');
+const { ensureConfig } = require('../../../lib/auth');
 
 // base64url helper
 function b64url(buf) {
@@ -30,16 +30,20 @@ module.exports = async (req, res) => {
       process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY;
 
     // --- PKCE ---
-    const codeVerifier  = b64url(crypto.randomBytes(32));
-    const codeChallenge = b64url(crypto.createHash('sha256').update(codeVerifier).digest());
-
-    // store verifier short‑lived for the callback
-    res.setHeader(
-      'Set-Cookie',
-      `oauth_code_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`
+    const codeVerifier = b64url(crypto.randomBytes(32));
+    const codeChallenge = b64url(
+      crypto.createHash('sha256').update(codeVerifier).digest()
     );
 
     const state = b64url(crypto.randomBytes(16));
+
+    // persist verifier and state for the callback
+    res.setHeader('Set-Cookie', [
+      `pkce_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
+      `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
+    ]);
+
+    console.log('/api/auth/oauth/[provider]: generated state', state);
 
     // Correct Stack Auth authorize endpoint & params
     const url =
