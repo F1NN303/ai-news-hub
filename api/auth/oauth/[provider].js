@@ -18,16 +18,17 @@ module.exports = async (req, res) => {
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
-    const redirectUri = encodeURIComponent(`${baseUrl}/api/auth/callback`);
+    const redirectUri = `${baseUrl}/api/auth/callback`;
     const clientId = process.env.STACK_AUTH_CLIENT_ID || '';
-    const url =
-      `https://api.stack-auth.com/api/v1/oauth/authorize?provider=${encodeURIComponent(
-        provider
-      )}&client_id=${encodeURIComponent(clientId)}&redirect_uri=${redirectUri}&state=${state}`;
+    const url = new URL('https://api.stack-auth.com/api/v1/oauth/authorize');
+    url.searchParams.append('provider', provider);
+    url.searchParams.append('client_id', clientId);
+    url.searchParams.append('redirect_uri', redirectUri);
+    url.searchParams.append('state', state);
 
     const cookie = `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Max-Age=600; Path=/`;
     res.setHeader('Set-Cookie', cookie);
-    res.writeHead(302, { Location: url });
+    res.writeHead(302, { Location: url.toString() });
     res.end();
   } catch (err) {
     console.error('/api/auth/oauth/[provider] error:', err);
