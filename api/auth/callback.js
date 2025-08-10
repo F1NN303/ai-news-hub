@@ -69,25 +69,34 @@ module.exports = async (req, res) => {
     } catch (err) {
       payload = null;
     }
-    if (!payload || !payload.sub || !payload.name) {
+    if (!payload || !payload.sub) {
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
 
-    const id = parseInt(payload.sub, 10);
-    if (Number.isNaN(id)) {
+    let { name, email } = payload;
+    if (!email || !name) {
+      const infoRes = await fetch(
+        'https://api.stack-auth.com/api/v1/auth/userinfo',
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const info = await infoRes.json();
+      name = name || info.name;
+      email = email || info.email;
+    }
+    if (!name || !email) {
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
-    const name = payload.name || '';
-    const email = payload.email || '';
 
     const { rows } = await db.query(
-      `INSERT INTO users(id, name, email, password_hash, role)
-       VALUES($1,$2,$3,'',$4)
-       ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, email = EXCLUDED.email
+      `INSERT INTO users(name, email, password_hash, role)
+       VALUES($1,$2,'',$3)
+       ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name
        RETURNING id, name, email, role`,
-      [id, name, email, 'user']
+      [name, email, 'user']
     );
     const user = rows[0];
 
