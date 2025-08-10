@@ -1,6 +1,6 @@
 const db = require('../../lib/db');
 const bcrypt = require('bcryptjs');
-const { signJWT } = require('../../lib/auth');
+const { signJWT, ensureConfig } = require('../../lib/auth');
 const { signSessionToken } = require('../../lib/cookies');
 const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
 const { createRateLimiter } = require('../../lib/rateLimit');
@@ -8,26 +8,27 @@ const { createRateLimiter } = require('../../lib/rateLimit');
 const limiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 5 });
 
 module.exports = async (req, res) => {
-  ensureCsrf(req, res);
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'method_not_allowed' });
-  }
-
-  if (!validateCsrf(req)) {
-    return res.status(403).json({ error: 'invalid_csrf_token' });
-  }
-
-  const { email, password } = req.body || {};
-  if (!email || !password) {
-    return res.status(400).json({ error: 'missing_credentials' });
-  }
-
-  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0] || req.socket?.remoteAddress || '';
-  if (limiter.isLimited(ip, email)) {
-    return res.status(429).json({ error: 'too_many_attempts' });
-  }
-
   try {
+    ensureConfig();
+    ensureCsrf(req, res);
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'method_not_allowed' });
+    }
+
+    if (!validateCsrf(req)) {
+      return res.status(403).json({ error: 'invalid_csrf_token' });
+    }
+
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ error: 'missing_credentials' });
+    }
+
+    const ip = (req.headers['x-forwarded-for'] || '').split(',')[0] || req.socket?.remoteAddress || '';
+    if (limiter.isLimited(ip, email)) {
+      return res.status(429).json({ error: 'too_many_attempts' });
+    }
+
     const { rows } = await db.query(
       'SELECT id, name, email, password_hash, role FROM users WHERE email = $1',
       [email]
@@ -66,6 +67,9 @@ module.exports = async (req, res) => {
     return res.status(200).json({ id: user.id, name: user.name, email: user.email, role: user.role });
   } catch (err) {
     console.error('/api/auth/login error:', err);
+    if (err.code === 'CONFIG_ERROR') {
+      return res.status(500).json({ error: 'missing_config' });
+    }
     return res.status(500).json({ error: 'SERVER_ERROR' });
   }
 };
