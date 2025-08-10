@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
 
     const cookie = `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Max-Age=600; Path=/`;
     res.setHeader('Set-Cookie', cookie);
-    res.writeHead(302, { Location: url.toString() });
+    res.writeHead(302, { Location: url.href });
     res.end();
   } catch (err) {
     console.error('/api/auth/oauth/[provider] error:', err);
