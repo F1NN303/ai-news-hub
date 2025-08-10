@@ -1,8 +1,9 @@
 const crypto = require('crypto');
 const { ensureConfig } = require('../../../lib/auth');
 
+// base64url helper
 function b64url(buf) {
-  return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/,'');
+  return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 module.exports = async (req, res) => {
@@ -12,6 +13,7 @@ module.exports = async (req, res) => {
   }
 
   try {
+    // Verifiziert, dass alle benötigten ENV Variablen da sind
     ensureConfig();
 
     const provider = req.query.provider;
@@ -22,22 +24,29 @@ module.exports = async (req, res) => {
     const baseUrl = `${proto}://${host}`;
     const redirectUri = encodeURIComponent(`${baseUrl}/api/auth/callback`);
 
+    // IDs/Keys aus ENV
     const clientId =
       process.env.STACK_AUTH_CLIENT_ID ||
       process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY;
 
-    // PKCE
+    const projectId =
+      process.env.STACK_AUTH_PROJECT_ID ||
+      process.env.NEXT_PUBLIC_STACK_PROJECT_ID;
+
+    // --- PKCE ---
     const codeVerifier = b64url(crypto.randomBytes(32));
     const codeChallenge = b64url(crypto.createHash('sha256').update(codeVerifier).digest());
     const state = b64url(crypto.randomBytes(16));
 
+    // Für den Callback merken
     res.setHeader('Set-Cookie', [
       `pkce_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
     ]);
 
-    const url =
-      `https://api.stack-auth.com/api/v1/auth/oauth/authorize` + // <— richtig
+    // **Richtiger Endpoint (projekt‑scoped, ohne /auth):**
+    const authorizeUrl =
+      `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(projectId)}/oauth/authorize` +
       `?provider=${encodeURIComponent(provider)}` +
       `&client_id=${encodeURIComponent(clientId)}` +
       `&redirect_uri=${redirectUri}` +
@@ -47,8 +56,8 @@ module.exports = async (req, res) => {
       `&code_challenge_method=S256` +
       `&code_challenge=${codeChallenge}`;
 
-    console.log('/api/auth/oauth/[provider]: redirecting to', url);
-    res.writeHead(302, { Location: url });
+    console.log('/api/auth/oauth/[provider]: redirecting to', authorizeUrl);
+    res.writeHead(302, { Location: authorizeUrl });
     res.end();
   } catch (err) {
     console.error('/api/auth/oauth/[provider] error:', err);
