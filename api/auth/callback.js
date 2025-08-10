@@ -41,24 +41,36 @@ module.exports = async (req, res) => {
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
 
-    const projectId = process.env.NEXT_PUBLIC_STACK_PROJECT_ID;
-    const serverSecret = process.env.STACK_SECRET_KEY;
+    const clientId = process.env.STACK_AUTH_CLIENT_ID;
+    const clientSecret = process.env.STACK_SECRET_KEY;
 
-    const tokenRes = await fetch(
-      `https://api.stack-auth.com/api/v1/auth/oauth/token/${provider}`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          client_id: projectId,
-          client_secret: serverSecret,
-          grant_type: 'authorization_code',
-          code,
-          redirect_uri: `${baseUrl}/api/auth/callback`,
-          code_verifier: verifier,
-        }),
-      }
-    );
+    const tokenUrl = new URL('https://api.stack-auth.com/api/v1/oauth/token');
+    tokenUrl.searchParams.set('provider', provider);
+
+    const tokenRes = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: `${baseUrl}/api/auth/callback`,
+        code_verifier: verifier,
+      }),
+    });
+    if (!tokenRes.ok) {
+      const detail = await tokenRes.text();
+      console.error(
+        '/api/auth/callback: token exchange failed',
+        tokenRes.status,
+        detail
+      );
+      res.setHeader('Set-Cookie', [clearState, clearPkce]);
+      return res
+        .status(tokenRes.status)
+        .json({ error: 'token_exchange_failed', detail });
+    }
     const tokenData = await tokenRes.json();
     console.log('/api/auth/callback: tokenData', tokenData);
     const token = tokenData.token;
