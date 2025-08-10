@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+const crypto = require('node:crypto');
 const { ensureConfig } = require('../../../lib/auth');
 
 // base64url helper
@@ -22,19 +22,18 @@ module.exports = async (req, res) => {
     const host  = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
 
-    const redirectUri = encodeURIComponent(`${baseUrl}/api/auth/callback`);
+    // Callback on our app
+    const redirectUri = `${baseUrl}/api/auth/callback`;
 
-    // Stack Auth client id = publishable client key
+    // Stack Auth IDs
+    const projectId = process.env.NEXT_PUBLIC_STACK_PROJECT_ID; // <-- wichtig!
     const clientId =
       process.env.STACK_AUTH_CLIENT_ID ||
       process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY;
 
     // --- PKCE ---
     const codeVerifier = b64url(crypto.randomBytes(32));
-    const codeChallenge = b64url(
-      crypto.createHash('sha256').update(codeVerifier).digest()
-    );
-
+    const codeChallenge = b64url(crypto.createHash('sha256').update(codeVerifier).digest());
     const state = b64url(crypto.randomBytes(16));
 
     // persist verifier and state for the callback
@@ -43,21 +42,20 @@ module.exports = async (req, res) => {
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
     ]);
 
-    console.log('/api/auth/oauth/[provider]: generated state', state);
+    // Correct Stack Auth authorize endpoint (mit /projects/<id>)
+    const url = new URL(`https://api.stack-auth.com/api/v1/projects/${projectId}/auth/oauth/authorize`);
+    url.searchParams.set('provider', provider);
+    url.searchParams.set('client_id', clientId);
+    url.searchParams.set('redirect_uri', redirectUri);
+    url.searchParams.set('state', state);
+    url.searchParams.set('response_type', 'code');
+    url.searchParams.set('scope', 'openid email profile');
+    url.searchParams.set('code_challenge_method', 'S256');
+    url.searchParams.set('code_challenge', codeChallenge);
 
-    // Correct Stack Auth authorize endpoint & params
-    const url =
-      `https://api.stack-auth.com/api/v1/auth/oauth/authorize` +
-      `?provider=${encodeURIComponent(provider)}` +
-      `&client_id=${encodeURIComponent(clientId)}` +
-      `&redirect_uri=${redirectUri}` +
-      `&state=${state}` +
-      `&response_type=code` +
-      `&scope=openid%20email%20profile` +
-      `&code_challenge_method=S256` +
-      `&code_challenge=${codeChallenge}`;
+    console.log('/api/auth/oauth/[provider]: redirect ->', url.toString());
 
-    res.writeHead(302, { Location: url });
+    res.writeHead(302, { Location: url.toString() });
     res.end();
   } catch (err) {
     console.error('/api/auth/oauth/[provider] error:', err);
