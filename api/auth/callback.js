@@ -27,29 +27,32 @@ module.exports = async (req, res) => {
     'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
   const clearPkce =
     'pkce_verifier=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
+  const clearProvider =
+    'oauth_provider=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
 
   try {
     // required envs; lib/auth.ensureConfig erlaubt JWKS_URL **oder** JWT_SECRET
     ensureConfig([
-      'STACK_AUTH_PROJECT_ID',
+      'STACK_PROJECT_ID',
       'STACK_AUTH_CLIENT_ID',
-      'STACK_AUTH_CLIENT_SECRET',
+      'STACK_SECRET_KEY',
       'SESSION_SECRET',
       'JWKS_URL',
       'JWT_SECRET',
     ]);
 
     // ---- read query ----
-    const { state, code, provider } = req.query || {};
+    const { state, code } = req.query || {};
+    let provider = (req.query && req.query.provider) || cookies.oauth_provider;
 
     if (!provider) {
       console.error('/api/auth/callback: missing_provider');
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
+      res.setHeader('Set-Cookie', [clearState, clearPkce, clearProvider]);
       return res.status(400).json({ error: 'missing_provider' });
     }
     if (!code) {
       console.error('/api/auth/callback: missing_code');
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
+      res.setHeader('Set-Cookie', [clearState, clearPkce, clearProvider]);
       return res.status(400).json({ error: 'missing_code' });
     }
 
@@ -61,7 +64,7 @@ module.exports = async (req, res) => {
 
     if (!stateMatch) {
       console.error('/api/auth/callback: invalid_state');
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
+      res.setHeader('Set-Cookie', [clearState, clearPkce, clearProvider]);
       return res.status(400).json({ error: 'invalid_state' });
     }
 
@@ -70,18 +73,24 @@ module.exports = async (req, res) => {
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
     const redirectUri = `${baseUrl}/api/auth/callback?provider=${encodeURIComponent(
-      provider
+      provider,
     )}`;
 
-    // ---- token exchange (project-scoped) ----
-    const projectId = process.env.STACK_AUTH_PROJECT_ID;
+    console.log('/api/auth/callback redirect', {
+      provider,
+      hasCode: Boolean(code),
+      hasVerifier: Boolean(verifier),
+      redirectUri,
+    });
+
+    // ---- token exchange ----
     const tokenUrl = `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(
-      projectId
+      process.env.STACK_PROJECT_ID,
     )}/auth/oauth/token/${encodeURIComponent(provider)}`;
 
     const body = new URLSearchParams({
       client_id: process.env.STACK_AUTH_CLIENT_ID,
-      client_secret: process.env.STACK_AUTH_CLIENT_SECRET,
+      client_secret: process.env.STACK_SECRET_KEY,
       grant_type: 'authorization_code',
       redirect_uri: redirectUri,
       code_verifier: verifier,
@@ -101,7 +110,7 @@ module.exports = async (req, res) => {
         status: tokenRes.status,
         bodyPreview: text.slice(0, 200),
       });
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
+      res.setHeader('Set-Cookie', [clearState, clearPkce, clearProvider]);
       return res.status(502).json({ error: 'token_exchange_failed' });
     }
 
@@ -113,7 +122,7 @@ module.exports = async (req, res) => {
     const user = await verifyToken(raw).catch(() => null);
     if (!user) {
       console.error('/api/auth/callback: token_verification_failed');
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
+      res.setHeader('Set-Cookie', [clearState, clearPkce, clearProvider]);
       return res.status(401).json({ error: 'token_verification_failed' });
     }
 
@@ -125,14 +134,14 @@ module.exports = async (req, res) => {
     const sessionCookie = signSessionToken(sessionJwt);
 
     // clear temp cookies & set session
-    res.setHeader('Set-Cookie', [clearState, clearPkce, sessionCookie]);
+    res.setHeader('Set-Cookie', [clearState, clearPkce, clearProvider, sessionCookie]);
 
     // success -> home
     res.writeHead(302, { Location: '/' });
     return res.end();
   } catch (err) {
     console.error('/api/auth/callback error:', err);
-    res.setHeader('Set-Cookie', [clearState, clearPkce]);
+    res.setHeader('Set-Cookie', [clearState, clearPkce, clearProvider]);
     return res.status(500).json({ error: 'server_error' });
   }
 };
