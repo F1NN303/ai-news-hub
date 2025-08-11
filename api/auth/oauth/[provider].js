@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    ensureConfig();
+    ensureConfig(['STACK_AUTH_PROJECT_ID', 'STACK_AUTH_CLIENT_ID']);
 
     const provider = req.query.provider;
     if (!provider) return res.status(400).json({ error: 'missing_provider' });

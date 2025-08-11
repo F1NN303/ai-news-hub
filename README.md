@@ -31,26 +31,35 @@ Replace `example@domain.com` with the email of the account you want to promote.
    ```
 2. Copy `.env.example` to `.env` and provide values for:
    - `DATABASE_URL` – Postgres connection string (Neon requires SSL).
-   - `JWT_SECRET` – Secret used to sign/verify JWTs locally.
    - `SESSION_SECRET` – Secret for signing the `session` cookie.
-   - `JWKS_URL` – optional JWKS endpoint to verify tokens from an external provider.
+   - `JWT_SECRET` – Secret used to sign/verify JWTs locally.
+   - `STACK_AUTH_PROJECT_ID`, `STACK_AUTH_CLIENT_ID`, `STACK_AUTH_CLIENT_SECRET` – credentials from Stack Auth.
+   - `JWKS_URL` – JWKS endpoint from Stack Auth or another provider.
 3. Start the development server (requires the [Vercel CLI](https://vercel.com/docs/cli)):
    ```bash
    npx vercel dev
    ```
    The site is available at `http://localhost:3000` and API routes under `http://localhost:3000/api/*`.
 
-## Neon Auth OAuth setup
+## Stack Auth setup
 
-1. In the Neon Console, enable the **Google** and **GitHub** providers.
-2. Set the following environment variables:
+1. In the Stack Auth dashboard, open your project and enable the **Google** provider.
+2. Under **Redirect URIs**, add:
+   - `http://localhost:3000/api/auth/callback`
+   - `https://your-production-domain/api/auth/callback`
+   These URIs must also be allowed in the Google Cloud console.
+3. Copy the credentials from the Stack Auth dashboard and set:
+   - `STACK_AUTH_PROJECT_ID`
+   - `STACK_AUTH_CLIENT_ID`
+   - `STACK_AUTH_CLIENT_SECRET`
    - `JWKS_URL` – `https://api.stack-auth.com/api/v1/projects/<project_id>/.well-known/jwks.json`
-   - `STACK_AUTH_PROJECT_ID` – your Neon Auth project ID.
-   - `STACK_AUTH_CLIENT_ID` – OAuth client ID from Neon Auth.
-   - `STACK_AUTH_CLIENT_SECRET` – OAuth client secret from Neon Auth.
-3. Add trusted domains in Neon Auth:
+4. Add trusted domains in Stack Auth:
    - `http://localhost:3000`
    - Your production URL
+
+### Local vs. production
+
+Local development uses `http://localhost:3000` while production runs on your deployed URL. Ensure both domains are included in Stack Auth and Google configuration.
 
 ### OAuth routes
 
@@ -108,10 +117,11 @@ This endpoint may be rate limited to prevent abuse.
 ## Deployment on Vercel
 
 1. Push the repository to your Git host and [import it into Vercel](https://vercel.com/new).
-2. In **Project Settings → Environment Variables**, configure the same variables used locally
-   (`DATABASE_URL`, `JWT_SECRET`, `SESSION_SECRET`, and `JWKS_URL` if used).
-3. Deploy the project. Vercel builds the static files and exposes the `api/` directory as
-   serverless functions.
+2. In **Project Settings → Environment Variables**, set the variables from `.env.example`
+   (`DATABASE_URL`, `SESSION_SECRET`, `JWT_SECRET`, `STACK_PROJECT_ID`, `STACK_SECRET_KEY`,
+   `STACK_AUTH_CLIENT_ID`, and `JWKS_URL` if used).
+3. Deploy or trigger a redeploy after saving variables so the build receives the new values.
+   Vercel builds the static files and exposes the `api/` directory as serverless functions.
 4. After deployment, ensure [docs/db-migration.sql](docs/db-migration.sql) has been run on
    your Neon database so the required tables and admin user exist.
 

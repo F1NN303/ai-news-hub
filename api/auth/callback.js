@@ -25,14 +25,23 @@ module.exports = async (req, res) => {
     'pkce_verifier=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
 
   try {
-    ensureConfig();
+    ensureConfig([
+      'STACK_AUTH_PROJECT_ID',
+      'STACK_AUTH_CLIENT_ID',
+      'STACK_AUTH_CLIENT_SECRET',
+      'JWKS_URL',
+      'JWT_SECRET',
+    ]);
     const { state, code, provider } = req.query || {};
-    console.log('/api/auth/callback: query', { state, code, provider });
-    if (!state || !stateCookie || stateCookie !== state) {
+    const stateMatch = Boolean(state && stateCookie && stateCookie === state);
+    console.log('/api/auth/callback', { provider, stateMatch });
+    if (!stateMatch) {
+      console.error('/api/auth/callback: invalid_state');
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_state' });
     }
     if (!code || !provider) {
+      console.error('/api/auth/callback: invalid_oauth_response');
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
@@ -63,27 +72,34 @@ module.exports = async (req, res) => {
       }
     );
 
+    console.log('/api/auth/callback', {
+      provider,
+      stateMatch,
+      tokenStatus: tokenRes.status,
+    });
     const tokenData = await tokenRes.json();
-    console.log('/api/auth/callback: tokenData', tokenData);
-    const token = tokenData.token;
+    const accessToken = tokenData.token;
+    const idToken = tokenData.id_token;
+    const verifyTarget = idToken || accessToken;
 
     let payload;
     try {
-      payload = await verifyToken(token);
+      payload = await verifyToken(verifyTarget);
     } catch (err) {
       payload = null;
     }
     if (!payload || !payload.sub) {
+      console.error('/api/auth/callback: invalid_oauth_response');
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
 
     let { name, email } = payload;
-    if (!email || !name) {
+    if ((!email || !name) && accessToken) {
       const infoRes = await fetch(
         'https://api.stack-auth.com/api/v1/auth/userinfo',
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${accessToken}` },
         }
       );
       const info = await infoRes.json();
@@ -91,6 +107,7 @@ module.exports = async (req, res) => {
       email = email || info.email;
     }
     if (!name || !email) {
+      console.error('/api/auth/callback: invalid_oauth_response');
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
@@ -118,7 +135,7 @@ module.exports = async (req, res) => {
     res.writeHead(302, { Location: '/' });
     res.end();
   } catch (err) {
-    console.error('/api/auth/callback error:', err);
+    console.error('/api/auth/callback error:', err.message);
     res.setHeader('Set-Cookie', [clearState, clearPkce]);
     if (err.code === 'CONFIG_ERROR') {
       return res.status(500).json({ error: 'missing_config' });
