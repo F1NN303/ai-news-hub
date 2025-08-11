@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'missing_provider' });
     }
     const stateMatch = Boolean(state && stateCookie && stateCookie === state);
-    console.log('/api/auth/callback', { provider, stateMatch });
+    console.log('/api/auth/callback', { provider, stateMatch, hasCode: Boolean(code) });
     if (!stateMatch) {
       console.error('/api/auth/callback: invalid_state');
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
@@ -96,7 +96,7 @@ module.exports = async (req, res) => {
         errText.slice(0, 100)
       );
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
-      return res.status(400).json({ error: 'invalid_oauth_response' });
+      return res.status(502).json({ error: 'token_exchange_failed' });
     }
 
     const tokenData = await tokenRes.json();
