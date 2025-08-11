@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
     'pkce_verifier=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
 
   try {
-    ensureConfig();
+    ensureConfig(['STACK_PROJECT_ID', 'STACK_SECRET_KEY', 'JWKS_URL', 'JWT_SECRET']);
     const { state, code, provider } = req.query || {};
     console.log('/api/auth/callback: provider', provider);
     if (!state || !stateCookie || stateCookie !== state) {

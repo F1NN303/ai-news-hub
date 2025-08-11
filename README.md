@@ -45,9 +45,9 @@ Replace `example@domain.com` with the email of the account you want to promote.
 1. In the Neon Console, enable the **Google** and **GitHub** providers.
 2. Set the following environment variables:
    - `JWKS_URL` – `https://api.stack-auth.com/api/v1/projects/<project_id>/.well-known/jwks.json`
-   - `STACK_AUTH_PROJECT_ID` – your Neon Auth project ID.
-   - `STACK_AUTH_CLIENT_ID` – OAuth client ID from Neon Auth.
-   - `STACK_AUTH_CLIENT_SECRET` – OAuth client secret from Neon Auth.
+   - `STACK_PROJECT_ID` – your Stack project ID.
+   - `STACK_AUTH_CLIENT_ID` – OAuth client ID from Stack Auth.
+   - `STACK_SECRET_KEY` – OAuth client secret from Stack Auth.
 3. Add trusted domains in Neon Auth:
    - `http://localhost:3000`
    - Your production URL

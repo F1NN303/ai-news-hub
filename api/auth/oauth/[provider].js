@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    ensureConfig();
+    ensureConfig(['STACK_AUTH_CLIENT_ID']);
 
     const provider = req.query.provider;
     if (!provider) return res.status(400).json({ error: 'missing_provider' });
@@ -24,9 +24,6 @@ module.exports = async (req, res) => {
     const redirectUri = `${baseUrl}/api/auth/callback`;
 
     const clientId = process.env.STACK_AUTH_CLIENT_ID;
-    if (!clientId) {
-      return res.status(500).json({ error: 'server_config_error' });
-    }
 
     const verifier = b64url(crypto.randomBytes(32));
     const challenge = b64url(crypto.createHash('sha256').update(verifier).digest());

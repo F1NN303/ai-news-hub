@@ -2,7 +2,7 @@ const { ensureConfig } = require('../../lib/auth');
 
 module.exports = (req, res) => {
   try {
-    ensureConfig();
+    ensureConfig(['SESSION_SECRET']);
     res.setHeader('Set-Cookie', 'session=; HttpOnly; Secure; SameSite=Strict; Max-Age=0; Path=/');
     res.writeHead(302, { Location: '/' }).end();
   } catch (err) {

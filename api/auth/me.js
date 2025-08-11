@@ -4,7 +4,7 @@ const db = require('../../lib/db');
 
 module.exports = async (req, res) => {
   try {
-    ensureConfig();
+    ensureConfig(['JWKS_URL', 'JWT_SECRET']);
     const token = getSessionToken(req);
     if (!token) {
       return res.status(401).json({ error: 'unauthorized' });

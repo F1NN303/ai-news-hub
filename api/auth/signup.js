@@ -8,7 +8,7 @@ const limiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 5 });
 
 module.exports = async (req, res) => {
   try {
-    ensureConfig();
+    ensureConfig(['DATABASE_URL']);
     ensureCsrf(req, res);
     if (req.method !== 'POST') {
       return res.status(405).json({ error: 'method_not_allowed' });
