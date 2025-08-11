@@ -35,7 +35,6 @@ module.exports = async (req, res) => {
     res.setHeader('Set-Cookie', [
       `pkce_verifier=${verifier}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
-      `oauth_provider=${encodeURIComponent(provider)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
     ]);
 
     const url = new URL('https://api.stack-auth.com');
