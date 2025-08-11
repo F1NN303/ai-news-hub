@@ -31,9 +31,9 @@ module.exports = async (req, res) => {
   try {
     // required envs; lib/auth.ensureConfig erlaubt JWKS_URL **oder** JWT_SECRET
     ensureConfig([
-      'STACK_AUTH_PROJECT_ID',
+      'STACK_PROJECT_ID',
       'STACK_AUTH_CLIENT_ID',
-      'STACK_AUTH_CLIENT_SECRET',
+      'STACK_SECRET_KEY',
       'SESSION_SECRET',
       'JWKS_URL',
       'JWT_SECRET',
@@ -70,18 +70,24 @@ module.exports = async (req, res) => {
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
     const redirectUri = `${baseUrl}/api/auth/callback?provider=${encodeURIComponent(
-      provider
+      provider,
     )}`;
 
-    // ---- token exchange (project-scoped) ----
-    const projectId = process.env.STACK_AUTH_PROJECT_ID;
-    const tokenUrl = `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(
-      projectId
-    )}/auth/oauth/token/${encodeURIComponent(provider)}`;
+    console.log('/api/auth/callback redirect', {
+      provider,
+      hasCode: Boolean(code),
+      hasVerifier: Boolean(verifier),
+      redirectUri,
+    });
+
+    // ---- token exchange ----
+    const tokenUrl = `https://api.stack-auth.com/api/v1/auth/oauth/token/${encodeURIComponent(
+      provider,
+    )}`;
 
     const body = new URLSearchParams({
       client_id: process.env.STACK_AUTH_CLIENT_ID,
-      client_secret: process.env.STACK_AUTH_CLIENT_SECRET,
+      client_secret: process.env.STACK_SECRET_KEY,
       grant_type: 'authorization_code',
       redirect_uri: redirectUri,
       code_verifier: verifier,

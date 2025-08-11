@@ -16,17 +16,18 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'method_not_allowed' });
   }
 
-  // temp cookies we set for the round‑trip
+  // temp cookies we set for the round-trip
   const clearState =
     'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
   const clearPkce =
     'pkce_verifier=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
 
   try {
-    // Require the new Stack Auth envs; ensureConfig allows JWKS_URL **or** JWT_SECRET
+    // Require the Stack Auth envs; ensureConfig allows JWKS_URL **or** JWT_SECRET
     ensureConfig([
-      'STACK_AUTH_PROJECT_ID',
+      'STACK_PROJECT_ID',
       'STACK_AUTH_CLIENT_ID',
+      'STACK_SECRET_KEY',
       'SESSION_SECRET',
       'JWKS_URL',
       'JWT_SECRET',
@@ -46,35 +47,33 @@ module.exports = async (req, res) => {
     // --- PKCE + state ---
     const verifier = b64url(crypto.randomBytes(32));
     const challenge = b64url(
-      crypto.createHash('sha256').update(verifier).digest()
+      crypto.createHash('sha256').update(verifier).digest(),
     );
     const state = b64url(crypto.randomBytes(16));
 
     // persist temp values
     res.setHeader('Set-Cookie', [
       `pkce_verifier=${encodeURIComponent(
-        verifier
+        verifier,
       )}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
       `oauth_state=${encodeURIComponent(
-        state
+        state,
       )}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
     ]);
 
     // Our callback includes the provider so the callback doesn't need to guess it
     const redirectUri = `${baseUrl}/api/auth/callback?provider=${encodeURIComponent(
-      provider
+      provider,
     )}`;
 
-    // --- build Stack Auth authorize URL (project‑scoped) ---
-    const projectId = process.env.STACK_AUTH_PROJECT_ID;
+    // --- build Stack Auth authorize URL ---
     const authorizeUrl = new URL(
-      `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(
-        projectId
-      )}/auth/oauth/authorize/${encodeURIComponent(provider)}`
+      'https://api.stack-auth.com/api/v1/auth/oauth/authorize',
     );
+    authorizeUrl.searchParams.set('provider', provider);
     authorizeUrl.searchParams.set(
       'client_id',
-      process.env.STACK_AUTH_CLIENT_ID
+      process.env.STACK_AUTH_CLIENT_ID,
     );
     authorizeUrl.searchParams.set('redirect_uri', redirectUri);
     authorizeUrl.searchParams.set('response_type', 'code');
@@ -83,14 +82,11 @@ module.exports = async (req, res) => {
     authorizeUrl.searchParams.set('code_challenge', challenge);
     authorizeUrl.searchParams.set('state', state);
 
-    // minimal masked log for debugging
-    console.log('/api/auth/oauth', {
-      provider,
-      host,
-      path: req.url,
-      state: `...${state.slice(-6)}`,
-      challenge: `...${challenge.slice(-6)}`,
-    });
+    // log final authorize URL (masking sensitive params)
+    const logUrl = new URL(authorizeUrl.toString());
+    logUrl.searchParams.set('code_challenge', '***');
+    logUrl.searchParams.set('state', '***');
+    console.log('/api/auth/oauth', { provider, url: logUrl.toString() });
 
     res.writeHead(302, { Location: authorizeUrl.toString() });
     return res.end();
@@ -100,3 +96,4 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'server_error' });
   }
 };
+

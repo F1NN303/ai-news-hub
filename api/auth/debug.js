@@ -4,9 +4,9 @@ module.exports = (req, res) => {
     return res.status(405).json({ error: 'method_not_allowed' });
   }
   const keys = [
-    'STACK_AUTH_PROJECT_ID',
+    'STACK_PROJECT_ID',
     'STACK_AUTH_CLIENT_ID',
-    'STACK_AUTH_CLIENT_SECRET',
+    'STACK_SECRET_KEY',
     'DATABASE_URL',
     'JWKS_URL',
     'JWT_SECRET',
