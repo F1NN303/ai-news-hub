@@ -46,12 +46,20 @@ module.exports = async (req, res) => {
       `&code_challenge=${encodeURIComponent(challenge)}` +
       `&state=${encodeURIComponent(state)}`;
 
+    const maskedAuthorizeUrl = authorizeUrl
+      .replace(
+        encodeURIComponent(challenge),
+        `${encodeURIComponent(challenge.slice(0, 6))}...`
+      )
+      .replace(
+        encodeURIComponent(state),
+        `${encodeURIComponent(state.slice(0, 6))}...`
+      );
+
     console.log('/api/auth/oauth', {
       provider,
       host,
-      path: req.url,
-      state: `...${state.slice(-6)}`,
-      challenge: `...${challenge.slice(-6)}`,
+      authorizeUrl: maskedAuthorizeUrl,
     });
 
     res.writeHead(302, { Location: authorizeUrl });

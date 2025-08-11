@@ -27,8 +27,9 @@ module.exports = async (req, res) => {
   try {
     ensureConfig(['STACK_PROJECT_ID', 'STACK_SECRET_KEY', 'JWKS_URL', 'JWT_SECRET']);
     const { state, code, provider } = req.query || {};
-    console.log('/api/auth/callback: provider', provider);
-    if (!state || !stateCookie || stateCookie !== state) {
+    const stateMatch = Boolean(state && stateCookie && stateCookie === state);
+    console.log('/api/auth/callback', { provider, stateMatch });
+    if (!stateMatch) {
       console.error('/api/auth/callback: invalid_state');
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_state' });
@@ -62,7 +63,11 @@ module.exports = async (req, res) => {
       }
     );
 
-    console.log('/api/auth/callback: token status', tokenRes.status);
+    console.log('/api/auth/callback', {
+      provider,
+      stateMatch,
+      tokenStatus: tokenRes.status,
+    });
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.token;
     const idToken = tokenData.id_token;
