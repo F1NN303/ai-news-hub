@@ -21,7 +21,9 @@ module.exports = async (req, res) => {
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
-    const redirectUri = `${baseUrl}/api/auth/callback`;
+    const redirectUri = `${baseUrl}/api/auth/callback?provider=${encodeURIComponent(
+      provider
+    )}`;
 
     const clientId = process.env.STACK_AUTH_CLIENT_ID;
     const projectId = process.env.STACK_PROJECT_ID;
@@ -39,7 +41,7 @@ module.exports = async (req, res) => {
     const authorizeUrl =
       `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(
         projectId
-      )}/oauth/authorize/${encodeURIComponent(provider)}` +
+      )}/auth/oauth/authorize/${encodeURIComponent(provider)}` +
       `?client_id=${encodeURIComponent(clientId)}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&response_type=code` +
