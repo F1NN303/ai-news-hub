@@ -38,8 +38,9 @@ module.exports = async (req, res) => {
     ]);
 
     const authorizeUrl =
-      `https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}` +
-      `?client_id=${encodeURIComponent(clientId)}` +
+      `https://api.stack-auth.com/api/v1/auth/oauth/authorize` +
+      `?provider=${encodeURIComponent(provider)}` +
+      `&client_id=${encodeURIComponent(clientId)}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&response_type=code` +
       `&scope=${encodeURIComponent('openid email profile')}` +

@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_state' });
     }
-    if (!code) {
+    if (!code || !provider) {
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
@@ -41,24 +41,24 @@ module.exports = async (req, res) => {
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
 
-    const projectId = process.env.STACK_PROJECT_ID;
-    const serverSecret = process.env.STACK_SECRET_KEY;
+    const clientId = process.env.STACK_AUTH_CLIENT_ID;
+    const clientSecret = process.env.STACK_AUTH_CLIENT_SECRET;
 
     const tokenRes = await fetch(
-  `https://api.stack-auth.com/api/v1/projects/${projectId}/auth/oauth/token`,
-  {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      client_id: projectId,
-      client_secret: serverSecret,
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: `${baseUrl}/api/auth/callback`,
-      code_verifier: verifier,
-    }),
-  }
-);
+      `https://api.stack-auth.com/api/v1/auth/oauth/token/${encodeURIComponent(provider)}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          client_id: clientId,
+          client_secret: clientSecret,
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: `${baseUrl}/api/auth/callback`,
+          code_verifier: verifier,
+        }),
+      }
+    );
 
     const tokenData = await tokenRes.json();
     console.log('/api/auth/callback: tokenData', tokenData);
