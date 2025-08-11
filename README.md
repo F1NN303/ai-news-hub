@@ -47,6 +47,7 @@ Replace `example@domain.com` with the email of the account you want to promote.
    - `JWKS_URL` – `https://api.stack-auth.com/api/v1/projects/<project_id>/.well-known/jwks.json`
    - `STACK_AUTH_PROJECT_ID` – your Neon Auth project ID.
    - `STACK_AUTH_CLIENT_ID` – OAuth client ID from Neon Auth.
+   - `STACK_AUTH_CLIENT_SECRET` – OAuth client secret from Neon Auth.
 3. Add trusted domains in Neon Auth:
    - `http://localhost:3000`
    - Your production URL
