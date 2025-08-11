@@ -28,7 +28,13 @@ module.exports = async (req, res) => {
     'oauth_provider=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
 
   try {
-    ensureConfig(['STACK_PROJECT_ID', 'STACK_SECRET_KEY', 'JWKS_URL', 'JWT_SECRET']);
+    ensureConfig([
+      'STACK_AUTH_PROJECT_ID',
+      'STACK_AUTH_CLIENT_ID',
+      'STACK_AUTH_CLIENT_SECRET',
+      'JWKS_URL',
+      'JWT_SECRET',
+    ]);
     const { state, code, provider: providerQuery } = req.query || {};
     const provider = providerQuery || providerCookie;
     const stateMatch = Boolean(state && stateCookie && stateCookie === state);
@@ -47,31 +53,50 @@ module.exports = async (req, res) => {
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
+    const redirectUri = `${baseUrl}/api/auth/callback?provider=${encodeURIComponent(
+      provider
+    )}`;
 
-    const clientId = process.env.STACK_PROJECT_ID;
-    const clientSecret = process.env.STACK_SECRET_KEY;
+    const clientId = process.env.STACK_AUTH_CLIENT_ID;
+    const clientSecret = process.env.STACK_AUTH_CLIENT_SECRET;
+    const projectId = process.env.STACK_AUTH_PROJECT_ID;
 
-    const tokenRes = await fetch(
-      `https://api.stack-auth.com/api/v1/auth/oauth/token/${encodeURIComponent(provider)}`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          client_id: clientId,
-          client_secret: clientSecret,
-          grant_type: 'authorization_code',
-          code,
-          redirect_uri: `${baseUrl}/api/auth/callback`,
-          code_verifier: verifier,
-        }),
-      }
-    );
+    const tokenUrl = new URL('https://api.stack-auth.com');
+    tokenUrl.pathname = `/api/v1/projects/${encodeURIComponent(
+      projectId
+    )}/auth/oauth/token/${encodeURIComponent(provider)}`;
+    const body = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: redirectUri,
+      client_id: clientId,
+      client_secret: clientSecret,
+      code_verifier: verifier,
+    });
+
+    const tokenRes = await fetch(tokenUrl.toString(), {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
 
     console.log('/api/auth/callback', {
       provider,
       stateMatch,
       tokenStatus: tokenRes.status,
     });
+
+    if (!tokenRes.ok) {
+      const errText = await tokenRes.text().catch(() => '');
+      console.error(
+        '/api/auth/callback token error',
+        tokenRes.status,
+        errText.slice(0, 100)
+      );
+      res.setHeader('Set-Cookie', [clearState, clearPkce, clearProvider]);
+      return res.status(400).json({ error: 'invalid_oauth_response' });
+    }
+
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.token;
     const idToken = tokenData.id_token;
