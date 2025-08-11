@@ -33,7 +33,8 @@ Replace `example@domain.com` with the email of the account you want to promote.
    - `DATABASE_URL` – Postgres connection string (Neon requires SSL).
    - `SESSION_SECRET` – Secret for signing the `session` cookie.
    - `JWT_SECRET` – Secret used to sign/verify JWTs locally.
-   - `STACK_AUTH_PROJECT_ID`, `STACK_AUTH_CLIENT_ID`, `STACK_AUTH_CLIENT_SECRET` – credentials from Stack Auth.
+   - `STACK_AUTH_CLIENT_ID` – Stack Auth publishable client key.
+   - `STACK_AUTH_CLIENT_SECRET` – Stack Auth server secret.
    - `JWKS_URL` – JWKS endpoint from Stack Auth or another provider.
 3. Start the development server (requires the [Vercel CLI](https://vercel.com/docs/cli)):
    ```bash
@@ -45,14 +46,16 @@ Replace `example@domain.com` with the email of the account you want to promote.
 
 1. In the Stack Auth dashboard, open your project and enable the **Google** provider.
 2. Under **Redirect URIs**, add:
+   - `http://localhost:3000/api/auth/oauth/google`
    - `http://localhost:3000/api/auth/callback`
+   - `https://your-production-domain/api/auth/oauth/google`
    - `https://your-production-domain/api/auth/callback`
    These URIs must also be allowed in the Google Cloud console.
 3. Copy the credentials from the Stack Auth dashboard and set:
-   - `STACK_AUTH_PROJECT_ID`
-   - `STACK_AUTH_CLIENT_ID`
-   - `STACK_AUTH_CLIENT_SECRET`
+   - `STACK_AUTH_CLIENT_ID` – publishable client key
+   - `STACK_AUTH_CLIENT_SECRET` – server secret
    - `JWKS_URL` – `https://api.stack-auth.com/api/v1/projects/<project_id>/.well-known/jwks.json`
+   - (Optional) `STACK_AUTH_PROJECT_ID` – for reference in docs
 4. Add trusted domains in Stack Auth:
    - `http://localhost:3000`
    - Your production URL
@@ -118,8 +121,8 @@ This endpoint may be rate limited to prevent abuse.
 
 1. Push the repository to your Git host and [import it into Vercel](https://vercel.com/new).
 2. In **Project Settings → Environment Variables**, set the variables from `.env.example`
-   (`DATABASE_URL`, `SESSION_SECRET`, `JWT_SECRET`, `STACK_PROJECT_ID`, `STACK_SECRET_KEY`,
-   `STACK_AUTH_CLIENT_ID`, and `JWKS_URL` if used).
+   (`DATABASE_URL`, `SESSION_SECRET`, `JWT_SECRET`, `STACK_AUTH_CLIENT_ID`,
+   `STACK_AUTH_CLIENT_SECRET`, and `JWKS_URL` if used).
 3. Deploy or trigger a redeploy after saving variables so the build receives the new values.
    Vercel builds the static files and exposes the `api/` directory as serverless functions.
 4. After deployment, ensure [docs/db-migration.sql](docs/db-migration.sql) has been run on

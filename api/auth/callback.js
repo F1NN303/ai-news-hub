@@ -26,7 +26,6 @@ module.exports = async (req, res) => {
 
   try {
     ensureConfig([
-      'STACK_AUTH_PROJECT_ID',
       'STACK_AUTH_CLIENT_ID',
       'STACK_AUTH_CLIENT_SECRET',
       'JWKS_URL',
@@ -52,12 +51,11 @@ module.exports = async (req, res) => {
 
     const clientId = process.env.STACK_AUTH_CLIENT_ID;
     const clientSecret = process.env.STACK_AUTH_CLIENT_SECRET;
-    const projectId = process.env.STACK_AUTH_PROJECT_ID;
 
     const tokenRes = await fetch(
-      `https://api.stack-auth.com/api/v1/${encodeURIComponent(
-        projectId
-      )}/auth/oauth/token/${encodeURIComponent(provider)}`,
+      `https://api.stack-auth.com/api/v1/auth/oauth/token/${encodeURIComponent(
+        provider
+      )}`,
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },

@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    ensureConfig(['STACK_AUTH_PROJECT_ID', 'STACK_AUTH_CLIENT_ID']);
+    ensureConfig(['STACK_AUTH_CLIENT_ID']);
 
     const provider = req.query.provider;
     if (!provider) return res.status(400).json({ error: 'missing_provider' });
@@ -24,8 +24,7 @@ module.exports = async (req, res) => {
     const redirectUri = `${baseUrl}/api/auth/callback`;
 
     const clientId = process.env.STACK_AUTH_CLIENT_ID;
-    const projectId = process.env.STACK_AUTH_PROJECT_ID;
-    if (!clientId || !projectId) {
+    if (!clientId) {
       return res.status(500).json({ error: 'server_config_error' });
     }
 
@@ -39,10 +38,9 @@ module.exports = async (req, res) => {
     ]);
 
     const authorizeUrl = new URL(
-      `https://api.stack-auth.com/api/v1/${encodeURIComponent(
-        projectId
-      )}/auth/oauth/authorize/${encodeURIComponent(provider)}`
+      'https://api.stack-auth.com/api/v1/auth/oauth/authorize'
     );
+    authorizeUrl.searchParams.set('provider', provider);
     authorizeUrl.searchParams.set('client_id', clientId);
     authorizeUrl.searchParams.set('redirect_uri', redirectUri);
     authorizeUrl.searchParams.set('response_type', 'code');

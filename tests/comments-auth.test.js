@@ -3,7 +3,6 @@ const assert = require('node:assert');
 
 const originalEnv = { ...process.env };
 
-process.env.STACK_AUTH_PROJECT_ID = 'proj';
 process.env.STACK_AUTH_CLIENT_ID = 'client';
 process.env.STACK_AUTH_CLIENT_SECRET = 'stacksecret';
 process.env.JWKS_URL = 'https://example.com/jwks.json';
