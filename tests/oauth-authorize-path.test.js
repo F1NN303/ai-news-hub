@@ -3,7 +3,7 @@ const assert = require('node:assert');
 
 const originalEnv = { ...process.env };
 
-test('authorize URL uses v1 auth path', async () => {
+test('authorize URL uses project auth path', async () => {
   process.env.STACK_PROJECT_ID = 'proj';
   process.env.STACK_AUTH_CLIENT_ID = 'client';
   process.env.STACK_SECRET_KEY = 'stacksecret';
@@ -20,8 +20,11 @@ test('authorize URL uses v1 auth path', async () => {
   await handler(req, res);
   assert.strictEqual(status, 302);
   const url = new URL(headers.Location);
-  assert.strictEqual(url.pathname, '/api/v1/auth/oauth/authorize');
-  assert.strictEqual(url.searchParams.get('provider'), 'google');
+  assert.strictEqual(
+    url.pathname,
+    '/api/v1/projects/proj/auth/oauth/authorize/google',
+  );
+  assert.strictEqual(url.searchParams.get('provider'), null);
 });
 
 test.after(() => {

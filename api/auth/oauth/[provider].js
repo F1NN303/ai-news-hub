@@ -21,6 +21,8 @@ module.exports = async (req, res) => {
     'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
   const clearPkce =
     'pkce_verifier=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
+  const clearProvider =
+    'oauth_provider=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
 
   try {
     // Require the Stack Auth envs; ensureConfig allows JWKS_URL **or** JWT_SECRET
@@ -35,7 +37,7 @@ module.exports = async (req, res) => {
 
     const provider = req.query.provider;
     if (!provider) {
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
+      res.setHeader('Set-Cookie', [clearState, clearPkce, clearProvider]);
       return res.status(400).json({ error: 'missing_provider' });
     }
 
@@ -59,6 +61,9 @@ module.exports = async (req, res) => {
       `oauth_state=${encodeURIComponent(
         state,
       )}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
+      `oauth_provider=${encodeURIComponent(
+        provider,
+      )}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
     ]);
 
     // Our callback includes the provider so the callback doesn't need to guess it
@@ -68,9 +73,10 @@ module.exports = async (req, res) => {
 
     // --- build Stack Auth authorize URL ---
     const authorizeUrl = new URL(
-      'https://api.stack-auth.com/api/v1/auth/oauth/authorize',
+      `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(
+        process.env.STACK_PROJECT_ID,
+      )}/auth/oauth/authorize/${encodeURIComponent(provider)}`,
     );
-    authorizeUrl.searchParams.set('provider', provider);
     authorizeUrl.searchParams.set(
       'client_id',
       process.env.STACK_AUTH_CLIENT_ID,
@@ -82,17 +88,20 @@ module.exports = async (req, res) => {
     authorizeUrl.searchParams.set('code_challenge', challenge);
     authorizeUrl.searchParams.set('state', state);
 
-    // log final authorize URL (masking sensitive params)
-    const logUrl = new URL(authorizeUrl.toString());
-    logUrl.searchParams.set('code_challenge', '***');
-    logUrl.searchParams.set('state', '***');
-    console.log('/api/auth/oauth', { provider, url: logUrl.toString() });
+    // log final authorize URL with debug info
+    console.log('/api/auth/oauth', {
+      provider,
+      redirectUri,
+      state,
+      code_challenge: challenge,
+      url: authorizeUrl.toString(),
+    });
 
     res.writeHead(302, { Location: authorizeUrl.toString() });
     return res.end();
   } catch (err) {
     console.error('/api/auth/oauth/[provider] error:', err);
-    res.setHeader('Set-Cookie', [clearState, clearPkce]);
+    res.setHeader('Set-Cookie', [clearState, clearPkce, clearProvider]);
     return res.status(500).json({ error: 'server_error' });
   }
 };
