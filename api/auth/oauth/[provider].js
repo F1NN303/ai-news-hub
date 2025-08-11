@@ -2,13 +2,8 @@
 const crypto = require('crypto');
 const { ensureConfig } = require('../../lib/auth');
 
-function b64url(buf) {
-  return Buffer.from(buf)
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/g, '');
-}
+const b64url = (buf) =>
+  Buffer.from(buf).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
@@ -16,21 +11,11 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'method_not_allowed' });
   }
 
-  // temp cookies we set for the round‑trip
-  const clearState =
-    'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
-  const clearPkce =
-    'pkce_verifier=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
+  const clearState = 'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
+  const clearPkce  = 'pkce_verifier=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
 
   try {
-    // Require the new Stack Auth envs; ensureConfig allows JWKS_URL **or** JWT_SECRET
-    ensureConfig([
-      'STACK_AUTH_PROJECT_ID',
-      'STACK_AUTH_CLIENT_ID',
-      'SESSION_SECRET',
-      'JWKS_URL',
-      'JWT_SECRET',
-    ]);
+    ensureConfig(['STACK_AUTH_PROJECT_ID','STACK_AUTH_CLIENT_ID','SESSION_SECRET','JWKS_URL','JWT_SECRET']);
 
     const provider = req.query.provider;
     if (!provider) {
@@ -38,44 +23,26 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'missing_provider' });
     }
 
-    // --- derive our public base url (works on Vercel) ---
     const proto = req.headers['x-forwarded-proto'] || 'https';
-    const host = req.headers['x-forwarded-host'] || req.headers.host;
-    const baseUrl = `${proto}://${host}`;
+    const host  = req.headers['x-forwarded-host'] || req.headers.host;
+    const base  = `${proto}://${host}`;
 
-    // --- PKCE + state ---
-    const verifier = b64url(crypto.randomBytes(32));
-    const challenge = b64url(
-      crypto.createHash('sha256').update(verifier).digest()
-    );
-    const state = b64url(crypto.randomBytes(16));
+    const verifier  = b64url(crypto.randomBytes(32));
+    const challenge = b64url(crypto.createHash('sha256').update(verifier).digest());
+    const state     = b64url(crypto.randomBytes(16));
 
-    // persist temp values
     res.setHeader('Set-Cookie', [
-      `pkce_verifier=${encodeURIComponent(
-        verifier
-      )}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
-      `oauth_state=${encodeURIComponent(
-        state
-      )}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
+      `pkce_verifier=${encodeURIComponent(verifier)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
+      `oauth_state=${encodeURIComponent(state)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
     ]);
 
-    // Our callback includes the provider so the callback doesn't need to guess it
-    const redirectUri = `${baseUrl}/api/auth/callback?provider=${encodeURIComponent(
-      provider
-    )}`;
+    const redirectUri = `${base}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
 
-    // --- build Stack Auth authorize URL (project‑scoped) ---
-    const projectId = process.env.STACK_AUTH_PROJECT_ID;
     const authorizeUrl = new URL(
-      `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(
-        projectId
-      )}/auth/oauth/authorize/${encodeURIComponent(provider)}`
+      `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(process.env.STACK_AUTH_PROJECT_ID)}` +
+      `/auth/oauth/authorize/${encodeURIComponent(provider)}`
     );
-    authorizeUrl.searchParams.set(
-      'client_id',
-      process.env.STACK_AUTH_CLIENT_ID
-    );
+    authorizeUrl.searchParams.set('client_id', process.env.STACK_AUTH_CLIENT_ID);
     authorizeUrl.searchParams.set('redirect_uri', redirectUri);
     authorizeUrl.searchParams.set('response_type', 'code');
     authorizeUrl.searchParams.set('scope', 'openid email profile');
@@ -83,20 +50,17 @@ module.exports = async (req, res) => {
     authorizeUrl.searchParams.set('code_challenge', challenge);
     authorizeUrl.searchParams.set('state', state);
 
-    // minimal masked log for debugging
     console.log('/api/auth/oauth', {
-      provider,
-      host,
-      path: req.url,
+      provider, host, path: req.url,
       state: `...${state.slice(-6)}`,
-      challenge: `...${challenge.slice(-6)}`,
+      challenge: `...${challenge.slice(-6)}`
     });
 
     res.writeHead(302, { Location: authorizeUrl.toString() });
-    return res.end();
+    res.end();
   } catch (err) {
     console.error('/api/auth/oauth/[provider] error:', err);
     res.setHeader('Set-Cookie', [clearState, clearPkce]);
-    return res.status(500).json({ error: 'server_error' });
+    res.status(500).json({ error: 'server_error' });
   }
 };
