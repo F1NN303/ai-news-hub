@@ -1,6 +1,6 @@
-const db = require('../../../lib/db');
-const requireAdmin = require('../../../lib/requireAdmin');
-const { ensureConfig } = require('../../../lib/auth');
+const db = require('../../lib/db');
+const requireAdmin = require('../../lib/requireAdmin');
+const { ensureConfig } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
   try {
