@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    ensureConfig(['STACK_AUTH_CLIENT_ID']);
+    ensureConfig(['STACK_AUTH_CLIENT_ID', 'STACK_PROJECT_ID']);
 
     const provider = req.query.provider;
     if (!provider) return res.status(400).json({ error: 'missing_provider' });
@@ -24,6 +24,7 @@ module.exports = async (req, res) => {
     const redirectUri = `${baseUrl}/api/auth/callback`;
 
     const clientId = process.env.STACK_AUTH_CLIENT_ID;
+    const projectId = process.env.STACK_PROJECT_ID;
 
     const verifier = b64url(crypto.randomBytes(32));
     const challenge = b64url(crypto.createHash('sha256').update(verifier).digest());
@@ -32,12 +33,13 @@ module.exports = async (req, res) => {
     res.setHeader('Set-Cookie', [
       `pkce_verifier=${verifier}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
+      `oauth_provider=${encodeURIComponent(provider)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
     ]);
 
     const authorizeUrl =
-      `https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(
-        provider
-      )}` +
+      `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(
+        projectId
+      )}/oauth/authorize/${encodeURIComponent(provider)}` +
       `?client_id=${encodeURIComponent(clientId)}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&response_type=code` +
