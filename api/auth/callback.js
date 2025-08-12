@@ -40,7 +40,8 @@ module.exports = async (req, res) => {
     const redirectUri = `${base}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
 
    // ---- token exchange (v1, non-project) ----
-const tokenUrl = `https://api.stack-auth.com/api/v1/auth/oauth/token/${encodeURIComponent(provider)}`;
+const tokenUrl = `https://api.stack-auth.com/api/v1/projects/${STACK_AUTH_PROJECT_ID}/auth/oauth/token/${provider}
+`;
 
 const body = new URLSearchParams({
   client_id: process.env.STACK_AUTH_CLIENT_ID,
