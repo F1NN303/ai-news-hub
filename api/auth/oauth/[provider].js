@@ -38,17 +38,18 @@ module.exports = async (req, res) => {
 
     const redirectUri = `${base}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
 
-    const authorizeUrl = new URL(
-      `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(process.env.STACK_AUTH_PROJECT_ID)}` +
-      `/auth/oauth/authorize/${encodeURIComponent(provider)}`
-    );
-    authorizeUrl.searchParams.set('client_id', process.env.STACK_AUTH_CLIENT_ID);
-    authorizeUrl.searchParams.set('redirect_uri', redirectUri);
-    authorizeUrl.searchParams.set('response_type', 'code');
-    authorizeUrl.searchParams.set('scope', 'openid email profile');
-    authorizeUrl.searchParams.set('code_challenge_method', 'S256');
-    authorizeUrl.searchParams.set('code_challenge', challenge);
-    authorizeUrl.searchParams.set('state', state);
+// --- build Stack Auth authorize URL (v1, non-project) ---
+const authorizeUrl = new URL(
+  'https://api.stack-auth.com/api/v1/auth/oauth/authorize'
+);
+authorizeUrl.searchParams.set('provider', provider);
+authorizeUrl.searchParams.set('client_id', process.env.STACK_AUTH_CLIENT_ID);
+authorizeUrl.searchParams.set('redirect_uri', redirectUri);
+authorizeUrl.searchParams.set('response_type', 'code');
+authorizeUrl.searchParams.set('scope', 'openid email profile');
+authorizeUrl.searchParams.set('code_challenge_method', 'S256');
+authorizeUrl.searchParams.set('code_challenge', challenge);
+authorizeUrl.searchParams.set('state', state);
 
     console.log('/api/auth/oauth', {
       provider, host, path: req.url,
