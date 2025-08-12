@@ -40,7 +40,8 @@ module.exports = async (req, res) => {
 
 // --- build Stack Auth authorize URL (v1, non-project) ---
 const authorizeUrl = new URL(
-  'https://api.stack-auth.com/api/v1/auth/oauth/authorize'
+  'https://api.stack-auth.com/api/v1/projects/${STACK_AUTH_PROJECT_ID}/auth/oauth/authorize/${provider}
+'
 );
 authorizeUrl.searchParams.set('provider', provider);
 authorizeUrl.searchParams.set('client_id', process.env.STACK_AUTH_CLIENT_ID);
