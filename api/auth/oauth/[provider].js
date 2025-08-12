@@ -13,22 +13,22 @@ module.exports = async (req, res) => {
 
   try {
     ensureConfig([
-      'STACK_AUTH_PROJECT_ID',
-      'STACK_AUTH_CLIENT_ID',
-      'STACK_AUTH_CLIENT_SECRET'
+      'STACK_AUTH_CLIENT_ID', // wird hier als Google Client ID benutzt
+      'STACK_AUTH_CLIENT_SECRET' // Google Client Secret
     ]);
 
     const provider = req.query.provider;
-    if (!provider) {
-      return res.status(400).json({ error: 'missing_provider' });
+    if (provider !== 'google') {
+      return res.status(400).json({ error: 'invalid_provider' });
     }
 
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
 
-    const redirectUri = `${baseUrl}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
+    const redirectUri = `${baseUrl}/api/auth/callback?provider=google`;
 
+    // PKCE
     const codeVerifier = b64url(crypto.randomBytes(32));
     const codeChallenge = b64url(
       crypto.createHash('sha256').update(codeVerifier).digest()
@@ -41,18 +41,21 @@ module.exports = async (req, res) => {
     ]);
 
     const clientId = process.env.STACK_AUTH_CLIENT_ID;
-    const clientSecret = process.env.STACK_AUTH_CLIENT_SECRET;
+    const scope = [
+      'openid',
+      'email',
+      'profile'
+    ].join(' ');
 
-    const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
+    const url = new URL(`https://accounts.google.com/o/oauth2/v2/auth`);
     url.searchParams.set('client_id', clientId);
-    url.searchParams.set('client_secret', clientSecret);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
-    url.searchParams.set('scope', 'openid email profile');
+    url.searchParams.set('scope', scope);
     url.searchParams.set('code_challenge_method', 'S256');
     url.searchParams.set('code_challenge', codeChallenge);
     url.searchParams.set('state', state);
-    url.searchParams.set('grant_type', 'authorization_code');
+    url.searchParams.set('access_type', 'offline'); // für Refresh Tokens
 
     res.writeHead(302, { Location: url.toString() });
     res.end();
