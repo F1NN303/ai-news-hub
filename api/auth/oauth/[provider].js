@@ -46,6 +46,7 @@ module.exports = async (req, res) => {
     ]);
 
     const clientId = process.env.STACK_AUTH_CLIENT_ID;
+    const clientSecret = process.env.STACK_AUTH_CLIENT_SECRET;
 
     // Authorize URL (ohne client_secret & grant_type)
     const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
