@@ -39,18 +39,18 @@ module.exports = async (req, res) => {
     const base  = `${proto}://${host}`;
     const redirectUri = `${base}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
 
-    const tokenUrl =
-      `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(process.env.STACK_AUTH_PROJECT_ID)}` +
-      `/auth/oauth/token/${encodeURIComponent(provider)}`;
+   // ---- token exchange (v1, non-project) ----
+const tokenUrl = `https://api.stack-auth.com/api/v1/auth/oauth/token/${encodeURIComponent(provider)}`;
 
-    const body = new URLSearchParams({
-      client_id: process.env.STACK_AUTH_CLIENT_ID,
-      client_secret: process.env.STACK_AUTH_CLIENT_SECRET,
-      grant_type: 'authorization_code',
-      redirect_uri: redirectUri,
-      code_verifier: verifier,
-      code,
-    });
+const body = new URLSearchParams({
+  client_id: process.env.STACK_AUTH_CLIENT_ID,
+  client_secret: process.env.STACK_AUTH_CLIENT_SECRET,
+  grant_type: 'authorization_code',
+  redirect_uri: redirectUri,
+  code_verifier: verifier,
+  code,
+});
+
 
     const tokenRes = await fetch(tokenUrl, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
     if (!tokenRes.ok) {
