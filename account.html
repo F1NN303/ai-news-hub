@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Account - AI News Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="bg-light dark:bg-dark text-slate-900 dark:text-slate-100">
+  <div id="root"></div>
+  <script type="module">
+    import React from 'https://cdn.skypack.dev/react';
+    import { createRoot } from 'https://cdn.skypack.dev/react-dom/client';
+    import { UserProvider, useUser } from 'https://cdn.skypack.dev/@auth0/nextjs-auth0/client';
+
+    function Account() {
+      const { user, error, isLoading } = useUser();
+      if (isLoading) return React.createElement('p', null, 'Loading...');
+      if (error) return React.createElement('p', null, error.message);
+      if (!user) {
+        window.location.href = '/login';
+        return null;
+      }
+      return React.createElement('div', { className: 'max-w-2xl mx-auto p-4' }, [
+        React.createElement('h1', { className: 'text-2xl font-bold mb-4' }, 'Account'),
+        React.createElement('pre', { className: 'bg-white dark:bg-slate-900 p-4 rounded border border-slate-200 dark:border-slate-700 overflow-auto' }, JSON.stringify(user, null, 2))
+      ]);
+    }
+
+    const root = createRoot(document.getElementById('root'));
+    root.render(
+      React.createElement(UserProvider, null, React.createElement(Account))
+    );
+  </script>
+</body>
+</html>
