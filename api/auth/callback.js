@@ -20,8 +20,8 @@ module.exports = async (req, res) => {
   );
   const stateCookie = cookies.oauth_state || '';
   const verifier    = cookies.pkce_verifier || '';
-  const clearState  = 'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
-  const clearPkce   = 'pkce_verifier=; Max-Age=0; HttpOnly; Secure; SameSite=Strict; Path=/';
+  const clearState  = 'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Lax; Path=/';
+  const clearPkce   = 'pkce_verifier=; Max-Age=0; HttpOnly; Secure; SameSite=Lax; Path=/';
 
   try {
     // MUST be set in Vercel:
@@ -121,7 +121,7 @@ module.exports = async (req, res) => {
     // Issue app session
     const jwt = await signJWT({ sub: String(user.id), email: user.email, name: user.name, role: user.role });
     const signed = signSessionToken(jwt);
-    const sessionCookie = `session=${signed}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`;
+    const sessionCookie = `session=${signed}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600`;
 
     res.setHeader('Set-Cookie', [sessionCookie, clearState, clearPkce]);
     res.writeHead(302, { Location: '/' });
