@@ -1,4 +1,3 @@
-// pages/api/auth/oauth/[provider].js
 const crypto = require('crypto');
 const { ensureConfig } = require('../../../lib/auth');
 
@@ -13,8 +12,8 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Brauchst du im Code: Project ID (UUID) + Publishable Client Key (pck_)
-    ensureConfig(['STACK_AUTH_PROJECT_ID', 'STACK_AUTH_CLIENT_ID']);
+    // Brauchen: Project-ID (bc68…) + Publishable Key (pck_…)
+    ensureConfig(['STACK_PROJECT_ID', 'STACK_AUTH_CLIENT_ID']);
 
     const provider = req.query.provider;
     if (!provider) return res.status(400).json({ error: 'missing_provider' });
@@ -22,46 +21,42 @@ module.exports = async (req, res) => {
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const host  = req.headers['x-forwarded-host'] || req.headers.host;
     const base  = `${proto}://${host}`;
-
-    // Das ist DEINE App-Callback-Route (Stack Auth leitet am Ende hierhin zurück,
-    // wo du dann den Code gegen Tokens bei Stack Auth eintauschst)
     const redirectUri = `${base}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
 
-    // PKCE
+    // PKCE + state
     const verifier  = b64url(crypto.randomBytes(32));
     const challenge = b64url(crypto.createHash('sha256').update(verifier).digest());
     const state     = b64url(crypto.randomBytes(16));
-
     res.setHeader('Set-Cookie', [
       `pkce_verifier=${verifier}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`,
-      `oauth_state=${state};   HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`,
+      `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`,
     ]);
 
-    const projectId = process.env.STACK_AUTH_PROJECT_ID; // z.B. bc68070c-…
-    const clientId  = process.env.STACK_AUTH_CLIENT_ID;  // pck_…
+    const projectId   = process.env.STACK_PROJECT_ID;     // z.B. bc68...
+    const publishable = process.env.STACK_AUTH_CLIENT_ID; // pck_...
 
-   // WRONG (gives 404):
-// const url = new URL(`https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(projectId)}/auth/oauth/authorize/${encodeURIComponent(provider)}`);
+    // *** KORREKTER ENDPOINT (global, NICHT /projects/.../oauth/...) ***
+    const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
 
-// RIGHT:
-const url = new URL(
-  `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(projectId)}/oauth/authorize/${encodeURIComponent(provider)}`
-);
+    // Pflichtfelder für diesen Endpoint:
+    url.searchParams.set('client_id', projectId);
+    url.searchParams.set('client_secret', publishable);         // Publishable Key (pck_…)
+    url.searchParams.set('grant_type', 'authorization_code');
 
-    url.searchParams.set('client_id', clientId);        // pck_…
-    url.searchParams.set('redirect_uri', redirectUri);  // deine /api/auth/callback…
+    // Standard OAuth Felder:
+    url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
 
-    // Scope MUSS exakt zu den in Stack Auth für Google konfigurierten Scopes passen
-    url.searchParams.set('scope', 'openid email profile'); 
-    // (falls du in Stack Auth die langen Google-Scopes eingetragen hast, nimm stattdessen:)
+    // Scope MUSS exakt zu deiner Stack‑Auth‑Provider‑Config passen:
+    url.searchParams.set('scope', 'openid email profile');
+    // Falls du dort die langen Google‑Scopes eingetragen hast, nutze stattdessen:
     // url.searchParams.set('scope', 'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
 
+    // PKCE
     url.searchParams.set('code_challenge_method', 'S256');
     url.searchParams.set('code_challenge', challenge);
     url.searchParams.set('state', state);
 
-    // KEIN client_secret und KEIN grant_type hier!
     res.writeHead(302, { Location: url.toString() });
     res.end();
   } catch (err) {
