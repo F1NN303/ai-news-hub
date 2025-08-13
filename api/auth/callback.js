@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
     (req.headers.cookie || '')
       .split(';')
       .filter(Boolean)
-      .map((c) => {
+      .map(c => {
         const i = c.indexOf('=');
         return [c.slice(0, i).trim(), decodeURIComponent(c.slice(i + 1))];
       })
@@ -24,12 +24,12 @@ module.exports = async (req, res) => {
   const clearPkce   = 'pkce_verifier=; Max-Age=0; HttpOnly; Secure; SameSite=Lax; Path=/';
 
   try {
-    // MUST be set in Vercel:
-    // STACK_AUTH_PROJECT_ID = project id (UUID)
-    // STACK_SECRET_KEY      = server secret key (sk_...)
+    // Required envs:
+    // STACK_AUTH_PROJECT_ID = your project UUID
+    // STACK_AUTH_CLIENT_ID  = your publishable client key (pck_…)
     // JWKS_URL              = https://api.stack-auth.com/api/v1/projects/<PROJECT_ID>/.well-known/jwks.json
-    // JWT_SECRET            = your app’s signing secret for your own session JWT (already used in repo)
-    ensureConfig(['STACK_AUTH_PROJECT_ID', 'STACK_SECRET_KEY', 'JWKS_URL', 'JWT_SECRET']);
+    // JWT_SECRET            = your app secret (for your own session)
+    ensureConfig(['STACK_AUTH_PROJECT_ID', 'STACK_AUTH_CLIENT_ID', 'JWKS_URL', 'JWT_SECRET']);
 
     const { state, code, provider } = req.query || {};
     if (!provider) {
@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_state' });
     }
-    if (!code) {
+    if (!code || !verifier) {
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_oauth_response' });
     }
@@ -50,16 +50,16 @@ module.exports = async (req, res) => {
     const base  = `${proto}://${host}`;
     const redirectUri = `${base}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
 
-    const projectId   = process.env.STACK_AUTH_PROJECT_ID;
-    const serverKey   = process.env.STACK_SECRET_KEY; // sk_... (server secret)
+    const projectId   = process.env.STACK_AUTH_PROJECT_ID; // UUID
+    const publishable = process.env.STACK_AUTH_CLIENT_ID;   // pck_…
 
     // Exchange code for Stack token
     const tokenRes = await fetch(`https://api.stack-auth.com/api/v1/auth/oauth/token/${encodeURIComponent(provider)}`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        client_id: projectId,
-        client_secret: serverKey,          // server secret used here
+        client_id: projectId,          // <- project UUID
+        client_secret: publishable,    // <- pck_… (publishable client key)
         grant_type: 'authorization_code',
         code,
         redirect_uri: redirectUri,
@@ -71,11 +71,10 @@ module.exports = async (req, res) => {
       const text = await tokenRes.text().catch(() => '');
       console.error('token exchange failed', tokenRes.status, text);
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
-      return res.status(400).json({ error: 'token_exchange_failed', status: tokenRes.status });
+      return res.status(400).json({ error: 'token_exchange_failed', status: tokenRes.status, details: text });
     }
 
-    const tokenData = await tokenRes.json();
-    const token = tokenData?.token;
+    const { token } = await tokenRes.json();
     if (!token) {
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_token_response' });
@@ -83,11 +82,7 @@ module.exports = async (req, res) => {
 
     // Verify Stack ID token via JWKS
     let payload;
-    try {
-      payload = await verifyToken(token);
-    } catch {
-      payload = null;
-    }
+    try { payload = await verifyToken(token); } catch { payload = null; }
     if (!payload?.sub) {
       res.setHeader('Set-Cookie', [clearState, clearPkce]);
       return res.status(400).json({ error: 'invalid_id_token' });
@@ -118,7 +113,7 @@ module.exports = async (req, res) => {
     );
     const user = rows[0];
 
-    // Issue app session
+    // App session
     const jwt = await signJWT({ sub: String(user.id), email: user.email, name: user.name, role: user.role });
     const signed = signSessionToken(jwt);
     const sessionCookie = `session=${signed}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600`;
