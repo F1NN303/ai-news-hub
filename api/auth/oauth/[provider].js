@@ -38,24 +38,20 @@ module.exports = async (req, res) => {
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`
     ]);
 
-    const clientId = process.env.STACK_AUTH_CLIENT_ID;        // pck_...
+  const clientId = process.env.STACK_AUTH_CLIENT_ID;        // pck_...
 const clientSecret = process.env.STACK_AUTH_CLIENT_SECRET; // ssk_...
 
-const url = new URL(
-  `https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`
-);
+const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
 
 url.searchParams.set('client_id', clientId);
-url.searchParams.set('client_secret', clientSecret); // <— fehlte
+url.searchParams.set('client_secret', clientSecret);
 url.searchParams.set('redirect_uri', redirectUri);
 url.searchParams.set('response_type', 'code');
-// wähle genau die Scopes, die du in Stack > Auth Methods > Google freigeschaltet hast:
-url.searchParams.set('scope', 'openid email profile');
-// PKCE
+url.searchParams.set('scope', 'openid email profile'); // oder die beiden Google userinfo-* Scopes, exakt wie in Stack freigeschaltet
 url.searchParams.set('code_challenge_method', 'S256');
 url.searchParams.set('code_challenge', codeChallenge);
 url.searchParams.set('state', state);
-// grant_type NICHT setzen (die v1‑Authorize erwartet ihn nicht immer)
+url.searchParams.set('grant_type', 'authorization_code'); // <— NEU (behebt den SCHEMA_ERROR)
 
     res.writeHead(302, { Location: url.toString() });
     res.end();
