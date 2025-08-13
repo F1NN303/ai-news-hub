@@ -1,129 +1,123 @@
-const db = require('../../lib/db');
-const { verifyToken, signJWT, ensureConfig } = require('../../lib/auth');
-const { signSessionToken } = require('../../lib/cookies');
+// pages/api/auth/callback.js
+const { ensureConfig } = require('../../../lib/auth');
 
+/**
+ * Notes (Shared keys OFF):
+ * - /authorize: no secret, no grant_type (done in [provider].js)
+ * - /token (this file): include client_secret + grant_type=authorization_code
+ *
+ * Required env on Vercel:
+ *   STACK_AUTH_CLIENT_ID     // pck_... (Publishable Client Key)
+ *   STACK_AUTH_CLIENT_SECRET // ssk_... (Server Key)
+ */
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'method_not_allowed' });
   }
 
-  // read cookies
-  const cookies = Object.fromEntries(
-    (req.headers.cookie || '')
-      .split(';')
-      .filter(Boolean)
-      .map(c => {
-        const i = c.indexOf('=');
-        return [c.slice(0, i).trim(), decodeURIComponent(c.slice(i + 1))];
-      })
-  );
-  const stateCookie = cookies.oauth_state || '';
-  const verifier    = cookies.pkce_verifier || '';
-  const clearState  = 'oauth_state=; Max-Age=0; HttpOnly; Secure; SameSite=Lax; Path=/';
-  const clearPkce   = 'pkce_verifier=; Max-Age=0; HttpOnly; Secure; SameSite=Lax; Path=/';
-
   try {
-    // Required envs:
-    // STACK_AUTH_PROJECT_ID = your project UUID
-    // STACK_AUTH_CLIENT_ID  = your publishable client key (pck_…)
-    // JWKS_URL              = https://api.stack-auth.com/api/v1/projects/<PROJECT_ID>/.well-known/jwks.json
-    // JWT_SECRET            = your app secret (for your own session)
-    ensureConfig(['STACK_AUTH_PROJECT_ID', 'STACK_AUTH_CLIENT_ID', 'JWKS_URL', 'JWT_SECRET']);
+    ensureConfig(['STACK_AUTH_CLIENT_ID', 'STACK_AUTH_CLIENT_SECRET']);
 
-    const { state, code, provider } = req.query || {};
-    if (!provider) {
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
-      return res.status(400).json({ error: 'missing_provider' });
+    const { code, state, provider } = req.query;
+    if (!provider) return res.status(400).json({ error: 'missing_provider' });
+    if (!code) return res.status(400).json({ error: 'missing_code' });
+    if (!state) return res.status(400).json({ error: 'missing_state' });
+
+    // Read & clear PKCE + state from cookies
+    const cookies = Object.fromEntries(
+      (req.headers.cookie || '')
+        .split(';')
+        .map(v => v.trim())
+        .filter(Boolean)
+        .map(v => {
+          const i = v.indexOf('=');
+          return [v.slice(0, i), decodeURIComponent(v.slice(i + 1))];
+        })
+    );
+
+    const cookieState = cookies['oauth_state'];
+    const codeVerifier = cookies['pkce_verifier'];
+
+    if (!cookieState || !codeVerifier) {
+      return res.status(400).json({ error: 'missing_pkce_or_state' });
     }
-    if (!state || state !== stateCookie) {
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
-      return res.status(400).json({ error: 'invalid_state' });
-    }
-    if (!code || !verifier) {
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
-      return res.status(400).json({ error: 'invalid_oauth_response' });
+    if (cookieState !== state) {
+      return res.status(400).json({ error: 'state_mismatch' });
     }
 
+    // Build redirectUri exactly like in [provider].js
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const host  = req.headers['x-forwarded-host'] || req.headers.host;
     const base  = `${proto}://${host}`;
     const redirectUri = `${base}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
 
-    const projectId   = process.env.STACK_AUTH_PROJECT_ID; // UUID
-    const publishable = process.env.STACK_AUTH_CLIENT_ID;   // pck_…
+    // Exchange authorization code for tokens at Stack Auth
+    const client_id     = process.env.STACK_AUTH_CLIENT_ID;     // pck_...
+    const client_secret = process.env.STACK_AUTH_CLIENT_SECRET; // ssk_...
 
-    // Exchange code for Stack token
-    const tokenRes = await fetch(`https://api.stack-auth.com/api/v1/auth/oauth/token/${encodeURIComponent(provider)}`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        client_id: projectId,          // <- project UUID
-        client_secret: publishable,    // <- pck_… (publishable client key)
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: redirectUri,
-        code_verifier: verifier,
-      }),
+    const body = new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id,
+      client_secret,
+      code,
+      code_verifier: codeVerifier,
+      redirect_uri: redirectUri
     });
 
+    const tokenRes = await fetch('https://api.stack-auth.com/api/v1/auth/oauth/token', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body
+    });
+
+    // Helpful error bubble‑up if Stack Auth rejects our request
     if (!tokenRes.ok) {
-      const text = await tokenRes.text().catch(() => '');
-      console.error('token exchange failed', tokenRes.status, text);
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
-      return res.status(400).json({ error: 'token_exchange_failed', status: tokenRes.status, details: text });
-    }
-
-    const { token } = await tokenRes.json();
-    if (!token) {
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
-      return res.status(400).json({ error: 'invalid_token_response' });
-    }
-
-    // Verify Stack ID token via JWKS
-    let payload;
-    try { payload = await verifyToken(token); } catch { payload = null; }
-    if (!payload?.sub) {
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
-      return res.status(400).json({ error: 'invalid_id_token' });
-    }
-
-    // Fallback to userinfo if name/email missing
-    let { name, email } = payload;
-    if (!name || !email) {
-      const infoRes = await fetch('https://api.stack-auth.com/api/v1/auth/userinfo', {
-        headers: { Authorization: `Bearer ${token}` },
+      const errJson = await tokenRes.json().catch(() => ({}));
+      console.error('Stack Auth /token error', tokenRes.status, errJson);
+      return res.status(502).json({
+        error: 'token_exchange_failed',
+        status: tokenRes.status,
+        details: errJson
       });
-      const info = await infoRes.json().catch(() => ({}));
-      name = name || info.name;
-      email = email || info.email;
-    }
-    if (!name || !email) {
-      res.setHeader('Set-Cookie', [clearState, clearPkce]);
-      return res.status(400).json({ error: 'incomplete_profile' });
     }
 
-    // Upsert local user
-    const { rows } = await db.query(
-      `INSERT INTO users(name, email, password_hash, role)
-       VALUES($1,$2,'',$3)
-       ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name
-       RETURNING id, name, email, role`,
-      [name, email, 'user']
-    );
-    const user = rows[0];
+    const tokenJson = await tokenRes.json();
+    // tokenJson typically includes: access_token, id_token, refresh_token?, token_type, expires_in, user, etc.
 
-    // App session
-    const jwt = await signJWT({ sub: String(user.id), email: user.email, name: user.name, role: user.role });
-    const signed = signSessionToken(jwt);
-    const sessionCookie = `session=${signed}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600`;
+    // OPTIONAL: integrate with your existing session util if present.
+    // If you have something like setSessionCookie or signSessionToken in lib/auth, prefer that.
+    let sessionCookieSet = false;
+    try {
+      const { setSessionCookie } = require('../../../lib/auth');
+      if (typeof setSessionCookie === 'function') {
+        await setSessionCookie(res, tokenJson);
+        sessionCookieSet = true;
+      }
+    } catch (_) { /* no-op: fallback below */ }
 
-    res.setHeader('Set-Cookie', [sessionCookie, clearState, clearPkce]);
+    // Fallback: set a secure, httpOnly cookie with the access token (adjust to your needs)
+    if (!sessionCookieSet && tokenJson.access_token) {
+      const maxAge = Math.max(60, Number(tokenJson.expires_in || 3600));
+      res.setHeader('Set-Cookie', [
+        `stack_access_token=${encodeURIComponent(tokenJson.access_token)}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAge}`,
+        // Clear the temporary PKCE/state cookies
+        'pkce_verifier=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0',
+        'oauth_state=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0'
+      ]);
+    } else {
+      // Clear PKCE/state even if a custom session util handled cookies
+      res.setHeader('Set-Cookie', [
+        'pkce_verifier=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0',
+        'oauth_state=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0'
+      ]);
+    }
+
+    // Redirect to the app (adjust if you have a post-login path)
     res.writeHead(302, { Location: '/' });
     res.end();
   } catch (err) {
     console.error('/api/auth/callback error:', err);
-    res.setHeader('Set-Cookie', [clearState, clearPkce]);
     return res.status(500).json({ error: 'server_error' });
   }
 };
