@@ -2,8 +2,9 @@ const db = require('../../lib/db');
 const requireAdmin = require('../../lib/requireAdmin');
 const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
 const { ensureConfig } = require('../../lib/auth');
+const { withApiAuthRequired } = require('@auth0/nextjs-auth0');
 
-module.exports = async (req, res) => {
+module.exports = withApiAuthRequired(async (req, res) => {
   const id = req.query.id;
   try {
     ensureConfig();
@@ -48,4 +49,4 @@ module.exports = async (req, res) => {
     }
     return res.status(500).json({ error: 'SERVER_ERROR' });
   }
-};
+});
