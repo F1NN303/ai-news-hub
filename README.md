@@ -5,9 +5,11 @@
 Create a `.env` file and provide the following variables:
 
 - `DATABASE_URL` – Postgres connection string (Neon requires SSL)
-- `STACK_AUTH_PROJECT_ID` – Stack Auth project identifier
-- `STACK_AUTH_CLIENT_ID` – Stack Auth client ID
-- `STACK_AUTH_CLIENT_SECRET` – Stack Auth client secret
+- `AUTH0_SECRET` – Auth0 session secret
+- `AUTH0_BASE_URL` – Base URL of this app
+- `AUTH0_CLIENT_ID` – Auth0 application client ID
+- `AUTH0_CLIENT_SECRET` – Auth0 application client secret
+- `AUTH0_ISSUER_BASE_URL` – Auth0 issuer URL
 
 ## Database Setup (Neon)
 
