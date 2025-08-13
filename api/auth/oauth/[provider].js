@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
     url.searchParams.set('client_secret', clientSecret);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
-    url.searchParams.set('scope', 'openid email profile'); // keep EXACTLY these; they must match your provider config
+    url.searchParams.set('https://www.googleapis.com/auth/userinfo.profile openid https://www.googleapis.com/auth/userinfo.email'); // keep EXACTLY these; they must match your provider config
     url.searchParams.set('code_challenge_method', 'S256');
     url.searchParams.set('code_challenge', codeChallenge);
     url.searchParams.set('state', state);
