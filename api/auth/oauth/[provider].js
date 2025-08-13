@@ -55,7 +55,7 @@ url.searchParams.set('client_secret', clientSecret); // MUSS bei Stack Auth scho
 url.searchParams.set('grant_type', 'authorization_code'); // auch hier schon notwendig
 url.searchParams.set('redirect_uri', redirectUri);
 url.searchParams.set('response_type', 'code');
-url.searchParams.set('scope', 'openid email profile');
+url.searchParams.set('scope', 'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
 url.searchParams.set('code_challenge_method', 'S256');
 url.searchParams.set('code_challenge', codeChallenge);
 url.searchParams.set('state', state);
