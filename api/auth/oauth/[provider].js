@@ -34,8 +34,8 @@ module.exports = async (req, res) => {
     const state = b64url(crypto.randomBytes(16));
 
     res.setHeader('Set-Cookie', [
-      `pkce_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
-      `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`
+      `pkce_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`,
+      `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`
     ]);
 
     const clientId     = process.env.STACK_AUTH_PROJECT_ID; // project UUID
