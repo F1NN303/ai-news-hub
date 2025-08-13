@@ -1,56 +1,44 @@
 const db = require('../../lib/db');
 const bcrypt = require('bcryptjs');
-const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
-const { createRateLimiter } = require('../../lib/rateLimit');
-const { ensureConfig } = require('../../lib/auth');
-
-const limiter = createRateLimiter({ windowMs: 10 * 60 * 1000, max: 5 });
+const { signJWT } = require('../../lib/auth');
+const { signSessionToken } = require('../../lib/cookies');
 
 module.exports = async (req, res) => {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'method_not_allowed' });
+  }
+
+  const { name = '', email, password } = req.body || {};
+  if (!email || !password) {
+    return res.status(400).json({ error: 'missing_fields' });
+  }
+
   try {
-    ensureConfig(['DATABASE_URL']);
-    ensureCsrf(req, res);
-    if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'method_not_allowed' });
+    const { rows: existing } = await db.query('SELECT 1 FROM users WHERE email=$1', [email]);
+    if (existing.length) {
+      return res.status(409).json({ error: 'user_exists' });
     }
 
-    if (!validateCsrf(req)) {
-      return res.status(403).json({ error: 'invalid_csrf_token' });
-    }
+    const hash = await bcrypt.hash(password, 10);
+    // TODO: adjust insert query to match actual schema
+    const { rows } = await db.query(
+      'INSERT INTO users(name, email, password_hash, role) VALUES($1,$2,$3,$4) RETURNING id, name, email, role',
+      [name, email, hash, 'user']
+    );
+    const user = rows[0];
 
-    const { name, email, password } = req.body || {};
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'missing_fields' });
-    }
+    const jwt = await signJWT({ sub: String(user.id), email: user.email, name: user.name, role: user.role }, '7d');
+    const signed = signSessionToken(jwt);
+    res.setHeader(
+      'Set-Cookie',
+      `session=${signed}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${60 * 60 * 24 * 7}`
+    );
 
-    const ip = (req.headers['x-forwarded-for'] || '').split(',')[0] || req.socket?.remoteAddress || '';
-    if (limiter.isLimited(ip, email)) {
-      return res.status(429).json({ error: 'too_many_attempts' });
-    }
-
-    try {
-      const hash = await bcrypt.hash(password, 10);
-      const { rows } = await db.query(
-        'INSERT INTO users(name, email, password_hash, role) VALUES($1,$2,$3,$4) RETURNING id, name, email, role',
-        [name, email, hash, 'user']
-      );
-      const user = rows[0];
-      limiter.clear(ip, email);
-      return res.status(201).json(user);
-    } catch (err) {
-      if (err.code === '23505') {
-        limiter.recordFailure(ip, email);
-        return res.status(409).json({ error: 'user_exists' });
-      }
-      limiter.recordFailure(ip, email);
-      console.error('/api/auth/signup error:', err);
-      return res.status(500).json({ error: 'SERVER_ERROR' });
-    }
+    return res.status(201).json({ ok: true });
   } catch (err) {
     console.error('/api/auth/signup error:', err);
-    if (err.code === 'CONFIG_ERROR') {
-      return res.status(500).json({ error: 'missing_config' });
-    }
-    return res.status(500).json({ error: 'SERVER_ERROR' });
+    return res.status(500).json({ error: 'server_error' });
   }
 };
+

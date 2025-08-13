@@ -38,16 +38,15 @@ module.exports = async (req, res) => {
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`
     ]);
 
-    const clientId     = process.env.STACK_AUTH_PROJECT_ID; // project UUID
-    const clientSecret = process.env.STACK_AUTH_CLIENT_ID;  // publishable pck_ key
+    const projectId = process.env.STACK_AUTH_PROJECT_ID; // project UUID
+    const clientId  = process.env.STACK_AUTH_CLIENT_ID;  // publishable pck_ key
 
-    // Correct Stack Auth authorize endpoint (provider in the path)
-    const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
+    // Correct Stack Auth authorize endpoint (provider in the path, project scoped)
+    const url = new URL(`https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(projectId)}/auth/oauth/authorize/${encodeURIComponent(provider)}`);
     url.searchParams.set('client_id', clientId);
-    url.searchParams.set('client_secret', clientSecret);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
-    url.searchParams.set('https://www.googleapis.com/auth/userinfo.profile+openid+https://www.googleapis.com/auth/userinfo.email'); // keep EXACTLY these; they must match your provider config
+    url.searchParams.set('scope', 'https://www.googleapis.com/auth/userinfo.profile openid https://www.googleapis.com/auth/userinfo.email'); // keep EXACTLY these; they must match your provider config
     url.searchParams.set('code_challenge_method', 'S256');
     url.searchParams.set('code_challenge', codeChallenge);
     url.searchParams.set('state', state);

@@ -3,73 +3,150 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sign Up - AI News Hub</title>
-  <!-- Tailwind & Icons -->
+  <title>Create account - AI News Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root{--primary:#0ea5e9;--secondary:#06b6d4;--dark:#0f172a;--light:#f8fafc;--accent:#818cf8;}
-    body{font-family:'Inter',sans-serif;background:#f8fafc;color:#0f172a;}
-  </style>
-</head>
-<body class="bg-light dark:bg-dark">
-  <main class="max-w-md mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-6 text-center">Sign Up</h1>
-    <form id="signup-form" class="space-y-4">
-      <input id="name" type="text" placeholder="Name" class="w-full border rounded p-2" required />
-      <input id="email" type="email" placeholder="Email" class="w-full border rounded p-2" required />
-      <input id="password" type="password" placeholder="Password" class="w-full border rounded p-2" required />
-      <button type="submit" class="w-full bg-primary text-white px-4 py-2 rounded">Create Account</button>
-      <p id="error-message" class="text-red-600"></p>
-    </form>
-  </main>
   <script>
-    function getCsrfToken(){
-      const m=document.cookie.match(/(?:^|;)\s*csrf=([^;]+)/);
-      if(!m) return '';
-      return decodeURIComponent(m[1]).split('.')[0];
-    }
-    document.addEventListener('DOMContentLoaded', async () => {
-      try { await fetch('/api/auth/signup', { credentials: 'include' }); } catch (e) {}
-      const form=document.getElementById('signup-form');
-      const errorEl=document.getElementById('error-message');
-      const btn=form.querySelector('button');
-      form.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        errorEl.textContent='';
-        const name=document.getElementById('name').value.trim();
-        const email=document.getElementById('email').value.trim();
-        const password=document.getElementById('password').value;
-        const csrfToken=getCsrfToken();
-        btn.disabled=true;
-        const originalHTML=btn.innerHTML;
-        btn.innerHTML='<i class="fas fa-spinner fa-spin mr-2"></i> Creating...';
-        try{
-          const res=await fetch('/api/auth/signup',{
-            method:'POST',
-            headers:{'Content-Type':'application/json','X-CSRF-Token':csrfToken},
-            credentials:'include',
-            body:JSON.stringify({name,email,password})
-          });
-          if(res.ok){
-            window.location.href='/';
-          }else{
-            let msg='Signup failed';
-            try{
-              const data=await res.json();
-              msg=data.error||msg;
-            }catch{}
-            errorEl.textContent=msg;
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0ea5e9',
+            secondary: '#06b6d4',
+            dark: '#0f172a',
+            light: '#f8fafc',
+            accent: '#818cf8'
+          },
+          fontFamily: {
+            inter: ['Inter', 'sans-serif']
           }
-        }catch{
-          errorEl.textContent='Signup failed';
-        }finally{
-          btn.disabled=false;
-          btn.innerHTML=originalHTML;
+        }
+      }
+    };
+    if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="bg-light dark:bg-dark text-slate-900 dark:text-slate-100 font-inter">
+  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
+      <a href="/" class="text-xl font-bold">AI News Hub</a>
+      <nav class="flex gap-4 text-sm">
+        <a href="/login.html" class="hover:underline">Sign in</a>
+        <a href="/signup.html" class="hover:underline">Sign up</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="min-h-[calc(100vh-160px)] flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-lg shadow p-6">
+      <h1 class="text-2xl font-bold mb-6 text-center">Create account</h1>
+      <form id="signup-form" class="space-y-4">
+        <div>
+          <label for="name" class="block mb-1 text-left">Name (optional)</label>
+          <input id="name" name="name" type="text" class="w-full border rounded p-2" />
+        </div>
+        <div>
+          <label for="email" class="block mb-1 text-left">Email</label>
+          <input id="email" name="email" type="email" class="w-full border rounded p-2" required />
+        </div>
+        <div>
+          <label for="password" class="block mb-1 text-left">Password</label>
+          <input id="password" name="password" type="password" class="w-full border rounded p-2" required />
+        </div>
+        <div>
+          <label for="confirmPassword" class="block mb-1 text-left">Confirm password</label>
+          <input id="confirmPassword" name="confirmPassword" type="password" class="w-full border rounded p-2" required />
+        </div>
+        <div class="flex items-center">
+          <input id="terms" type="checkbox" class="mr-2" />
+          <label for="terms" class="text-sm">I accept the <a href="/legal/terms.html" class="text-primary hover:underline">Terms</a> and <a href="/legal/privacy.html" class="text-primary hover:underline">Privacy Policy</a></label>
+        </div>
+        <button id="signup-submit" type="submit" class="w-full bg-primary text-white py-2 rounded disabled:opacity-50">Create account</button>
+        <p id="signup-error" class="text-red-600 text-sm"></p>
+      </form>
+      <div class="my-4 flex items-center">
+        <hr class="flex-grow border-slate-300" />
+        <span class="px-2 text-slate-500 text-sm">or</span>
+        <hr class="flex-grow border-slate-300" />
+      </div>
+      <button id="google-signup" class="w-full border flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800"><i class="fa-brands fa-google"></i><span>Sign up with Google</span></button>
+      <p class="mt-4 text-center text-sm">Already have an account? <a href="/login.html" class="text-primary hover:underline">Sign in</a></p>
+    </div>
+  </main>
+
+  <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12">
+    <div class="max-w-7xl mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-slate-500">
+      <div>
+        <h3 class="text-slate-800 dark:text-slate-200 font-semibold mb-2">Resources</h3>
+        <ul class="space-y-1">
+          <li><a href="/resources/glossary.html" class="hover:underline">AI Glossary</a></li>
+          <li><a href="/resources/research.html" class="hover:underline">Research Papers</a></li>
+          <li><a href="/resources/tutorials.html" class="hover:underline">Tutorials</a></li>
+          <li><a href="/resources/events.html" class="hover:underline">Events Calendar</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-slate-800 dark:text-slate-200 font-semibold mb-2">Legal</h3>
+        <ul class="space-y-1">
+          <li><a href="/legal/privacy.html" class="hover:underline">Privacy Policy</a></li>
+          <li><a href="/legal/terms.html" class="hover:underline">Terms of Service</a></li>
+          <li><a href="/legal/cookie-policy.html" class="hover:underline">Cookie Policy</a></li>
+        </ul>
+      </div>
+      <div class="md:text-right flex items-end">
+        <p class="w-full text-center md:text-right">© <span id="year"></span> AI News Hub</p>
+      </div>
+    </div>
+    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('signup-form');
+      const btn = document.getElementById('signup-submit');
+      const errorEl = document.getElementById('signup-error');
+      document.getElementById('google-signup').addEventListener('click', () => {
+        window.location.href = '/api/auth/oauth/google?provider=google';
+      });
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorEl.textContent = '';
+        if (document.getElementById('password').value !== document.getElementById('confirmPassword').value) {
+          errorEl.textContent = 'Passwords do not match';
+          return;
+        }
+        if (!document.getElementById('terms').checked) {
+          errorEl.textContent = 'You must accept the Terms and Privacy Policy';
+          return;
+        }
+        btn.disabled = true;
+        const payload = {
+          name: document.getElementById('name').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          password: document.getElementById('password').value,
+        };
+        try {
+          const res = await fetch('/api/auth/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          if (res.ok) {
+            window.location.href = '/';
+          } else {
+            const out = await res.json().catch(() => ({}));
+            errorEl.textContent = out.error || 'Signup failed';
+          }
+        } catch {
+          errorEl.textContent = 'Signup failed';
+        } finally {
+          btn.disabled = false;
         }
       });
     });
   </script>
 </body>
 </html>
+
