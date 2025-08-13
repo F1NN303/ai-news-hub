@@ -42,10 +42,10 @@ test('POST /api/comments allows authenticated users', async () => {
   const mem = newDb();
   const pg = mem.adapters.createPg();
   const pool = new pg.Pool();
-  await pool.query(`CREATE TABLE users (id SERIAL PRIMARY KEY, name TEXT, email TEXT, password_hash TEXT, role TEXT);`);
+  await pool.query(`CREATE TABLE users (id SERIAL PRIMARY KEY, name TEXT, email TEXT, password_hash TEXT, role TEXT, email_verification_token TEXT, email_verified BOOLEAN DEFAULT false);`);
   await pool.query(`CREATE TABLE posts (id SERIAL PRIMARY KEY, title TEXT, slug TEXT);`);
   await pool.query(`CREATE TABLE comments (id SERIAL PRIMARY KEY, post_id INT REFERENCES posts(id), user_id INT REFERENCES users(id), content TEXT NOT NULL, created_at TIMESTAMPTZ DEFAULT now());`);
-  await pool.query(`INSERT INTO users (name, email, password_hash, role) VALUES ('Alice','a@b.c','x','user');`);
+  await pool.query(`INSERT INTO users (name, email, password_hash, role, email_verified) VALUES ('Alice','a@b.c','x','user',true);`);
   await pool.query(`INSERT INTO posts (title, slug) VALUES ('Post','post');`);
 
   const db = require('../lib/db');

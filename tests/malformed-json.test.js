@@ -31,9 +31,11 @@ test('PUT /api/posts/:slug returns 400 for invalid JSON', async () => {
 
   await pool.query(`CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    role TEXT
+    role TEXT,
+    email_verification_token TEXT,
+    email_verified BOOLEAN DEFAULT false
   )`);
-  await pool.query(`INSERT INTO users(role) VALUES('admin')`);
+  await pool.query(`INSERT INTO users(role, email_verified) VALUES('admin', true)`);
 
   const db = require('../lib/db');
   db.query = (text, params) => pool.query(text, params);

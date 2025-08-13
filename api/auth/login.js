@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
   try {
     // TODO: replace with real DB lookup
     const { rows } = await db.query(
-      'SELECT id, name, email, password_hash, role FROM users WHERE email=$1',
+      'SELECT id, name, email, password_hash, role, email_verified FROM users WHERE email=$1',
       [email]
     );
     const user = rows[0];
@@ -25,10 +25,15 @@ module.exports = async (req, res) => {
       return res.status(401).json({ error: 'invalid_credentials' });
     }
 
-    // TODO: replace with proper password verification
     const valid = await bcrypt.compare(password, user.password_hash || '');
     if (!valid) {
       return res.status(401).json({ error: 'invalid_credentials' });
+    }
+
+    if (!user.email_verified) {
+      return res
+        .status(403)
+        .json({ error: 'email_not_verified', message: 'Please verify your email before logging in.' });
     }
 
     const jwt = await signJWT(

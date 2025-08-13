@@ -1,7 +1,7 @@
 const db = require('../../lib/db');
 const bcrypt = require('bcryptjs');
-const { signJWT } = require('../../lib/auth');
-const { signSessionToken } = require('../../lib/cookies');
+const crypto = require('crypto');
+const { sendVerificationEmail } = require('../../lib/email');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -21,21 +21,16 @@ module.exports = async (req, res) => {
     }
 
     const hash = await bcrypt.hash(password, 10);
-    // TODO: adjust insert query to match actual schema
-    const { rows } = await db.query(
-      'INSERT INTO users(name, email, password_hash, role) VALUES($1,$2,$3,$4) RETURNING id, name, email, role',
-      [name, email, hash, 'user']
+    const token = crypto.randomBytes(32).toString('hex');
+    await db.query(
+      'INSERT INTO users(name, email, password_hash, role, email_verification_token) VALUES($1,$2,$3,$4,$5)',
+      [name, email, hash, 'user', token]
     );
-    const user = rows[0];
+    await sendVerificationEmail(email, token);
 
-    const jwt = await signJWT({ sub: String(user.id), email: user.email, name: user.name, role: user.role }, '7d');
-    const signed = signSessionToken(jwt);
-    res.setHeader(
-      'Set-Cookie',
-      `session=${signed}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${60 * 60 * 24 * 7}`
-    );
-
-    return res.status(201).json({ ok: true });
+    return res
+      .status(201)
+      .json({ message: 'User created. Please check your email to verify your account.' });
   } catch (err) {
     console.error('/api/auth/signup error:', err);
     return res.status(500).json({ error: 'server_error' });

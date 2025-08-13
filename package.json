@@ -10,7 +10,8 @@
     "bcryptjs": "^2.4.3",
     "cookie": "^1.0.2",
     "jose": "^5.10.0",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "nodemailer": "^6.9.11"
   },
   "devDependencies": {
     "pg-mem": "^3.0.5"
