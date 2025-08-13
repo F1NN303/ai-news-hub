@@ -42,28 +42,10 @@
   <main class="min-h-[calc(100vh-160px)] flex items-center justify-center p-4">
     <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-lg shadow p-6">
       <h1 class="text-2xl font-bold mb-6 text-center">Sign in</h1>
-      <form id="login-form" class="space-y-4" method="post">
-        <input type="hidden" name="csrfToken" id="csrfToken" />
-        <div>
-          <label for="email" class="block mb-1 text-left">Email</label>
-          <input id="email" name="email" type="email" class="w-full border rounded p-2" required />
-        </div>
-        <div>
-          <label for="password" class="block mb-1 text-left">Password</label>
-          <input id="password" name="password" type="password" class="w-full border rounded p-2" required />
-        </div>
-        <div class="flex items-center">
-          <input id="remember" name="remember" type="checkbox" class="mr-2" />
-          <label for="remember">Keep me signed in</label>
-        </div>
-        <button id="login-submit" type="submit" class="w-full bg-primary text-white py-2 rounded">Sign in</button>
-      </form>
-      <div class="my-4 flex items-center">
-        <hr class="flex-grow border-slate-300" />
-        <span class="px-2 text-slate-500 text-sm">or</span>
-        <hr class="flex-grow border-slate-300" />
+      <div class="space-y-4">
+        <a href="/api/auth/login" class="block w-full text-center bg-primary text-white py-2 rounded">Sign in</a>
+        <a href="/api/auth/login?connection=google-oauth2" class="block w-full border flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800"><i class="fa-brands fa-google"></i><span>Continue with Google</span></a>
       </div>
-      <button id="google-btn" class="w-full border flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800"><i class="fa-brands fa-google"></i><span>Continue with Google</span></button>
       <p class="mt-4 text-center text-sm">No account? <a href="/signup" class="text-primary hover:underline">Sign up</a></p>
     </div>
   </main>
@@ -94,14 +76,6 @@
     <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
   </footer>
 
-  <script>
-    document.getElementById('google-btn').addEventListener('click', () => {
-      window.location.href = '/api/auth/login?connection=google-oauth2';
-    });
-    fetch('/api/auth/csrf').then(r => r.json()).then(d => {
-      document.getElementById('csrfToken').value = d.csrfToken;
-    });
-  </script>
 </body>
 </html>
 
