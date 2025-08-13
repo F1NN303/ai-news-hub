@@ -58,12 +58,6 @@
       return match ? match.split('=')[1].split('.')[0] : '';
     }
 
-    async function ensureCsrfCookie() {
-        if (!getCsrfToken()) {
-          await fetch('/api/auth/csrf', { credentials: 'include' });
-        }
-    }
-
     function csrfFetch(url, options = {}) {
       const headers = options.headers || {};
       headers['X-CSRF-Token'] = getCsrfToken();
@@ -165,7 +159,6 @@
     });
 
     document.addEventListener('DOMContentLoaded', async () => {
-      await ensureCsrfCookie();
       const res = await fetch('/api/auth/me', { credentials: 'include' });
       if (res.status !== 200) {
         window.location.href = '/login';
