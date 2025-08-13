@@ -1,13 +1,8 @@
-// pages/api/auth/oauth/[provider].js
 const crypto = require('crypto');
 const { ensureConfig } = require('../../../lib/auth');
 
 function b64url(buf) {
-  return buf
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
+  return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 module.exports = async (req, res) => {
@@ -17,8 +12,8 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Only the publishable client key (pck_...) is required for /authorize
-    ensureConfig(['STACK_AUTH_CLIENT_ID']);
+    // Brauchen: Project-ID (bc68…) + Publishable Key (pck_…)
+    ensureConfig(['STACK_PROJECT_ID', 'STACK_AUTH_CLIENT_ID']);
 
     const provider = req.query.provider;
     if (!provider) return res.status(400).json({ error: 'missing_provider' });
@@ -32,27 +27,39 @@ module.exports = async (req, res) => {
     const verifier  = b64url(crypto.randomBytes(32));
     const challenge = b64url(crypto.createHash('sha256').update(verifier).digest());
     const state     = b64url(crypto.randomBytes(16));
-
     res.setHeader('Set-Cookie', [
       `pkce_verifier=${verifier}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`,
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`,
     ]);
 
-    const clientId = process.env.STACK_AUTH_CLIENT_ID; // pck_…
+    const projectId   = process.env.STACK_PROJECT_ID;     // z.B. bc68...
+    const publishable = process.env.STACK_AUTH_CLIENT_ID; // pck_...
 
-    // Correct global authorize endpoint (no /projects/... and no client_secret/grant_type here)
-    const url = new URL(
-      `https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`
-    );
+    // *** KORREKTER ENDPOINT (global, NICHT /projects/.../oauth/...) ***
+    const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
 
-    // Required params
-    url.searchParams.set('client_id', clientId);
+    // Pflichtfelder für diesen Endpoint:
+    url.searchParams.set('client_id', projectId);
+    url.searchParams.set('client_secret', publishable);         // Publishable Key (pck_…)
+    url.searchParams.set('grant_type', 'authorization_code');
+
+    // Standard OAuth Felder:
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
 
-    // Scopes MUST be OIDC short form to avoid "Invalid scope"
-    // Do NOT use the long Google URLs here.
-    url.searchParams.set('scope', 'openid email profile');
+    // Scope: read from env if provided, otherwise default to short OIDC scopes.
+// Set STACK_GOOGLE_SCOPE in Vercel exactly to either:
+//  - "openid email profile"   (short form), or
+//  - "openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"
+const configuredScope = process.env.STACK_GOOGLE_SCOPE && process.env.STACK_GOOGLE_SCOPE.trim();
+url.searchParams.set(
+  'scope',
+  configuredScope && configuredScope.length > 0
+    ? configuredScope
+    : 'openid email profile'
+);
+    // Falls du dort die langen Google‑Scopes eingetragen hast, nutze stattdessen:
+    // url.searchParams.set('scope', 'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
 
     // PKCE
     url.searchParams.set('code_challenge_method', 'S256');
