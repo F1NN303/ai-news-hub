@@ -1,7 +1,8 @@
+// [provider] (2).js - Korrigierte Version
+
 const crypto = require('crypto');
 const { ensureConfig } = require('../../../lib/auth');
 
-// base64url helper
 function b64url(buf) {
   return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/,'');
 }
@@ -13,9 +14,6 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Required env vars:
-    // - STACK_AUTH_PROJECT_ID  => your Stack Auth Project ID (UUID like bc6807... )
-    // - STACK_AUTH_CLIENT_ID   => your Publishable Client Key (starts with pck_)
     ensureConfig(['STACK_AUTH_PROJECT_ID', 'STACK_AUTH_CLIENT_ID']);
 
     const provider = req.query.provider;
@@ -24,11 +22,8 @@ module.exports = async (req, res) => {
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const host  = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
-
-    // We include provider in the callback query so the callback knows which flow this was
     const redirectUri = `${baseUrl}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
 
-    // PKCE + state
     const codeVerifier = b64url(crypto.randomBytes(32));
     const codeChallenge = b64url(crypto.createHash('sha256').update(codeVerifier).digest());
     const state = b64url(crypto.randomBytes(16));
@@ -38,20 +33,22 @@ module.exports = async (req, res) => {
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`
     ]);
 
-  const clientId = process.env.STACK_AUTH_CLIENT_ID;        // pck_...
-const clientSecret = process.env.STACK_AUTH_CLIENT_SECRET; // ssk_...
+    const clientId = process.env.STACK_AUTH_CLIENT_ID; // pck_...
+    const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
 
-const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
+    // !!! WICHTIG: Ersetze diese Scopes durch die exakten Scopes aus deinem Stack Auth Dashboard !!!
+    // Beispiel für Google:
+    const scopes = 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+    // const scopes = 'openid email profile'; // Standard, falls vom Provider unterstützt
 
-url.searchParams.set('client_id', clientId);
-url.searchParams.set('client_secret', clientSecret);
-url.searchParams.set('redirect_uri', redirectUri);
-url.searchParams.set('response_type', 'code');
-url.searchParams.set('scope', 'openid email profile'); // oder die beiden Google userinfo-* Scopes, exakt wie in Stack freigeschaltet
-url.searchParams.set('code_challenge_method', 'S256');
-url.searchParams.set('code_challenge', codeChallenge);
-url.searchParams.set('state', state);
-url.searchParams.set('grant_type', 'authorization_code'); // <— NEU (behebt den SCHEMA_ERROR)
+    url.searchParams.set('client_id', clientId);
+    url.searchParams.set('redirect_uri', redirectUri);
+    url.searchParams.set('response_type', 'code');
+    url.searchParams.set('scope', scopes); // <-- Korrigierte Scopes hier einsetzen
+    url.searchParams.set('code_challenge_method', 'S256');
+    url.searchParams.set('code_challenge', codeChallenge);
+    url.searchParams.set('state', state);
+    url.searchParams.set('grant_type', 'authorization_code');
 
     res.writeHead(302, { Location: url.toString() });
     res.end();
