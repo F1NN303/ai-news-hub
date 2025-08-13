@@ -40,10 +40,13 @@ module.exports = async (req, res) => {
     const projectId = process.env.STACK_AUTH_PROJECT_ID; // z.B. bc68070c-…
     const clientId  = process.env.STACK_AUTH_CLIENT_ID;  // pck_…
 
-    // WICHTIG: Projekt‑scoped Authorize‑Endpoint verwenden!
-    const url = new URL(
-      `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(projectId)}/auth/oauth/authorize/${encodeURIComponent(provider)}`
-    );
+   // WRONG (gives 404):
+// const url = new URL(`https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(projectId)}/auth/oauth/authorize/${encodeURIComponent(provider)}`);
+
+// RIGHT:
+const url = new URL(
+  `https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(projectId)}/oauth/authorize/${encodeURIComponent(provider)}`
+);
 
     url.searchParams.set('client_id', clientId);        // pck_…
     url.searchParams.set('redirect_uri', redirectUri);  // deine /api/auth/callback…
