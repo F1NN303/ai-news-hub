@@ -1,5 +1,6 @@
 // pages/api/auth/callback.js
 const { ensureConfig } = require('../../../lib/auth');
+const { parse } = require('cookie');
 
 /**
  * Notes (Shared keys OFF):
@@ -25,16 +26,7 @@ module.exports = async (req, res) => {
     if (!state) return res.status(400).json({ error: 'missing_state' });
 
     // Read & clear PKCE + state from cookies
-    const cookies = Object.fromEntries(
-      (req.headers.cookie || '')
-        .split(';')
-        .map(v => v.trim())
-        .filter(Boolean)
-        .map(v => {
-          const i = v.indexOf('=');
-          return [v.slice(0, i), decodeURIComponent(v.slice(i + 1))];
-        })
-    );
+    const cookies = parse(req.headers.cookie || '');
 
     const cookieState = cookies['oauth_state'];
     const codeVerifier = cookies['pkce_verifier'];

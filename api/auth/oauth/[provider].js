@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
 
   try {
     // Public key only (pck_…)
-    ensureConfig(['STACK_AUTH_CLIENT_ID']);
+    ensureConfig(['STACK_AUTH_PROJECT_ID', 'STACK_AUTH_CLIENT_ID']);
 
     const provider = req.query.provider;
     if (!provider) return res.status(400).json({ error: 'missing_provider' });
@@ -32,18 +32,16 @@ module.exports = async (req, res) => {
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`
     ]);
 
+    const projectId = process.env.STACK_AUTH_PROJECT_ID;
     const clientId = process.env.STACK_AUTH_CLIENT_ID; // pck_…
 
-    const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
+    const url = new URL(`https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(projectId)}/auth/oauth/authorize/${encodeURIComponent(provider)}`);
     url.searchParams.set('client_id', clientId);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
 
     // IMPORTANT: this must match the scopes configured for the provider in Stack Auth.
-    // If your provider page shows short scopes, use this:
     url.searchParams.set('scope', 'openid email profile');
-    // If you explicitly configured long Google scopes there, use:
-    // url.searchParams.set('scope', 'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
 
     url.searchParams.set('code_challenge_method', 'S256');
     url.searchParams.set('code_challenge', challenge);
