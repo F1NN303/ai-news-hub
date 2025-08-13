@@ -111,10 +111,10 @@
               <button type="submit" class="bg-primary text-white px-4 py-2 rounded">Post Comment</button>
             </form>`;
           } else {
-            authHtml = `<a href="/login.html" class="text-primary hover:underline">Log in to comment</a>`;
+            authHtml = `<a href="/login" class="text-primary hover:underline">Log in to comment</a>`;
           }
         } catch (err) {
-          authHtml = `<a href="/login.html" class="text-primary hover:underline">Log in to comment</a>`;
+          authHtml = `<a href="/login" class="text-primary hover:underline">Log in to comment</a>`;
         }
 
         container.innerHTML = `
