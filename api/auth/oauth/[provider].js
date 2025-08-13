@@ -1,9 +1,8 @@
 const crypto = require('crypto');
 const { ensureConfig } = require('../../../lib/auth');
 
-// base64url helper
 function b64url(buf) {
-  return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/,'');
+  return buf.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 module.exports = async (req, res) => {
@@ -13,47 +12,44 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Benötigte Umgebungsvariablen
-    ensureConfig(['STACK_AUTH_PROJECT_ID', 'STACK_AUTH_CLIENT_ID']);
+    // Public key only (pck_…)
+    ensureConfig(['STACK_AUTH_CLIENT_ID']);
 
     const provider = req.query.provider;
     if (!provider) return res.status(400).json({ error: 'missing_provider' });
 
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const host  = req.headers['x-forwarded-host'] || req.headers.host;
-    const baseUrl = `${proto}://${host}`;
+    const base  = `${proto}://${host}`;
+    const redirectUri = `${base}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
 
-    const redirectUri = `${baseUrl}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
-
-    // PKCE + state für die Sicherheit
-    const codeVerifier = b64url(crypto.randomBytes(32));
-    const codeChallenge = b64url(crypto.createHash('sha256').update(codeVerifier).digest());
+    // PKCE + state
+    const verifier = b64url(crypto.randomBytes(32));
+    const challenge = b64url(crypto.createHash('sha256').update(verifier).digest());
     const state = b64url(crypto.randomBytes(16));
-
     res.setHeader('Set-Cookie', [
-      `pkce_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`,
+      `pkce_verifier=${verifier}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`,
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`
     ]);
 
-    // Dies sollte Ihr öffentlicher Client-Key sein (beginnt mit pck_)
-    const clientId = process.env.STACK_AUTH_CLIENT_ID;
+    const clientId = process.env.STACK_AUTH_CLIENT_ID; // pck_…
 
     const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
-
     url.searchParams.set('client_id', clientId);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
-    // WICHTIG: Stellen Sie sicher, dass diese Scopes exakt mit denen
-    // in Ihrem Stack Auth Dashboard für diesen Anbieter übereinstimmen.
-    url.searchParams.set('scope', 'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
+
+    // IMPORTANT: this must match the scopes configured for the provider in Stack Auth.
+    // If your provider page shows short scopes, use this:
+    url.searchParams.set('scope', 'openid email profile');
+    // If you explicitly configured long Google scopes there, use:
+    // url.searchParams.set('scope', 'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
+
     url.searchParams.set('code_challenge_method', 'S256');
-    url.searchParams.set('code_challenge', codeChallenge);
+    url.searchParams.set('code_challenge', challenge);
     url.searchParams.set('state', state);
 
-    // ENTFERNTE FEHLER:
-    // Der `client_secret` und `grant_type` gehören nicht in den Authorize-Request.
-    // url.searchParams.set('client_secret', clientSecret); // <--- FEHLER: Entfernen!
-    // url.searchParams.set('grant_type', 'authorization_code'); // <--- FEHLER: Entfernen!
+    // DO NOT send client_secret or grant_type in the authorize request.
 
     res.writeHead(302, { Location: url.toString() });
     res.end();
