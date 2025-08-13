@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { ensureConfig } = require('../../../lib/auth');
 
+// Hilfsfunktion für Base64URL
 function b64url(buf) {
   return buf.toString('base64')
     .replace(/\+/g, '-')
@@ -16,7 +17,6 @@ module.exports = async (req, res) => {
 
   try {
     ensureConfig([
-      'STACK_AUTH_PROJECT_ID',
       'STACK_AUTH_CLIENT_ID',
       'STACK_AUTH_CLIENT_SECRET'
     ]);
@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
 
     const redirectUri = `${baseUrl}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
 
-    // PKCE
+    // PKCE erstellen
     const codeVerifier = b64url(crypto.randomBytes(32));
     const codeChallenge = b64url(
       crypto.createHash('sha256').update(codeVerifier).digest()
@@ -48,17 +48,17 @@ module.exports = async (req, res) => {
     const clientId = process.env.STACK_AUTH_CLIENT_ID;
     const clientSecret = process.env.STACK_AUTH_CLIENT_SECRET;
 
-    // Authorize URL (ohne client_secret & grant_type)
+    // KORREKTER Stack Auth Endpoint
     const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
     url.searchParams.set('client_id', clientId);
-url.searchParams.set('client_secret', clientSecret); // MUSS bei Stack Auth schon hier hin
-url.searchParams.set('grant_type', 'authorization_code'); // auch hier schon notwendig
-url.searchParams.set('redirect_uri', redirectUri);
-url.searchParams.set('response_type', 'code');
-url.searchParams.set('scope', 'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
-url.searchParams.set('code_challenge_method', 'S256');
-url.searchParams.set('code_challenge', codeChallenge);
-url.searchParams.set('state', state);
+    url.searchParams.set('client_secret', clientSecret);
+    url.searchParams.set('redirect_uri', redirectUri);
+    url.searchParams.set('response_type', 'code');
+    url.searchParams.set('scope', 'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
+    url.searchParams.set('code_challenge_method', 'S256');
+    url.searchParams.set('code_challenge', codeChallenge);
+    url.searchParams.set('state', state);
+    url.searchParams.set('grant_type', 'authorization_code');
 
     res.writeHead(302, { Location: url.toString() });
     res.end();
