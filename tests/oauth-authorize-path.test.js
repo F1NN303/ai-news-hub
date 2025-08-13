@@ -20,6 +20,8 @@ test('authorize URL uses project-scoped auth path', async () => {
   assert.strictEqual(status, 302);
   const url = new URL(headers.Location);
   assert.strictEqual(url.pathname, '/api/v1/projects/proj/auth/oauth/authorize/google');
+  assert.ok(!url.searchParams.has('client_secret'));
+  assert.ok(!url.searchParams.has('grant_type'));
 });
 
 test.after(() => {
