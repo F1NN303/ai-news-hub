@@ -465,7 +465,7 @@
       const userName = document.getElementById('user-name');
       const adminLink = document.getElementById('admin-link');
       try {
-        const res = await fetch('/api/auth/me');
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
         if (res.ok) {
           const user = await res.json();
           if (user && (user.name || user.email)) {

@@ -29,12 +29,6 @@
       return match ? match.split('=')[1].split('.')[0] : '';
     }
 
-    async function ensureCsrfCookie() {
-        if (!getCsrfToken()) {
-          await fetch('/api/auth/csrf', { credentials: 'include' });
-        }
-    }
-
     function csrfFetch(url, options = {}) {
       const headers = options.headers || {};
       headers['X-CSRF-Token'] = getCsrfToken();
@@ -102,7 +96,7 @@
 
         let authHtml = '';
         try {
-          const meRes = await fetch('/api/auth/me');
+          const meRes = await fetch('/api/auth/me', { credentials: 'include' });
           if (meRes.ok) {
             currentUser = await meRes.json();
             authHtml = `
@@ -151,8 +145,7 @@
         container.innerHTML = '<p class="text-red-500">Failed to load article.</p>';
       }
     }
-    document.addEventListener('DOMContentLoaded', async () => {
-      await ensureCsrfCookie();
+    document.addEventListener('DOMContentLoaded', () => {
       loadPost();
     });
   </script>
