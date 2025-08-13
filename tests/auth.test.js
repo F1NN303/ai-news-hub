@@ -23,12 +23,17 @@ test('POST /api/auth/signup creates user with hashed password', async () => {
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role TEXT DEFAULT 'user'
+    role TEXT DEFAULT 'user',
+    email_verification_token TEXT,
+    email_verified BOOLEAN DEFAULT false
   )`);
 
   const db = require('../lib/db');
   db.query = (text, params) => pool.query(text, params);
 
+  let sent = false;
+  const email = require('../lib/email');
+  email.sendVerificationEmail = async () => { sent = true; };
   const handler = require('../api/auth/signup.js');
   const req = { method: 'POST', body: { name: 'Bob', email: 'bob@example.com', password: 'secret' } };
   let statusCode; let jsonBody; let headers = {};
@@ -40,11 +45,14 @@ test('POST /api/auth/signup creates user with hashed password', async () => {
   };
   await handler(req, res);
   assert.strictEqual(statusCode, 201);
-  assert.deepStrictEqual(jsonBody, { ok: true });
-  assert.match(headers['Set-Cookie'], /session=/);
+  assert.deepStrictEqual(jsonBody, { message: 'User created. Please check your email to verify your account.' });
+  assert.strictEqual(headers['Set-Cookie'], undefined);
+  assert.strictEqual(sent, true);
   const { rows } = await pool.query('SELECT * FROM users WHERE email=$1', ['bob@example.com']);
   assert.strictEqual(rows[0].role, 'user');
   assert.notStrictEqual(rows[0].password_hash, 'secret');
+  assert.strictEqual(rows[0].email_verified, false);
+  assert.ok(rows[0].email_verification_token);
 });
 
 // Login route
@@ -59,11 +67,13 @@ test('POST /api/auth/login issues session cookie', async () => {
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role TEXT DEFAULT 'user'
+    role TEXT DEFAULT 'user',
+    email_verification_token TEXT,
+    email_verified BOOLEAN DEFAULT false
   )`);
 
   const hash = await require('bcryptjs').hash('secret', 10);
-  await pool.query('INSERT INTO users(name, email, password_hash, role) VALUES($1,$2,$3,$4)', ['Bob', 'bob@example.com', hash, 'user']);
+  await pool.query('INSERT INTO users(name, email, password_hash, role, email_verified) VALUES($1,$2,$3,$4,$5)', ['Bob', 'bob@example.com', hash, 'user', true]);
 
   const db = require('../lib/db');
   db.query = (text, params) => pool.query(text, params);
@@ -81,6 +91,44 @@ test('POST /api/auth/login issues session cookie', async () => {
   assert.strictEqual(statusCode, 200);
   assert.deepStrictEqual(jsonBody, { ok: true });
   assert.match(headers['Set-Cookie'], /session=/);
+});
+
+// Login should block unverified users
+
+test('POST /api/auth/login rejects unverified users', async () => {
+  const { newDb } = require('pg-mem');
+  const mem = newDb();
+  const pg = mem.adapters.createPg();
+  const pool = new pg.Pool();
+  await pool.query(`CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT DEFAULT 'user',
+    email_verification_token TEXT,
+    email_verified BOOLEAN DEFAULT false
+  )`);
+
+  const hash = await require('bcryptjs').hash('secret', 10);
+  await pool.query('INSERT INTO users(name, email, password_hash, role, email_verified) VALUES($1,$2,$3,$4,$5)', ['Bob', 'bob@example.com', hash, 'user', false]);
+
+  const db = require('../lib/db');
+  db.query = (text, params) => pool.query(text, params);
+
+  const handler = require('../api/auth/login.js');
+  const req = { method: 'POST', body: { email: 'bob@example.com', password: 'secret', remember: false } };
+  let statusCode; let jsonBody; let headers = {};
+  const res = {
+    status(code) { statusCode = code; return this; },
+    json(data) { jsonBody = data; return this; },
+    setHeader(k, v) { headers[k] = v; },
+    end() {},
+  };
+  await handler(req, res);
+  assert.strictEqual(statusCode, 403);
+  assert.deepStrictEqual(jsonBody, { error: 'email_not_verified', message: 'Please verify your email before logging in.' });
+  assert.strictEqual(headers['Set-Cookie'], undefined);
 });
 
 // Logout route

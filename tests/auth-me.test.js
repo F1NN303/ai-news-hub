@@ -43,9 +43,11 @@ test('GET /api/auth/me returns user profile', async () => {
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role TEXT DEFAULT 'user'
+    role TEXT DEFAULT 'user',
+    email_verification_token TEXT,
+    email_verified BOOLEAN DEFAULT false
   )`);
-  await pool.query(`INSERT INTO users(name,email,password_hash,role) VALUES('Alice','a@b.c','x','user')`);
+  await pool.query(`INSERT INTO users(name,email,password_hash,role,email_verified) VALUES('Alice','a@b.c','x','user',true)`);
 
   const db = require('../lib/db');
   db.query = (text, params) => pool.query(text, params);
