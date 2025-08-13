@@ -12,6 +12,8 @@ test('authorize URL uses project-scoped auth path', async () => {
   const res = {
     setHeader() {},
     writeHead(code, h) { status = code; headers = h; return this; },
+    status(code) { status = code; return this; },
+    json() {},
     end() {},
   };
   await handler(req, res);
