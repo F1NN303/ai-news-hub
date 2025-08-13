@@ -48,7 +48,10 @@ module.exports = async (req, res) => {
     url.searchParams.set('response_type', 'code');
 
     // Immer feste Scopes erzwingen (Short OIDC)
-    url.searchParams.set('scope', 'openid email profile');
+    url.searchParams.set(
+  'scope',
+  'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile'
+);
 
     // PKCE
     url.searchParams.set('code_challenge_method', 'S256');
