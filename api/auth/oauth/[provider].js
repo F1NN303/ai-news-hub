@@ -38,22 +38,24 @@ module.exports = async (req, res) => {
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`
     ]);
 
-    const projectId = process.env.STACK_AUTH_PROJECT_ID; // project UUID
-    const clientId  = process.env.STACK_AUTH_CLIENT_ID;  // publishable pck_ key
+    const clientId = process.env.STACK_AUTH_CLIENT_ID;        // pck_...
+const clientSecret = process.env.STACK_AUTH_CLIENT_SECRET; // ssk_...
 
-    // Correct Stack Auth authorize endpoint (provider in the path, project scoped)
-    const url = new URL(
+const url = new URL(
   `https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`
 );
-    url.searchParams.set('client_id', clientId);
-    url.searchParams.set('redirect_uri', redirectUri);
-    url.searchParams.set('response_type', 'code');
-    url.searchParams.set('scope', 'openid email profile'); // keep EXACTLY these; they must match your provider config
-    url.searchParams.set('code_challenge_method', 'S256');
-    url.searchParams.set('code_challenge', codeChallenge);
-    url.searchParams.set('state', state);
-    // ← This fixes your current error:
-    url.searchParams.set('grant_type', 'authorization_code');
+
+url.searchParams.set('client_id', clientId);
+url.searchParams.set('client_secret', clientSecret); // <— fehlte
+url.searchParams.set('redirect_uri', redirectUri);
+url.searchParams.set('response_type', 'code');
+// wähle genau die Scopes, die du in Stack > Auth Methods > Google freigeschaltet hast:
+url.searchParams.set('scope', 'openid email profile');
+// PKCE
+url.searchParams.set('code_challenge_method', 'S256');
+url.searchParams.set('code_challenge', codeChallenge);
+url.searchParams.set('state', state);
+// grant_type NICHT setzen (die v1‑Authorize erwartet ihn nicht immer)
 
     res.writeHead(302, { Location: url.toString() });
     res.end();
