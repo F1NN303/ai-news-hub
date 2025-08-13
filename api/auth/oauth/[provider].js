@@ -13,9 +13,9 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // IMPORTANT: which envs we actually use
-    // - STACK_AUTH_PROJECT_ID -> your project UUID (bc68070c-....)
-    // - STACK_AUTH_CLIENT_ID  -> your publishable client key (starts with pck_)
+    // Required env vars:
+    // - STACK_AUTH_PROJECT_ID  => your Stack Auth Project ID (UUID like bc6807... )
+    // - STACK_AUTH_CLIENT_ID   => your Publishable Client Key (starts with pck_)
     ensureConfig(['STACK_AUTH_PROJECT_ID', 'STACK_AUTH_CLIENT_ID']);
 
     const provider = req.query.provider;
@@ -24,33 +24,36 @@ module.exports = async (req, res) => {
     const proto = req.headers['x-forwarded-proto'] || 'https';
     const host  = req.headers['x-forwarded-host'] || req.headers.host;
     const baseUrl = `${proto}://${host}`;
+
+    // We include provider in the callback query so the callback knows which flow this was
     const redirectUri = `${baseUrl}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
 
-    // PKCE
+    // PKCE + state
     const codeVerifier = b64url(crypto.randomBytes(32));
     const codeChallenge = b64url(crypto.createHash('sha256').update(codeVerifier).digest());
     const state = b64url(crypto.randomBytes(16));
 
     res.setHeader('Set-Cookie', [
       `pkce_verifier=${codeVerifier}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
-      `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`,
+      `oauth_state=${state}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=600`
     ]);
 
-    const clientId     = process.env.STACK_AUTH_PROJECT_ID;   // <- project UUID
-    const clientSecret = process.env.STACK_AUTH_CLIENT_ID;    // <- publishable client key (pck_...)
+    const clientId     = process.env.STACK_AUTH_PROJECT_ID; // project UUID
+    const clientSecret = process.env.STACK_AUTH_CLIENT_ID;  // publishable pck_ key
 
-    // Correct authorize endpoint (provider in the path) and ONLY standard OIDC scopes
+    // Correct Stack Auth authorize endpoint (provider in the path)
     const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
     url.searchParams.set('client_id', clientId);
     url.searchParams.set('client_secret', clientSecret);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
-    url.searchParams.set('scope', 'openid email profile');  // keep exactly these
+    url.searchParams.set('scope', 'openid email profile'); // keep EXACTLY these; they must match your provider config
     url.searchParams.set('code_challenge_method', 'S256');
     url.searchParams.set('code_challenge', codeChallenge);
     url.searchParams.set('state', state);
+    // ← This fixes your current error:
+    url.searchParams.set('grant_type', 'authorization_code');
 
-    // NOTE: do NOT send grant_type on authorize step
     res.writeHead(302, { Location: url.toString() });
     res.end();
   } catch (err) {
