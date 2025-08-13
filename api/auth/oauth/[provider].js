@@ -47,8 +47,17 @@ module.exports = async (req, res) => {
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
 
-    // Scope MUSS exakt zu deiner Stack‑Auth‑Provider‑Config passen:
-    url.searchParams.set('scope', 'openid email profile');
+    // Scope: read from env if provided, otherwise default to short OIDC scopes.
+// Set STACK_GOOGLE_SCOPE in Vercel exactly to either:
+//  - "openid email profile"   (short form), or
+//  - "openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"
+const configuredScope = process.env.STACK_GOOGLE_SCOPE && process.env.STACK_GOOGLE_SCOPE.trim();
+url.searchParams.set(
+  'scope',
+  configuredScope && configuredScope.length > 0
+    ? configuredScope
+    : 'openid email profile'
+);
     // Falls du dort die langen Google‑Scopes eingetragen hast, nutze stattdessen:
     // url.searchParams.set('scope', 'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
 
