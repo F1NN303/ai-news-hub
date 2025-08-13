@@ -60,7 +60,7 @@
 
     async function ensureCsrfCookie() {
         if (!getCsrfToken()) {
-          await fetch('/api/auth/signup', { credentials: 'include' });
+          await fetch('/api/auth/csrf', { credentials: 'include' });
         }
     }
 

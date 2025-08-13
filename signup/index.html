@@ -105,45 +105,13 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const form = document.getElementById('signup-form');
-      const btn = document.getElementById('signup-submit');
       const errorEl = document.getElementById('signup-error');
       document.getElementById('google-signup').addEventListener('click', () => {
-        window.location.href = '/api/auth/signin/google';
+        window.location.href = '/api/auth/login?connection=google-oauth2';
       });
-      form.addEventListener('submit', async (e) => {
+      form.addEventListener('submit', (e) => {
         e.preventDefault();
-        errorEl.textContent = '';
-        if (document.getElementById('password').value !== document.getElementById('confirmPassword').value) {
-          errorEl.textContent = 'Passwords do not match';
-          return;
-        }
-        if (!document.getElementById('terms').checked) {
-          errorEl.textContent = 'You must accept the Terms and Privacy Policy';
-          return;
-        }
-        btn.disabled = true;
-        const payload = {
-          name: document.getElementById('name').value.trim(),
-          email: document.getElementById('email').value.trim(),
-          password: document.getElementById('password').value,
-        };
-        try {
-          const res = await fetch('/api/auth/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-          if (res.ok) {
-            window.location.href = '/';
-          } else {
-            const out = await res.json().catch(() => ({}));
-            errorEl.textContent = out.error || 'Signup failed';
-          }
-        } catch {
-          errorEl.textContent = 'Signup failed';
-        } finally {
-          btn.disabled = false;
-        }
+        errorEl.textContent = 'Signup is currently unavailable.';
       });
     });
   </script>
