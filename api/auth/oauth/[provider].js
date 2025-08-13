@@ -45,7 +45,7 @@ module.exports = async (req, res) => {
     url.searchParams.set('response_type', 'code');
     // WICHTIG: Stellen Sie sicher, dass diese Scopes exakt mit denen
     // in Ihrem Stack Auth Dashboard für diesen Anbieter übereinstimmen.
-    url.searchParams.set('scope', 'openid email profile');
+    url.searchParams.set('scope', 'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
     url.searchParams.set('code_challenge_method', 'S256');
     url.searchParams.set('code_challenge', codeChallenge);
     url.searchParams.set('state', state);
