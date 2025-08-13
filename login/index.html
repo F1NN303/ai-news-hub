@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Create account - AI News Hub</title>
+  <title>Sign in - AI News Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -33,20 +33,17 @@
     <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
       <a href="/" class="text-xl font-bold">AI News Hub</a>
       <nav class="flex gap-4 text-sm">
-        <a href="/login.html" class="hover:underline">Sign in</a>
-        <a href="/signup.html" class="hover:underline">Sign up</a>
+        <a href="/login" class="hover:underline">Sign in</a>
+        <a href="/signup" class="hover:underline">Sign up</a>
       </nav>
     </div>
   </header>
 
   <main class="min-h-[calc(100vh-160px)] flex items-center justify-center p-4">
     <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-lg shadow p-6">
-      <h1 class="text-2xl font-bold mb-6 text-center">Create account</h1>
-      <form id="signup-form" class="space-y-4">
-        <div>
-          <label for="name" class="block mb-1 text-left">Name (optional)</label>
-          <input id="name" name="name" type="text" class="w-full border rounded p-2" />
-        </div>
+      <h1 class="text-2xl font-bold mb-6 text-center">Sign in</h1>
+      <form id="login-form" class="space-y-4" method="post" action="/api/auth/callback/credentials">
+        <input type="hidden" name="csrfToken" id="csrfToken" />
         <div>
           <label for="email" class="block mb-1 text-left">Email</label>
           <input id="email" name="email" type="email" class="w-full border rounded p-2" required />
@@ -55,24 +52,19 @@
           <label for="password" class="block mb-1 text-left">Password</label>
           <input id="password" name="password" type="password" class="w-full border rounded p-2" required />
         </div>
-        <div>
-          <label for="confirmPassword" class="block mb-1 text-left">Confirm password</label>
-          <input id="confirmPassword" name="confirmPassword" type="password" class="w-full border rounded p-2" required />
-        </div>
         <div class="flex items-center">
-          <input id="terms" type="checkbox" class="mr-2" />
-          <label for="terms" class="text-sm">I accept the <a href="/legal/terms.html" class="text-primary hover:underline">Terms</a> and <a href="/legal/privacy.html" class="text-primary hover:underline">Privacy Policy</a></label>
+          <input id="remember" name="remember" type="checkbox" class="mr-2" />
+          <label for="remember">Keep me signed in</label>
         </div>
-        <button id="signup-submit" type="submit" class="w-full bg-primary text-white py-2 rounded disabled:opacity-50">Create account</button>
-        <p id="signup-error" class="text-red-600 text-sm"></p>
+        <button id="login-submit" type="submit" class="w-full bg-primary text-white py-2 rounded">Sign in</button>
       </form>
       <div class="my-4 flex items-center">
         <hr class="flex-grow border-slate-300" />
         <span class="px-2 text-slate-500 text-sm">or</span>
         <hr class="flex-grow border-slate-300" />
       </div>
-      <button id="google-signup" class="w-full border flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800"><i class="fa-brands fa-google"></i><span>Sign up with Google</span></button>
-      <p class="mt-4 text-center text-sm">Already have an account? <a href="/login.html" class="text-primary hover:underline">Sign in</a></p>
+      <button id="google-btn" class="w-full border flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800"><i class="fa-brands fa-google"></i><span>Continue with Google</span></button>
+      <p class="mt-4 text-center text-sm">No account? <a href="/signup" class="text-primary hover:underline">Sign up</a></p>
     </div>
   </main>
 
@@ -103,48 +95,11 @@
   </footer>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const form = document.getElementById('signup-form');
-      const btn = document.getElementById('signup-submit');
-      const errorEl = document.getElementById('signup-error');
-      document.getElementById('google-signup').addEventListener('click', () => {
-        window.location.href = '/api/auth/oauth/google?provider=google';
-      });
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        errorEl.textContent = '';
-        if (document.getElementById('password').value !== document.getElementById('confirmPassword').value) {
-          errorEl.textContent = 'Passwords do not match';
-          return;
-        }
-        if (!document.getElementById('terms').checked) {
-          errorEl.textContent = 'You must accept the Terms and Privacy Policy';
-          return;
-        }
-        btn.disabled = true;
-        const payload = {
-          name: document.getElementById('name').value.trim(),
-          email: document.getElementById('email').value.trim(),
-          password: document.getElementById('password').value,
-        };
-        try {
-          const res = await fetch('/api/auth/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-          if (res.ok) {
-            window.location.href = '/';
-          } else {
-            const out = await res.json().catch(() => ({}));
-            errorEl.textContent = out.error || 'Signup failed';
-          }
-        } catch {
-          errorEl.textContent = 'Signup failed';
-        } finally {
-          btn.disabled = false;
-        }
-      });
+    document.getElementById('google-btn').addEventListener('click', () => {
+      window.location.href = '/api/auth/signin/google';
+    });
+    fetch('/api/auth/csrf').then(r => r.json()).then(d => {
+      document.getElementById('csrfToken').value = d.csrfToken;
     });
   </script>
 </body>
