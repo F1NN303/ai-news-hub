@@ -1,3 +1,4 @@
+// pages/api/auth/oauth/[provider].js
 const crypto = require('crypto');
 const { ensureConfig } = require('../../../lib/auth');
 
@@ -12,8 +13,8 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Public key only (pck_…)
-    ensureConfig(['STACK_AUTH_PROJECT_ID', 'STACK_AUTH_CLIENT_ID']);
+    // Nur der veröffentlichbare Stack‑Auth Client‑Key (pck_…)
+    ensureConfig(['STACK_AUTH_CLIENT_ID']);
 
     const provider = req.query.provider;
     if (!provider) return res.status(400).json({ error: 'missing_provider' });
@@ -24,32 +25,34 @@ module.exports = async (req, res) => {
     const redirectUri = `${base}/api/auth/callback?provider=${encodeURIComponent(provider)}`;
 
     // PKCE + state
-    const verifier = b64url(crypto.randomBytes(32));
+    const verifier  = b64url(crypto.randomBytes(32));
     const challenge = b64url(crypto.createHash('sha256').update(verifier).digest());
-    const state = b64url(crypto.randomBytes(16));
+    const state     = b64url(crypto.randomBytes(16));
+
     res.setHeader('Set-Cookie', [
       `pkce_verifier=${verifier}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`,
       `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`
     ]);
 
-    const projectId = process.env.STACK_AUTH_PROJECT_ID;
     const clientId = process.env.STACK_AUTH_CLIENT_ID; // pck_…
 
+    // KORREKTER Authorize‑Endpoint (ohne /projects/{id})
     const url = new URL(`https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`);
     url.searchParams.set('client_id', clientId);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
 
-    // IMPORTANT: this must match the scopes configured for the provider in Stack Auth.
+    // Scope MUSS exakt den in Stack Auth konfigurierten Scopes entsprechen:
+    // Variante A (Standard‑Kurzformen – wenn so im Stack‑Dashboard hinterlegt):
     url.searchParams.set('scope', 'openid email profile');
+    // Variante B (falls du in Stack Auth explizit die langen Google‑Scopes eingetragen hast):
+    // url.searchParams.set('scope', 'openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
 
     url.searchParams.set('code_challenge_method', 'S256');
     url.searchParams.set('code_challenge', challenge);
     url.searchParams.set('state', state);
-    
 
-    // DO NOT send client_secret or grant_type in the authorize request.
-
+    // WICHTIG: Hier KEIN client_secret und KEIN grant_type senden (die gehören in /token in callback.js)
     res.writeHead(302, { Location: url.toString() });
     res.end();
   } catch (err) {
