@@ -1,5 +1,4 @@
 node_modules/
-package-lock.json
 webfonts/
 font-awesome.min.css
 .env

@@ -7,17 +7,10 @@
     "test": "node --test"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cookie": "^1.0.2",
-    "jose": "^5.10.0",
     "pg": "^8.11.3",
-    "nodemailer": "^6.9.11",
-    "next-auth": "^4.24.5",
-    "@auth/prisma-adapter": "^1.0.3",
-    "@prisma/client": "^5.15.0"
+    "@auth0/nextjs-auth0": "^3"
   },
   "devDependencies": {
-    "pg-mem": "^3.0.5",
-    "prisma": "^5.15.0"
+    "pg-mem": "^3.0.5"
   }
 }
