@@ -48,6 +48,7 @@ module.exports = async (req, res) => {
     url.searchParams.set('code_challenge_method', 'S256');
     url.searchParams.set('code_challenge', challenge);
     url.searchParams.set('state', state);
+    
 
     // DO NOT send client_secret or grant_type in the authorize request.
 
