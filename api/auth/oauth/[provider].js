@@ -42,7 +42,9 @@ module.exports = async (req, res) => {
     const clientId  = process.env.STACK_AUTH_CLIENT_ID;  // publishable pck_ key
 
     // Correct Stack Auth authorize endpoint (provider in the path, project scoped)
-    const url = new URL(`https://api.stack-auth.com/api/v1/projects/${encodeURIComponent(projectId)}/auth/oauth/authorize/${encodeURIComponent(provider)}`);
+    const url = new URL(
+  `https://api.stack-auth.com/api/v1/auth/oauth/authorize/${encodeURIComponent(provider)}`
+);
     url.searchParams.set('client_id', clientId);
     url.searchParams.set('redirect_uri', redirectUri);
     url.searchParams.set('response_type', 'code');
