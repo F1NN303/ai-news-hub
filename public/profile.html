@@ -8,21 +8,44 @@
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com"><!-- Auth0 Domain injected at build time -->
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
+  <script>
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') document.documentElement.classList.add('dark');
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body class="p-6 bg-light dark:bg-dark">
   <h1 class="text-2xl font-bold mb-4">Profile</h1>
-  <pre id="json" class="bg-slate-100 dark:bg-slate-800 p-4 rounded overflow-auto"></pre>
+  <div id="profile-card" class="max-w-sm bg-slate-100 dark:bg-slate-800 p-6 rounded shadow-md flex items-center gap-4">
+    <img id="avatar" class="w-20 h-20 rounded-full" src="" alt="Profile picture">
+    <div>
+      <h2 class="text-xl font-semibold flex items-center gap-2">
+        <span id="name"></span>
+        <i id="verified" class="fa-solid fa-circle-check text-green-500 hidden" title="Verified"></i>
+      </h2>
+      <p id="email" class="text-slate-600 dark:text-slate-300"></p>
+      <p id="sub" class="text-sm text-slate-500 break-all"></p>
+    </div>
+  </div>
+  <button id="logout-btn" class="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Sign out</button>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
       initAuth();
       await window.authReady;
       if (!(await auth.isAuthenticated())) {
-        location.replace('/');
+        location.replace('/login/index.html');
         return;
       }
       const user = await auth.getUser();
-      document.getElementById('json').textContent = JSON.stringify(user, null, 2);
+      document.getElementById('avatar').src = user.picture || '';
+      document.getElementById('name').textContent = user.name || user.nickname || '';
+      document.getElementById('email').textContent = user.email || '';
+      document.getElementById('sub').textContent = user.sub || '';
+      if (user.email_verified) {
+        document.getElementById('verified').classList.remove('hidden');
+      }
+      document.getElementById('logout-btn').addEventListener('click', () => auth.logout());
     });
   </script>
 </body>
