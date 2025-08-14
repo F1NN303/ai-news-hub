@@ -42,7 +42,10 @@
       auth0Client = await createClientFn({
         domain,
         clientId,
-        authorizationParams: { redirect_uri }
+        authorizationParams: { redirect_uri },
+        cacheLocation: 'localstorage',
+        useRefreshTokens: true,
+        useRefreshTokensFallback: true
       });
     } catch (e) {
       console.error('Auth0 init failed', e);
