@@ -6,6 +6,8 @@
   <title>AI News Hub | Latest in AI, OpenAI & ChatGPT</title>
   <meta name="description" content="Stay updated with the latest AI news, OpenAI developments, ChatGPT updates, and innovations in artificial intelligence.">
   <link rel="canonical" href="/" />
+  <!-- Replace REPLACE_ME with Client ID from Auth0 App -->
+  <meta name="auth0-client-id" content="REPLACE_ME">
 
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
@@ -118,9 +120,8 @@
 
           <div id="auth-area" class="flex items-center gap-2">
             <span id="user-name" class="font-medium hidden"></span>
-            <button id="loginBtn" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800" disabled>Sign in</button>
-            <button id="logoutBtn" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign out</button>
-            <a id="dashboard-link" href="/profile.html" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Dashboard</a>
+            <button id="loginBtn" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800" onclick="(sessionStorage.setItem('postLoginRedirect', location.pathname+location.search), auth.login())">Sign in</button>
+            <button id="logoutBtn" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800" onclick="auth.logout()">Sign out</button>
           </div>
 
           <button id="theme-toggle" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700">
@@ -458,45 +459,25 @@
     document.addEventListener('DOMContentLoaded', loadAll);
   </script>
   <script>
-    window.__auth0 = {
-      domain: '<%= process.env.AUTH0_ISSUER_BASE_URL.replace("https://", "").replace(/\/$/, "") %>',
-      clientId: '<%= process.env.AUTH0_CLIENT_ID %>',
-      baseUrl: '<%= process.env.AUTH0_BASE_URL.replace(/\/$/, "") %>'
-    };
-  </script>
-  <script>
-    window.addEventListener('DOMContentLoaded', async () => {
+    (async () => {
       const loginBtn = document.getElementById('loginBtn');
       const logoutBtn = document.getElementById('logoutBtn');
       const userName = document.getElementById('user-name');
-      const dashboardLink = document.getElementById('dashboard-link');
 
-      const client = await auth0ClientPromise;
-      if (!client) return;
+      await auth.ready;
 
-      loginBtn.disabled = false;
-      loginBtn.addEventListener('click', () => {
-        sessionStorage.setItem('postLoginRedirect', location.pathname + location.search);
-        client.loginWithRedirect({ authorizationParams: { redirect_uri: window.__auth0.baseUrl + '/auth/callback.html' } });
-      });
-      logoutBtn.addEventListener('click', () => {
-        client.logout({ logoutParams: { returnTo: window.__auth0.baseUrl + '/' } });
-      });
-
-      if (await client.isAuthenticated()) {
-        const user = await client.getUser();
+      if (await auth.isAuthenticated()) {
+        const user = await auth.getUser();
         userName.textContent = user.name || user.email;
         userName.classList.remove('hidden');
         loginBtn.classList.add('hidden');
         logoutBtn.classList.remove('hidden');
-        if (dashboardLink) dashboardLink.classList.remove('hidden');
       } else {
         userName.classList.add('hidden');
         loginBtn.classList.remove('hidden');
         logoutBtn.classList.add('hidden');
-        if (dashboardLink) dashboardLink.classList.add('hidden');
       }
-    });
+    })();
   </script>
 </body>
 </html>

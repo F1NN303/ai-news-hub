@@ -4,27 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sign in</title>
+  <!-- Replace REPLACE_ME with Client ID from Auth0 App -->
+  <meta name="auth0-client-id" content="REPLACE_ME">
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
 </head>
 <body>
   <button id="loginBtn" disabled>Continue with Auth0</button>
   <script>
-    window.__auth0 = {
-      domain: '<%= process.env.AUTH0_ISSUER_BASE_URL.replace("https://", "").replace(/\/$/, "") %>',
-      clientId: '<%= process.env.AUTH0_CLIENT_ID %>',
-      baseUrl: '<%= process.env.AUTH0_BASE_URL.replace(/\/$/, "") %>'
-    };
-  </script>
-  <script>
     window.addEventListener('DOMContentLoaded', async () => {
+      await auth.ready;
       const btn = document.getElementById('loginBtn');
-      const client = await auth0ClientPromise;
-      if (!client) return;
       btn.disabled = false;
       btn.addEventListener('click', () => {
         sessionStorage.setItem('postLoginRedirect', '/');
-        client.loginWithRedirect({ authorizationParams: { redirect_uri: window.__auth0.baseUrl + '/auth/callback.html' } });
+        auth.login();
       });
     });
   </script>

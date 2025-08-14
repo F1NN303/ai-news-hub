@@ -3,19 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sign up</title>
+  <title>Auth Callback</title>
   <!-- Replace REPLACE_ME with Client ID from Auth0 App -->
   <meta name="auth0-client-id" content="REPLACE_ME">
-  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
-  <script src="/auth/auth.js" defer></script>
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
+  <script src="/auth/auth.js"></script>
 </head>
 <body>
-  <p>Redirecting…</p>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
-      await auth.ready;
-      sessionStorage.setItem('postLoginRedirect', '/');
-      auth.login();
+      await auth.handleRedirectCallback();
+      window.location.replace(sessionStorage.getItem('postLoginRedirect') || '/');
     });
   </script>
 </body>
