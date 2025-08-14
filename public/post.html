@@ -98,7 +98,8 @@
         const p = await res.json();
         const date = new Date(p.published_at || Date.now()).toLocaleDateString();
 
-        await auth.ready;
+        initAuth();
+        await window.authReady;
         let authHtml = '';
         if (await auth.isAuthenticated()) {
           currentUser = await auth.getUser();

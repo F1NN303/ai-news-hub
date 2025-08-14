@@ -12,7 +12,8 @@
 <body>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
-      await auth.ready;
+      initAuth();
+      await window.authReady;
       try {
         await auth.handleRedirectCallback();
         window.location.replace(sessionStorage.getItem('postLoginRedirect') || '/');
