@@ -487,11 +487,36 @@
       const backdrop = document.getElementById('menu-backdrop');
       const btn = document.getElementById('menu-button');
 
+      let firstFocusable, lastFocusable;
+
+      function trapFocus(e) {
+        if (e.key !== 'Tab') return;
+        if (e.shiftKey) {
+          if (document.activeElement === firstFocusable) {
+            e.preventDefault();
+            lastFocusable.focus();
+          }
+        } else {
+          if (document.activeElement === lastFocusable) {
+            e.preventDefault();
+            firstFocusable.focus();
+          }
+        }
+      }
+
       function openMenu() {
         menu.classList.remove('-translate-x-full');
         backdrop.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
         btn.setAttribute('aria-expanded', 'true');
+
+        const focusable = menu.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length) {
+          firstFocusable = focusable[0];
+          lastFocusable = focusable[focusable.length - 1];
+          firstFocusable.focus();
+          document.addEventListener('keydown', trapFocus);
+        }
       }
 
       function closeMenu() {
@@ -499,6 +524,8 @@
         backdrop.classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
         btn.setAttribute('aria-expanded', 'false');
+        document.removeEventListener('keydown', trapFocus);
+        btn.focus();
       }
 
       btn.addEventListener('click', () => {
