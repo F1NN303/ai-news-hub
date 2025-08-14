@@ -7,7 +7,8 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@auth0/nextjs-auth0": "^3",
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.2.0",
     "pg": "^8.11.3"
   },
   "devDependencies": {

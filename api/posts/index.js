@@ -6,9 +6,9 @@ const { ensureConfig } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
   try {
-    ensureConfig();
     ensureCsrf(req, res);
     if (req.method === 'GET') {
+      ensureConfig(['DATABASE_URL']);
       const { rows } = await query(`
         SELECT id, title, slug, excerpt, content, category, tags, author, image_url, published_at
         FROM public.posts
@@ -18,6 +18,7 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'POST') {
+      ensureConfig();
       const admin = await requireAdmin(req, res);
       if (!admin) return;
       if (!validateCsrf(req)) {
