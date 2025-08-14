@@ -5,6 +5,29 @@
   const clientId = clientMeta ? clientMeta.content : (window.AUTH0_CLIENT_ID || '');
   const redirect_uri = window.location.origin + '/auth/callback.html';
   let auth0Client;
+  const signInBtn = document.getElementById('sign-in-btn');
+  const signOutBtn = document.getElementById('sign-out-btn');
+  if (signInBtn) signInBtn.disabled = true;
+
+  let authErrorShown = false;
+  function showAuthError() {
+    if (authErrorShown) return;
+    authErrorShown = true;
+    [signInBtn, signOutBtn].forEach(btn => {
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+    });
+    if (!document.getElementById('auth-error')) {
+      const msg = document.createElement('div');
+      msg.id = 'auth-error';
+      msg.className = 'bg-red-100 text-red-700 p-2 text-center';
+      msg.textContent = 'Authentication is currently unavailable. Please try again later.';
+      document.body.prepend(msg);
+    }
+  }
+
   const ready = (async () => {
     try {
       auth0Client = await createAuth0Client({
@@ -14,6 +37,11 @@
       });
     } catch (e) {
       console.error('Auth0 init failed', e);
+    }
+    if (!auth0Client) {
+      showAuthError();
+    } else if (signInBtn) {
+      signInBtn.disabled = false;
     }
   })();
 
@@ -26,8 +54,12 @@
     }
   }
 
-  async function withClient(fn) {
+  async function withClient(fn, fallback) {
     await ready;
+    if (!auth0Client) {
+      showAuthError();
+      return typeof fallback === 'function' ? fallback() : fallback;
+    }
     return fn();
   }
 
@@ -39,9 +71,9 @@
           logoutParams: { returnTo: window.location.origin + '/' }
         })
       ),
-    getUser: () => withClient(() => auth0Client.getUser()),
-    isAuthenticated: () => withClient(() => auth0Client.isAuthenticated()),
-    getIdTokenClaims: () => withClient(() => auth0Client.getIdTokenClaims()),
+    getUser: () => withClient(() => auth0Client.getUser(), null),
+    isAuthenticated: () => withClient(() => auth0Client.isAuthenticated(), false),
+    getIdTokenClaims: () => withClient(() => auth0Client.getIdTokenClaims(), null),
     handleRedirectCallback: () => withClient(() => handleRedirectCallbackSafe()),
     ready
   };

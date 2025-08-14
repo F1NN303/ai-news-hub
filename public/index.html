@@ -120,7 +120,7 @@
 
           <div id="auth-area" class="flex items-center gap-2">
             <span id="user-name" class="font-medium hidden"></span>
-            <button id="sign-in-btn" onclick="(sessionStorage.setItem('postLoginRedirect', location.pathname+location.search), auth.login())" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</button>
+            <button id="sign-in-btn" onclick="(sessionStorage.setItem('postLoginRedirect', location.pathname+location.search), auth.login())" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</button>
             <button id="sign-out-btn" onclick="auth.logout()" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign out</button>
             <a id="dashboard-link" href="/profile.html" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Dashboard</a>
           </div>
