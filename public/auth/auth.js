@@ -16,7 +16,7 @@
     }
   })();
 
-  async function handleRedirectCallback() {
+  async function handleRedirectCallbackSafe() {
     try {
       return await auth0Client.handleRedirectCallback();
     } catch (e) {
@@ -25,13 +25,18 @@
     }
   }
 
+  async function withClient(fn) {
+    await ready;
+    return fn();
+  }
+
   window.auth = {
-    login: () => auth0Client.loginWithRedirect(),
-    logout: () => auth0Client.logout({ logoutParams: { returnTo: 'https://ai-news-hub-eta.vercel.app/' } }),
-    getUser: () => auth0Client.getUser(),
-    isAuthenticated: () => auth0Client.isAuthenticated(),
-    getIdTokenClaims: () => auth0Client.getIdTokenClaims(),
-    handleRedirectCallback,
+    login: () => withClient(() => auth0Client.loginWithRedirect()),
+    logout: () => withClient(() => auth0Client.logout({ logoutParams: { returnTo: 'https://ai-news-hub-eta.vercel.app/' } })),
+    getUser: () => withClient(() => auth0Client.getUser()),
+    isAuthenticated: () => withClient(() => auth0Client.isAuthenticated()),
+    getIdTokenClaims: () => withClient(() => auth0Client.getIdTokenClaims()),
+    handleRedirectCallback: () => withClient(() => handleRedirectCallbackSafe()),
     ready
   };
 })();
