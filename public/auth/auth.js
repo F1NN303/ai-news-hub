@@ -3,6 +3,7 @@
   let authErrorShown = false;
   let signInBtn;
   let signOutBtn;
+  let updateAuthUITimer;
   const authDebug = new URLSearchParams(window.location.search).get('auth_debug') === '1';
   
   async function updateAuthUI() {
@@ -47,6 +48,11 @@
     if (signOutBtn) {
       signOutBtn.onclick = () => window.auth.logout();
     }
+  }
+
+  function debouncedUpdateAuthUI() {
+    clearTimeout(updateAuthUITimer);
+    updateAuthUITimer = setTimeout(updateAuthUI, 100);
   }
 
   function toggleMobileProfileLink(show) {
@@ -155,7 +161,7 @@
       handleRedirectCallback: () => withClient(() => handleRedirectCallbackSafe())
     };
 
-    window.updateAuthUI = updateAuthUI;
+    window.updateAuthUI = debouncedUpdateAuthUI;
     window.toggleMobileProfileLink = toggleMobileProfileLink;
 
     return window.authReady;
