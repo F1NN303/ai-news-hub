@@ -7,6 +7,6 @@ module.exports = (req, res) => {
   if (!session || !session.user) {
     return res.status(401).end();
   }
-  const { id, name, email } = session.user;
-  return res.status(200).json({ id, name, email });
+  const { id, name, email, role } = session.user;
+  return res.status(200).json({ id, name, email, role });
 };
