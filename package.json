@@ -2,16 +2,24 @@
   "name": "ai-news-hub",
   "private": true,
   "version": "1.0.0",
-  "type": "commonjs",
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "test": "node --test"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^3",
+    "next": "^14.2.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "pg": "^8.11.3"
   },
   "devDependencies": {
     "pg-mem": "^3.0.5",
     "undici": "^7.13.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
