@@ -12,7 +12,7 @@ Create a `.env` file with the following variables.
 
 In your Auth0 Single Page Application settings, configure:
 
-- **Allowed Callback URLs**: `https://ai-news-hub-eta.vercel.app/callback.html`
+- **Allowed Callback URLs**: `https://ai-news-hub-eta.vercel.app/auth/callback.html`
 - **Allowed Logout URLs**: `https://ai-news-hub-eta.vercel.app/`
 - **Allowed Web Origins**: `https://ai-news-hub-eta.vercel.app`
 - **(Optional) Application Login URI**: `https://ai-news-hub-eta.vercel.app/`

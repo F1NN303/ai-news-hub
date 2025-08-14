@@ -2,7 +2,7 @@
   const domain = 'dev-zi3ojkfg51ob4f3c.eu.auth0.com';
   const meta = document.querySelector('meta[name="auth0-client-id"]');
   const clientId = meta ? meta.content : '';
-  const redirect_uri = 'https://ai-news-hub-eta.vercel.app/callback.html';
+  const redirect_uri = 'https://ai-news-hub-eta.vercel.app/auth/callback.html';
   let auth0Client;
   const ready = (async () => {
     try {
