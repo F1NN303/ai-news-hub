@@ -29,7 +29,7 @@
           sessionStorage.removeItem('postLoginRedirect');
           window.location.replace(redirectPath);
         } else {
-          window.location.replace('/');
+          window.location.replace('/profile.html');
         }
       } catch (e) {
         document.body.innerHTML = `<p>Authentication failed.</p><p><a href="/">Back to home</a></p>`;
