@@ -120,7 +120,10 @@
 
           <div id="auth-area" class="flex items-center gap-2">
             <button id="sign-in-btn" onclick="(sessionStorage.setItem('postLoginRedirect', location.pathname+location.search), auth.login())" class="hidden px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</button>
-            <a id="profile-link" href="/profile.html" class="hidden px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Profile</a>
+            <a id="profile-link" href="/profile.html" class="hidden px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center">
+              <img id="profile-avatar" class="w-6 h-6 rounded-full mr-2 hidden" alt="Profile avatar" />
+              Profile
+            </a>
           </div>
 
           <button id="theme-toggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700" aria-label="Toggle theme">

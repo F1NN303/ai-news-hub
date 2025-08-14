@@ -8,9 +8,11 @@
   async function updateAuthUI() {
     if (!window.auth) return;
     const profileLink = document.getElementById('profile-link') || document.getElementById('dashboard-link');
+    const profileAvatar = document.getElementById('profile-avatar');
     signInBtn = document.getElementById('sign-in-btn');
     signOutBtn = document.getElementById('sign-out-btn') || document.getElementById('logout-btn');
     const isAuth = await window.auth.isAuthenticated();
+    const user = isAuth ? await window.auth.getUser() : null;
     let hasToken = false;
     if (authDebug) {
       try {
@@ -23,10 +25,23 @@
     if (isAuth) {
       if (signInBtn) signInBtn.classList.add('hidden');
       if (profileLink) profileLink.classList.remove('hidden');
+      if (profileAvatar) {
+        if (user && user.picture) {
+          profileAvatar.src = user.picture;
+          profileAvatar.classList.remove('hidden');
+        } else {
+          profileAvatar.classList.add('hidden');
+          profileAvatar.removeAttribute('src');
+        }
+      }
       toggleMobileProfileLink(true);
     } else {
       if (signInBtn) signInBtn.classList.remove('hidden');
       if (profileLink) profileLink.classList.add('hidden');
+      if (profileAvatar) {
+        profileAvatar.classList.add('hidden');
+        profileAvatar.removeAttribute('src');
+      }
       toggleMobileProfileLink(false);
     }
     if (signOutBtn) {
