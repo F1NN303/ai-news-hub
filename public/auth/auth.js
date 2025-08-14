@@ -30,7 +30,16 @@
 
   const ready = (async () => {
     try {
-      auth0Client = await createAuth0Client({
+      const createClientFn =
+        typeof createAuth0Client === 'function'
+          ? createAuth0Client
+          : (window.auth0 && typeof window.auth0.createAuth0Client === 'function'
+              ? window.auth0.createAuth0Client
+              : null);
+      if (!createClientFn) {
+        throw new Error('Auth0 SPA SDK not loaded');
+      }
+      auth0Client = await createClientFn({
         domain,
         clientId,
         authorizationParams: { redirect_uri }
