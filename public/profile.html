@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sign in</title>
+  <title>Your Profile</title>
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <button id="loginBtn" disabled>Continue with Auth0</button>
+<body class="p-6 bg-light dark:bg-dark">
+  <h1 class="text-2xl font-bold mb-4">Profile</h1>
+  <pre id="json" class="bg-slate-100 dark:bg-slate-800 p-4 rounded overflow-auto"></pre>
   <script>
     window.__auth0 = {
       domain: '<%= process.env.AUTH0_ISSUER_BASE_URL.replace("https://", "").replace(/\/$/, "") %>',
@@ -18,14 +20,14 @@
   </script>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
-      const btn = document.getElementById('loginBtn');
       const client = await auth0ClientPromise;
       if (!client) return;
-      btn.disabled = false;
-      btn.addEventListener('click', () => {
-        sessionStorage.setItem('postLoginRedirect', '/');
-        client.loginWithRedirect({ authorizationParams: { redirect_uri: window.__auth0.baseUrl + '/auth/callback.html' } });
-      });
+      if (!(await client.isAuthenticated())) {
+        document.getElementById('json').textContent = 'Not signed in';
+        return;
+      }
+      const user = await client.getUser();
+      document.getElementById('json').textContent = JSON.stringify(user, null, 2);
     });
   </script>
 </body>

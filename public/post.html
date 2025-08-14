@@ -6,6 +6,9 @@
   <title>AI News Hub | Article</title>
   <meta name="description" content="Read the full article on AI News Hub.">
   <link rel="canonical" href="/post.html" />
+  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID -->
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
+  <script src="/auth/auth.js" defer></script>
   <!-- Tailwind & Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -94,21 +97,17 @@
         const p = await res.json();
         const date = new Date(p.published_at || Date.now()).toLocaleDateString();
 
+        await auth.ready;
         let authHtml = '';
-        try {
-          const meRes = await fetch('/api/auth/me', { credentials: 'include' });
-          if (meRes.ok) {
-            currentUser = await meRes.json();
-            authHtml = `
+        if (await auth.isAuthenticated()) {
+          currentUser = await auth.getUser();
+          authHtml = `
             <form id="comment-form" class="space-y-2">
               <textarea id="comment-content" class="w-full border rounded p-2" required></textarea>
               <button type="submit" class="bg-primary text-white px-4 py-2 rounded">Post Comment</button>
             </form>`;
-          } else {
-            authHtml = `<a href="/login" class="text-primary hover:underline">Log in to comment</a>`;
-          }
-        } catch (err) {
-          authHtml = `<a href="/login" class="text-primary hover:underline">Log in to comment</a>`;
+        } else {
+          authHtml = `<a href="#" onclick="(sessionStorage.setItem('postLoginRedirect', location.pathname+location.search), auth.login())" class="text-primary hover:underline">Log in to comment</a>`;
         }
 
         container.innerHTML = `
