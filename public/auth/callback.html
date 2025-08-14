@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sign in</title>
-  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
-  <script src="/auth/auth.js" defer></script>
+  <title>Auth Callback</title>
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
+  <script src="/auth/auth.js"></script>
 </head>
 <body>
-  <button id="loginBtn" disabled>Continue with Auth0</button>
   <script>
     window.__auth0 = {
       domain: '<%= process.env.AUTH0_ISSUER_BASE_URL.replace("https://", "").replace(/\/$/, "") %>',
@@ -18,14 +17,15 @@
   </script>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
-      const btn = document.getElementById('loginBtn');
       const client = await auth0ClientPromise;
-      if (!client) return;
-      btn.disabled = false;
-      btn.addEventListener('click', () => {
-        sessionStorage.setItem('postLoginRedirect', '/');
-        client.loginWithRedirect({ authorizationParams: { redirect_uri: window.__auth0.baseUrl + '/auth/callback.html' } });
-      });
+      try {
+        if (location.search.includes('code=') && location.search.includes('state=')) {
+          await client.handleRedirectCallback();
+        }
+      } catch (e) {
+        console.error('callback error', e);
+      }
+      window.location.replace(sessionStorage.getItem('postLoginRedirect') || '/');
     });
   </script>
 </body>

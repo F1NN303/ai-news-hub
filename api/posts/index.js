@@ -1,23 +1,30 @@
 // api/posts/index.js
 const { query } = require('../../lib/db');
 const requireAdmin = require('../../lib/requireAdmin');
+const requireUser = require('../../lib/requireUser');
 const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
 const { ensureConfig } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
   try {
-    ensureConfig();
     ensureCsrf(req, res);
     if (req.method === 'GET') {
+      ensureConfig(['DATABASE_URL']);
       const { rows } = await query(`
         SELECT id, title, slug, excerpt, content, category, tags, author, image_url, published_at
         FROM public.posts
         ORDER BY id DESC
       `);
-      return res.status(200).json(rows);
+      let user = null;
+      if (req.headers?.authorization) {
+        user = await requireUser(req, res);
+        if (!user) return;
+      }
+      return res.status(200).json({ posts: rows, user });
     }
 
     if (req.method === 'POST') {
+      ensureConfig();
       const admin = await requireAdmin(req, res);
       if (!admin) return;
       if (!validateCsrf(req)) {

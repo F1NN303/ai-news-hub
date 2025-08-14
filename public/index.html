@@ -7,6 +7,9 @@
   <meta name="description" content="Stay updated with the latest AI news, OpenAI developments, ChatGPT updates, and innovations in artificial intelligence.">
   <link rel="canonical" href="/" />
 
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
+  <script src="/auth/auth.js" defer></script>
+
   <!-- Open Graph -->
   <meta property="og:title" content="AI News Hub" />
   <meta property="og:description" content="Your source for the latest AI news and developments." />
@@ -114,13 +117,10 @@
           </div>
 
           <div id="auth-area" class="flex items-center gap-2">
-            <a id="login-link" href="/api/auth/login" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</a>
-            <a id="signup-link" href="/signup" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign up</a>
-            <div id="user-info" class="hidden items-center gap-2">
-              <span id="user-name" class="font-medium"></span>
-              <a id="admin-link" href="/admin.html" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
-            <a id="logout-link" href="/api/auth/logout" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Logout</a>
-            </div>
+            <span id="user-name" class="font-medium hidden"></span>
+            <button id="loginBtn" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800" disabled>Sign in</button>
+            <button id="logoutBtn" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign out</button>
+            <a id="dashboard-link" href="/profile.html" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Dashboard</a>
           </div>
 
           <button id="theme-toggle" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700">
@@ -458,36 +458,44 @@
     document.addEventListener('DOMContentLoaded', loadAll);
   </script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const loginLink = document.getElementById('login-link');
-      const signupLink = document.getElementById('signup-link');
-      const userInfo = document.getElementById('user-info');
+    window.__auth0 = {
+      domain: '<%= process.env.AUTH0_ISSUER_BASE_URL.replace("https://", "").replace(/\/$/, "") %>',
+      clientId: '<%= process.env.AUTH0_CLIENT_ID %>',
+      baseUrl: '<%= process.env.AUTH0_BASE_URL.replace(/\/$/, "") %>'
+    };
+  </script>
+  <script>
+    window.addEventListener('DOMContentLoaded', async () => {
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
       const userName = document.getElementById('user-name');
-      const adminLink = document.getElementById('admin-link');
-      try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
-        if (res.ok) {
-          const user = await res.json();
-          if (user && (user.name || user.email)) {
-            userName.textContent = user.name || user.email;
-            loginLink.classList.add('hidden');
-            signupLink.classList.add('hidden');
-            if (user.role === 'admin') {
-              adminLink.classList.remove('hidden');
-            } else {
-              adminLink.classList.add('hidden');
-            }
-            userInfo.classList.remove('hidden');
-            return;
-          }
-        }
-      } catch (err) {
-        console.error('Auth check failed', err);
+      const dashboardLink = document.getElementById('dashboard-link');
+
+      const client = await auth0ClientPromise;
+      if (!client) return;
+
+      loginBtn.disabled = false;
+      loginBtn.addEventListener('click', () => {
+        sessionStorage.setItem('postLoginRedirect', location.pathname + location.search);
+        client.loginWithRedirect({ authorizationParams: { redirect_uri: window.__auth0.baseUrl + '/auth/callback.html' } });
+      });
+      logoutBtn.addEventListener('click', () => {
+        client.logout({ logoutParams: { returnTo: window.__auth0.baseUrl + '/' } });
+      });
+
+      if (await client.isAuthenticated()) {
+        const user = await client.getUser();
+        userName.textContent = user.name || user.email;
+        userName.classList.remove('hidden');
+        loginBtn.classList.add('hidden');
+        logoutBtn.classList.remove('hidden');
+        if (dashboardLink) dashboardLink.classList.remove('hidden');
+      } else {
+        userName.classList.add('hidden');
+        loginBtn.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+        if (dashboardLink) dashboardLink.classList.add('hidden');
       }
-      loginLink.classList.remove('hidden');
-      signupLink.classList.remove('hidden');
-      userInfo.classList.add('hidden');
-      adminLink.classList.add('hidden');
     });
   </script>
 </body>

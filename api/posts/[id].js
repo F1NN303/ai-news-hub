@@ -1,5 +1,6 @@
 const db = require('../../lib/db');
 const requireAdmin = require('../../lib/requireAdmin');
+const requireUser = require('../../lib/requireUser');
 const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
 const { ensureConfig } = require('../../lib/auth');
 
@@ -15,7 +16,12 @@ module.exports = async (req, res) => {
         : 'SELECT * FROM posts WHERE slug = $1';
       const { rows } = await db.query(query, [id]);
       if (!rows[0]) return res.status(404).json({ error: 'Not found' });
-      return res.status(200).json(rows[0]);
+      let user = null;
+      if (req.headers?.authorization) {
+        user = await requireUser(req, res);
+        if (!user) return;
+      }
+      return res.status(200).json({ ...rows[0], user });
     }
     if (req.method === 'PUT') {
       const admin = await requireAdmin(req, res);
