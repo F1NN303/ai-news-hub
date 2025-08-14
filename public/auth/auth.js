@@ -3,12 +3,23 @@
   let authErrorShown = false;
   let signInBtn;
   let signOutBtn;
+  const authDebug = new URLSearchParams(window.location.search).get('auth_debug') === '1';
   
   async function updateAuthUI() {
     if (!window.auth) return;
     const userNameEl = document.getElementById('user-name');
     const profileLink = document.getElementById('profile-link') || document.getElementById('dashboard-link');
-    if (await window.auth.isAuthenticated()) {
+    const isAuth = await window.auth.isAuthenticated();
+    let hasToken = false;
+    if (authDebug) {
+      try {
+        hasToken = !!(await window.auth.getIdTokenClaims());
+      } catch (e) {
+        hasToken = false;
+      }
+      console.debug('Auth state', { isAuthenticated: isAuth, hasToken });
+    }
+    if (isAuth) {
       const user = await window.auth.getUser();
       if (userNameEl && user) {
         userNameEl.textContent = user.name || user.email || '';
@@ -63,17 +74,25 @@
 
   window.initAuth = function initAuth() {
     if (window.authReady) return window.authReady;
+    if (authDebug) console.debug('initAuth called');
     const domainMeta = document.querySelector('meta[name="auth0-domain"]');
     const domain = domainMeta ? domainMeta.content : (window.AUTH0_DOMAIN || '');
     const clientMeta = document.querySelector('meta[name="auth0-client-id"]');
     const clientId = clientMeta ? clientMeta.content : (window.AUTH0_CLIENT_ID || '');
     const redirect_uri = window.location.origin + '/auth/callback.html';
+    if (authDebug) console.debug('Auth0 config', { domain, clientId, redirect_uri });
     signInBtn = document.getElementById('sign-in-btn');
     signOutBtn = document.getElementById('sign-out-btn');
     if (signInBtn) signInBtn.disabled = true;
 
     window.authReady = (async () => {
       try {
+        try {
+          await fetch(`https://${domain}/.well-known/health`, { mode: 'cors' });
+          if (authDebug) console.debug('Auth0 health check succeeded');
+        } catch (e) {
+          console.warn(`Auth0 CORS check failed: ${window.location.origin} is not in Allowed Web Origins`);
+        }
         const createClientFn =
           typeof createAuth0Client === 'function'
             ? createAuth0Client
@@ -91,13 +110,17 @@
           useRefreshTokens: true,
           useRefreshTokensFallback: true
         });
+        if (authDebug) console.debug('Auth0 client created');
       } catch (e) {
+        if (authDebug) console.debug('Auth0 init failed', e);
         console.error('Auth0 init failed', e);
       }
       if (!auth0Client) {
         showAuthError();
+        if (authDebug) console.debug('Auth0 client unavailable');
       } else if (signInBtn) {
         signInBtn.disabled = false;
+        if (authDebug) console.debug('Auth0 ready');
       }
     })();
 
