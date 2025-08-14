@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Auth Callback</title>
+  <meta name="auth0-client-id" content="REPLACE_ME"><!-- Replace REPLACE_ME with the Client ID from Auth0 App -->
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
+  <script src="/auth/auth.js"></script>
+</head>
+<body>
+<script>
+  (async () => {
+    await auth.ready;
+    await auth.handleRedirectCallback();
+    window.location.replace(sessionStorage.getItem('postLoginRedirect') || '/');
+  })();
+</script>
+</body>
+</html>

@@ -7,7 +7,6 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@auth0/nextjs-auth0": "^3",
     "pg": "^8.11.3"
   },
   "devDependencies": {

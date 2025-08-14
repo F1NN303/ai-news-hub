@@ -7,6 +7,10 @@
   <meta name="description" content="Stay updated with the latest AI news, OpenAI developments, ChatGPT updates, and innovations in artificial intelligence.">
   <link rel="canonical" href="/" />
 
+  <meta name="auth0-client-id" content="REPLACE_ME"><!-- Replace REPLACE_ME with the Client ID from Auth0 App -->
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
+  <script src="/auth/auth.js" defer></script>
+
   <!-- Open Graph -->
   <meta property="og:title" content="AI News Hub" />
   <meta property="og:description" content="Your source for the latest AI news and developments." />
@@ -114,13 +118,10 @@
           </div>
 
           <div id="auth-area" class="flex items-center gap-2">
-            <a id="login-link" href="/api/auth/login" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</a>
-            <a id="signup-link" href="/signup" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign up</a>
-            <div id="user-info" class="hidden items-center gap-2">
-              <span id="user-name" class="font-medium"></span>
-              <a id="admin-link" href="/admin.html" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
-            <a id="logout-link" href="/api/auth/logout" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Logout</a>
-            </div>
+            <span id="user-name" class="font-medium hidden"></span>
+            <button id="sign-in-btn" onclick="(sessionStorage.setItem('postLoginRedirect', location.pathname+location.search), auth.login())" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</button>
+            <button id="sign-out-btn" onclick="auth.logout()" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign out</button>
+            <a id="dashboard-link" href="/profile.html" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Dashboard</a>
           </div>
 
           <button id="theme-toggle" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700">
@@ -458,37 +459,26 @@
     document.addEventListener('DOMContentLoaded', loadAll);
   </script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const loginLink = document.getElementById('login-link');
-      const signupLink = document.getElementById('signup-link');
-      const userInfo = document.getElementById('user-info');
+    (async () => {
+      await auth.ready;
+      const signInBtn = document.getElementById('sign-in-btn');
+      const signOutBtn = document.getElementById('sign-out-btn');
       const userName = document.getElementById('user-name');
-      const adminLink = document.getElementById('admin-link');
-      try {
-        const res = await fetch('/api/auth/me', { credentials: 'include' });
-        if (res.ok) {
-          const user = await res.json();
-          if (user && (user.name || user.email)) {
-            userName.textContent = user.name || user.email;
-            loginLink.classList.add('hidden');
-            signupLink.classList.add('hidden');
-            if (user.role === 'admin') {
-              adminLink.classList.remove('hidden');
-            } else {
-              adminLink.classList.add('hidden');
-            }
-            userInfo.classList.remove('hidden');
-            return;
-          }
-        }
-      } catch (err) {
-        console.error('Auth check failed', err);
+      const dashboardLink = document.getElementById('dashboard-link');
+      if (await auth.isAuthenticated()) {
+        const user = await auth.getUser();
+        userName.textContent = user.name || user.email;
+        userName.classList.remove('hidden');
+        signInBtn.classList.add('hidden');
+        signOutBtn.classList.remove('hidden');
+        if (dashboardLink) dashboardLink.classList.remove('hidden');
+      } else {
+        userName.classList.add('hidden');
+        signInBtn.classList.remove('hidden');
+        signOutBtn.classList.add('hidden');
+        if (dashboardLink) dashboardLink.classList.add('hidden');
       }
-      loginLink.classList.remove('hidden');
-      signupLink.classList.remove('hidden');
-      userInfo.classList.add('hidden');
-      adminLink.classList.add('hidden');
-    });
+    })();
   </script>
 </body>
 </html>
