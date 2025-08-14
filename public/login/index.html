@@ -15,7 +15,7 @@
     window.addEventListener('DOMContentLoaded', async () => {
       initAuth();
       await window.authReady;
-      sessionStorage.setItem('postLoginRedirect', '/');
+      sessionStorage.setItem('postLoginRedirect', '/profile.html');
       auth.login();
     });
   </script>
