@@ -3,6 +3,27 @@
   let authErrorShown = false;
   let signInBtn;
   let signOutBtn;
+  
+  async function updateAuthUI() {
+    if (!window.auth) return;
+    const userNameEl = document.getElementById('user-name');
+    const profileLink = document.getElementById('profile-link') || document.getElementById('dashboard-link');
+    if (await window.auth.isAuthenticated()) {
+      const user = await window.auth.getUser();
+      if (userNameEl && user) {
+        userNameEl.textContent = user.name || user.email || '';
+        userNameEl.classList.remove('hidden');
+      }
+      if (signInBtn) signInBtn.classList.add('hidden');
+      if (signOutBtn) signOutBtn.classList.remove('hidden');
+      if (profileLink) profileLink.classList.remove('hidden');
+    } else {
+      if (userNameEl) userNameEl.classList.add('hidden');
+      if (signInBtn) signInBtn.classList.remove('hidden');
+      if (signOutBtn) signOutBtn.classList.add('hidden');
+      if (profileLink) profileLink.classList.add('hidden');
+    }
+  }
 
   function showAuthError() {
     if (authErrorShown) return;
@@ -93,6 +114,8 @@
       getIdTokenClaims: () => withClient(() => auth0Client.getIdTokenClaims(), null),
       handleRedirectCallback: () => withClient(() => handleRedirectCallbackSafe())
     };
+
+    window.updateAuthUI = updateAuthUI;
 
     return window.authReady;
   };
