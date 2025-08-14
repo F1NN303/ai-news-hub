@@ -128,13 +128,24 @@
             <i class="fa-solid fa-moon hidden dark:block text-slate-200"></i>
           </button>
 
-          <button class="md:hidden w-11 h-11 text-slate-700 dark:text-slate-300">
+          <button id="menu-button" class="md:hidden w-11 h-11 flex items-center justify-center rounded-full text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Open menu" aria-expanded="false">
             <i class="fa-solid fa-bars text-xl"></i>
           </button>
         </div>
       </div>
     </div>
   </header>
+
+  <!-- Mobile Menu -->
+  <nav id="mobile-menu" class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-dark transform -translate-x-full transition-transform z-50">
+    <div id="mobile-menu-links" class="pt-20 px-4 space-y-1">
+      <a href="#openai" class="block px-4 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">OpenAI News</a>
+      <a href="#chatgpt" class="block px-4 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">ChatGPT Updates</a>
+      <a href="#industry" class="block px-4 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">AI Industry</a>
+      <a href="#research" class="block px-4 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Research &amp; Innovation</a>
+    </div>
+  </nav>
+  <div id="menu-backdrop" class="fixed inset-0 bg-black/50 z-40 hidden"></div>
 
   <!-- Hero -->
   <section class="relative py-16 md:py-24 bg-gradient-to-r from-blue-900 to-indigo-900 dark:from-slate-900 dark:to-slate-900 text-white overflow-hidden">
@@ -458,13 +469,61 @@
     document.addEventListener('DOMContentLoaded', loadAll);
   </script>
   <script>
-    window.addEventListener('DOMContentLoaded', async () => {
-      initAuth();
-      await window.authReady;
-      updateAuthUI();
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) updateAuthUI();
+  window.addEventListener('DOMContentLoaded', async () => {
+    initAuth();
+    await window.authReady;
+    updateAuthUI();
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) updateAuthUI();
+    });
+  });
+</script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const menu = document.getElementById('mobile-menu');
+      const backdrop = document.getElementById('menu-backdrop');
+      const btn = document.getElementById('menu-button');
+
+      function openMenu() {
+        menu.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+
+      function closeMenu() {
+        menu.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+
+      btn.addEventListener('click', () => {
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        expanded ? closeMenu() : openMenu();
       });
+
+      backdrop.addEventListener('click', closeMenu);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeMenu();
+      });
+
+      if (window.authReady) {
+        window.authReady.then(async () => {
+          if (await auth.isAuthenticated()) {
+            let link = document.getElementById('profile-link-mobile');
+            if (!link) {
+              const menuLinks = document.getElementById('mobile-menu-links');
+              link = document.createElement('a');
+              link.id = 'profile-link-mobile';
+              link.href = '/profile.html';
+              link.className = 'block px-4 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800';
+              link.textContent = 'Profile';
+              menuLinks.appendChild(link);
+            }
+          }
+        });
+      }
     });
   </script>
 </body>
