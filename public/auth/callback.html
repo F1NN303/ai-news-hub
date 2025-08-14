@@ -15,10 +15,24 @@
       initAuth();
       await window.authReady;
       try {
-        await auth.handleRedirectCallback();
-        window.location.replace(sessionStorage.getItem('postLoginRedirect') || '/');
+        if (!window.__handledAuthRedirect) {
+          window.__handledAuthRedirect = true;
+          await auth.handleRedirectCallback();
+          const url = new URL(window.location.href);
+          url.searchParams.delete('code');
+          url.searchParams.delete('state');
+          window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+        }
+
+        const redirectPath = sessionStorage.getItem('postLoginRedirect');
+        if (redirectPath) {
+          sessionStorage.removeItem('postLoginRedirect');
+          window.location.replace(redirectPath);
+        } else {
+          window.location.replace('/');
+        }
       } catch (e) {
-        // auth.handleRedirectCallback already renders an error message
+        document.body.innerHTML = `<p>Authentication failed.</p><p><a href="/">Back to home</a></p>`;
       }
     });
   </script>
