@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "type": "commonjs",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "inject:auth0": "node scripts/inject-auth0-client-id.js"
   },
   "dependencies": {
     "jsonwebtoken": "^9.0.2",
