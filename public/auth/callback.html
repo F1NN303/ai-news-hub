@@ -9,12 +9,16 @@
   <script src="/auth/auth.js"></script>
 </head>
 <body>
-<script>
-  (async () => {
-    await auth.ready;
-    await auth.handleRedirectCallback();
-    window.location.replace(sessionStorage.getItem('postLoginRedirect') || '/');
-  })();
-</script>
+  <script>
+    window.addEventListener('DOMContentLoaded', async () => {
+      await auth.ready;
+      try {
+        await auth.handleRedirectCallback();
+        window.location.replace(sessionStorage.getItem('postLoginRedirect') || '/');
+      } catch (e) {
+        // auth.handleRedirectCallback already renders an error message
+      }
+    });
+  </script>
 </body>
 </html>

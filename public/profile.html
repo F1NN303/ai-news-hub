@@ -13,7 +13,7 @@
   <h1 class="text-2xl font-bold mb-4">Profile</h1>
   <pre id="json" class="bg-slate-100 dark:bg-slate-800 p-4 rounded overflow-auto"></pre>
   <script>
-    (async () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       await auth.ready;
       if (!(await auth.isAuthenticated())) {
         location.replace('/');
@@ -21,7 +21,7 @@
       }
       const user = await auth.getUser();
       document.getElementById('json').textContent = JSON.stringify(user, null, 2);
-    })();
+    });
   </script>
 </body>
 </html>

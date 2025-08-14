@@ -11,11 +11,11 @@
 <body>
   <p>Redirecting…</p>
   <script>
-    (async () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       await auth.ready;
       sessionStorage.setItem('postLoginRedirect', '/');
       auth.login();
-    })();
+    });
   </script>
 </body>
 </html>
