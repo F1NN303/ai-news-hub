@@ -12,22 +12,28 @@ Create a `.env` file with the following variables.
 
 Set these variables to enable authentication with Auth0:
 
-- `AUTH0_SECRET` – session secret used to encrypt cookies. Use a long, random value and keep it consistent between local and production.
-- `AUTH0_BASE_URL` – base URL of this app. Use `http://localhost:3000` locally and `https://ai-news-hub-eta.vercel.app` in production.
-- `AUTH0_CLIENT_ID` – Auth0 application client ID from your Auth0 dashboard. Use the production client ID when deployed.
-- `AUTH0_CLIENT_SECRET` – Auth0 application client secret from your Auth0 dashboard. Use the production client secret when deployed.
-- `AUTH0_ISSUER_BASE_URL` – Auth0 issuer URL (e.g., `https://your-tenant.auth0.com`).
+- `AUTH0_ISSUER_BASE_URL`
+- `AUTH0_BASE_URL`
+- `AUTH0_CLIENT_ID`
+- `AUTH0_CLIENT_SECRET`
+- `AUTH0_SECRET`
 
-## Auth0 Dashboard Settings
+## Auth0 Setup
 
-Configure these values in your Auth0 application settings:
+Configure these values in your Auth0 dashboard for the production deployment:
 
-| Setting | Production | Local |
-| --- | --- | --- |
-| Allowed Callback URLs | `https://ai-news-hub-eta.vercel.app/api/auth/callback` | `http://localhost:3000/api/auth/callback` |
-| Allowed Logout URLs | `https://ai-news-hub-eta.vercel.app/` | `http://localhost:3000/` |
-| Web Origins | `https://ai-news-hub-eta.vercel.app` | `http://localhost:3000` |
-| Application Login URI | `https://ai-news-hub-eta.vercel.app/login` | `http://localhost:3000/login` |
+- **Allowed Callback URLs:** `https://ai-news-hub-eta.vercel.app/api/auth/callback`
+- **Allowed Logout URLs:** `https://ai-news-hub-eta.vercel.app/`
+- **Allowed Web Origins:** `https://ai-news-hub-eta.vercel.app`
+- **Application Login URI:** `https://ai-news-hub-eta.vercel.app/api/auth/login`
+
+In Vercel project settings, add the following environment variables:
+
+- `AUTH0_ISSUER_BASE_URL`
+- `AUTH0_BASE_URL`
+- `AUTH0_CLIENT_ID`
+- `AUTH0_CLIENT_SECRET`
+- `AUTH0_SECRET`
 
 ## Database Setup (Neon)
 
