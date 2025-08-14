@@ -13,7 +13,7 @@ before(async () => {
   server = createServer(async (req, res) => {
     try {
       const url = new URL(req.url, 'http://localhost');
-      let filePath = join(process.cwd(), url.pathname);
+      let filePath = join(process.cwd(), 'public', url.pathname);
       try {
         const stats = await stat(filePath);
         if (stats.isDirectory()) {
