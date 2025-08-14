@@ -13,7 +13,8 @@
   <p>Redirecting…</p>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
-      await auth.ready;
+      initAuth();
+      await window.authReady;
       sessionStorage.setItem('postLoginRedirect', '/');
       auth.login();
     });

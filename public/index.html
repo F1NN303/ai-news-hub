@@ -461,7 +461,8 @@
   </script>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
-      await auth.ready;
+      initAuth();
+      await window.authReady;
       const signInBtn = document.getElementById('sign-in-btn');
       const signOutBtn = document.getElementById('sign-out-btn');
       const userName = document.getElementById('user-name');

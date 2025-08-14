@@ -15,7 +15,8 @@
   <pre id="json" class="bg-slate-100 dark:bg-slate-800 p-4 rounded overflow-auto"></pre>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
-      await auth.ready;
+      initAuth();
+      await window.authReady;
       if (!(await auth.isAuthenticated())) {
         location.replace('/');
         return;
