@@ -2,12 +2,10 @@
   let auth0Client;
   let authErrorShown = false;
   let signInBtn;
-  let signOutBtn;
   const authDebug = new URLSearchParams(window.location.search).get('auth_debug') === '1';
   
   async function updateAuthUI() {
     if (!window.auth) return;
-    const userNameEl = document.getElementById('user-name');
     const profileLink = document.getElementById('profile-link') || document.getElementById('dashboard-link');
     const isAuth = await window.auth.isAuthenticated();
     let hasToken = false;
@@ -20,18 +18,10 @@
       console.debug('Auth state', { isAuthenticated: isAuth, hasToken });
     }
     if (isAuth) {
-      const user = await window.auth.getUser();
-      if (userNameEl && user) {
-        userNameEl.textContent = user.name || user.email || '';
-        userNameEl.classList.remove('hidden');
-      }
       if (signInBtn) signInBtn.classList.add('hidden');
-      if (signOutBtn) signOutBtn.classList.remove('hidden');
       if (profileLink) profileLink.classList.remove('hidden');
     } else {
-      if (userNameEl) userNameEl.classList.add('hidden');
       if (signInBtn) signInBtn.classList.remove('hidden');
-      if (signOutBtn) signOutBtn.classList.add('hidden');
       if (profileLink) profileLink.classList.add('hidden');
     }
   }
@@ -39,12 +29,10 @@
   function showAuthError() {
     if (authErrorShown) return;
     authErrorShown = true;
-    [signInBtn, signOutBtn].forEach(btn => {
-      if (btn) {
-        btn.disabled = true;
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
-      }
-    });
+    if (signInBtn) {
+      signInBtn.disabled = true;
+      signInBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
     if (!document.getElementById('auth-error')) {
       const msg = document.createElement('div');
       msg.id = 'auth-error';
@@ -82,7 +70,6 @@
     const redirect_uri = window.location.origin + '/auth/callback.html';
     if (authDebug) console.debug('Auth0 config', { domain, clientId, redirect_uri });
     signInBtn = document.getElementById('sign-in-btn');
-    signOutBtn = document.getElementById('sign-out-btn');
     if (signInBtn) signInBtn.disabled = true;
 
     window.authReady = (async () => {
