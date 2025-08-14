@@ -2,11 +2,14 @@
   let auth0Client;
   let authErrorShown = false;
   let signInBtn;
+  let signOutBtn;
   const authDebug = new URLSearchParams(window.location.search).get('auth_debug') === '1';
   
   async function updateAuthUI() {
     if (!window.auth) return;
     const profileLink = document.getElementById('profile-link') || document.getElementById('dashboard-link');
+    signInBtn = document.getElementById('sign-in-btn');
+    signOutBtn = document.getElementById('sign-out-btn') || document.getElementById('logout-btn');
     const isAuth = await window.auth.isAuthenticated();
     let hasToken = false;
     if (authDebug) {
@@ -20,9 +23,21 @@
     if (isAuth) {
       if (signInBtn) signInBtn.classList.add('hidden');
       if (profileLink) profileLink.classList.remove('hidden');
+      toggleMobileProfileLink(true);
     } else {
       if (signInBtn) signInBtn.classList.remove('hidden');
       if (profileLink) profileLink.classList.add('hidden');
+      toggleMobileProfileLink(false);
+    }
+    if (signOutBtn) {
+      signOutBtn.onclick = () => window.auth.logout();
+    }
+  }
+
+  function toggleMobileProfileLink(show) {
+    const mobileProfileLink = document.getElementById('profile-link-mobile');
+    if (mobileProfileLink) {
+      mobileProfileLink.classList.toggle('hidden', !show);
     }
   }
 
@@ -126,6 +141,7 @@
     };
 
     window.updateAuthUI = updateAuthUI;
+    window.toggleMobileProfileLink = toggleMobileProfileLink;
 
     return window.authReady;
   };
