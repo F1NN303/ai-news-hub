@@ -1,8 +1,9 @@
 (async () => {
-  const domain = 'dev-zi3ojkfg51ob4f3c.eu.auth0.com';
-  const meta = document.querySelector('meta[name="auth0-client-id"]');
-  const clientId = meta ? meta.content : '';
-  const redirect_uri = 'https://ai-news-hub-eta.vercel.app/auth/callback.html';
+  const domainMeta = document.querySelector('meta[name="auth0-domain"]');
+  const domain = domainMeta ? domainMeta.content : (window.AUTH0_DOMAIN || '');
+  const clientMeta = document.querySelector('meta[name="auth0-client-id"]');
+  const clientId = clientMeta ? clientMeta.content : (window.AUTH0_CLIENT_ID || '');
+  const redirect_uri = window.location.origin + '/auth/callback.html';
   let auth0Client;
   const ready = (async () => {
     try {
@@ -32,7 +33,12 @@
 
   window.auth = {
     login: () => withClient(() => auth0Client.loginWithRedirect()),
-    logout: () => withClient(() => auth0Client.logout({ logoutParams: { returnTo: 'https://ai-news-hub-eta.vercel.app/' } })),
+    logout: () =>
+      withClient(() =>
+        auth0Client.logout({
+          logoutParams: { returnTo: window.location.origin + '/' }
+        })
+      ),
     getUser: () => withClient(() => auth0Client.getUser()),
     isAuthenticated: () => withClient(() => auth0Client.isAuthenticated()),
     getIdTokenClaims: () => withClient(() => auth0Client.getIdTokenClaims()),
