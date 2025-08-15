@@ -49,8 +49,8 @@
     if (authErrorShown) return;
     authErrorShown = true;
     if (signInBtn) {
-      signInBtn.disabled = true;
-      signInBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      signInBtn.disabled = false;
+      signInBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
     if (!document.getElementById('auth-error')) {
       const msg = document.createElement('div');
@@ -89,7 +89,6 @@
     const redirect_uri = window.location.origin + '/auth/callback.html';
     if (authDebug) console.debug('Auth0 config', { domain, clientId, redirect_uri, audience: AUDIENCE });
     signInBtn = document.getElementById('sign-in-btn');
-    if (signInBtn) signInBtn.disabled = true;
 
     window.authReady = (async () => {
       try {
@@ -128,9 +127,11 @@
       if (!auth0Client) {
         showAuthError();
         if (authDebug) console.debug('Auth0 client unavailable');
-      } else if (signInBtn) {
+      }
+      if (signInBtn) {
         signInBtn.disabled = false;
-        if (authDebug) console.debug('Auth0 ready');
+        signInBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        if (auth0Client && authDebug) console.debug('Auth0 ready');
       }
     })();
 
