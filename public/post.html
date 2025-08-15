@@ -11,7 +11,6 @@
   <meta name="auth0-audience" content="__INJECTED__" />
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
-  <script src="/resources/roles.js" defer></script>
   <!-- Tailwind & Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -41,7 +40,7 @@
               <div class="border-b pb-2">
                 <div class="flex items-center justify-between mb-1">
                   <div class="text-sm text-slate-500">${c.name || 'Anonymous'} &bull; ${new Date(c.created_at).toLocaleString()}</div>
-                  ${currentUser && (currentUser.sub === c.user_id || window.isAdmin)
+                  ${currentUser && (currentUser.sub === c.user_id || window.__auth?.isAdmin)
                     ? `<button data-id="${c.id}" class="comment-delete text-xs text-red-500 hover:underline">Delete</button>`
                     : ''}
                 </div>
@@ -95,7 +94,7 @@
 
         initAuth();
         await window.authReady;
-        if (typeof initRoles === 'function') await initRoles();
+
         let authHtml = '';
         if (await auth.isAuthenticated()) {
           currentUser = await auth.getUser();

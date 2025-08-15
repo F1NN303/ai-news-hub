@@ -171,16 +171,86 @@
       getUser: () => withClient(() => auth0Client.getUser(), null),
       isAuthenticated: () => withClient(() => auth0Client.isAuthenticated(), false),
       getIdTokenClaims: () => withClient(() => auth0Client.getIdTokenClaims(), null),
-      handleRedirectCallback: () => withClient(() => handleRedirectCallbackSafe())
+      handleRedirectCallback: () =>
+        withClient(async () => {
+          const res = await handleRedirectCallbackSafe();
+          await refreshAuthState();
+          return res;
+        })
     };
 
-    window.getApiToken = async function getApiToken() {
-      await window.authReady;
-      return auth0Client.getTokenSilently({ authorizationParams: { audience: AUDIENCE } });
-    };
+    async function getApiToken() {
+      if (!auth0Client) await window.authReady;
+      if (!auth0Client) return null;
+      try {
+        return await auth0Client.getTokenSilently({
+          authorizationParams: { audience: AUDIENCE, scope: 'manage:site' }
+        });
+      } catch (e) {
+        if (authDebug) console.debug('getApiToken failed', e);
+        return null;
+      }
+    }
 
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map(c => `%${('00' + c.charCodeAt(0).toString(16)).slice(-2)}`)
+            .join('')
+        );
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        return {};
+      }
+    }
+
+    async function refreshAuthState() {
+      const isAuthenticated = await window.auth.isAuthenticated();
+      let user = null;
+      let idTokenClaims = null;
+      let apiToken = null;
+      if (isAuthenticated) {
+        user = await window.auth.getUser();
+        try {
+          idTokenClaims = await window.auth.getIdTokenClaims();
+        } catch (e) {
+          idTokenClaims = null;
+        }
+        apiToken = await getApiToken();
+      }
+
+      let isAdmin = false;
+      if (apiToken) {
+        const { permissions = [] } = parseJwt(apiToken);
+        if (Array.isArray(permissions)) {
+          isAdmin = permissions.includes('manage:site');
+        }
+      }
+      if (!isAdmin && idTokenClaims) {
+        const roles = idTokenClaims['https://ai-news-hub/roles'];
+        if (Array.isArray(roles)) {
+          isAdmin = roles.includes('admin');
+        } else if (typeof roles === 'string') {
+          isAdmin = roles.split(' ').includes('admin');
+        }
+      }
+
+      window.__auth = { user, isAuthenticated, isAdmin, getApiToken };
+      document.documentElement.dataset.admin = isAdmin ? 'true' : 'false';
+      document.documentElement.dataset.auth = isAuthenticated ? 'true' : 'false';
+      document.dispatchEvent(new CustomEvent('auth:ready', { detail: window.__auth }));
+      debouncedUpdateAuthUI();
+    }
+
+    window.getApiToken = getApiToken;
     window.updateAuthUI = debouncedUpdateAuthUI;
     window.toggleMobileProfileLink = toggleMobileProfileLink;
+
+    window.authReady = window.authReady.then(refreshAuthState);
 
     return window.authReady;
   };
