@@ -5,6 +5,7 @@
   let signOutBtn;
   let updateAuthUITimer;
   const authDebug = new URLSearchParams(window.location.search).get('auth_debug') === '1';
+  const AUDIENCE = document.querySelector('meta[name="auth0-audience"]')?.content;
   
   async function updateAuthUI() {
     if (!window.auth) return;
@@ -104,7 +105,7 @@
     const clientMeta = document.querySelector('meta[name="auth0-client-id"]');
     const clientId = clientMeta ? clientMeta.content : (window.AUTH0_CLIENT_ID || '');
     const redirect_uri = window.location.origin + '/auth/callback.html';
-    if (authDebug) console.debug('Auth0 config', { domain, clientId, redirect_uri });
+    if (authDebug) console.debug('Auth0 config', { domain, clientId, redirect_uri, audience: AUDIENCE });
     signInBtn = document.getElementById('sign-in-btn');
     if (signInBtn) signInBtn.disabled = true;
 
@@ -128,7 +129,11 @@
         auth0Client = await createClientFn({
           domain,
           clientId,
-          authorizationParams: { redirect_uri },
+          authorizationParams: {
+            redirect_uri,
+            audience: AUDIENCE,
+            scope: 'openid profile email offline_access'
+          },
           cacheLocation: 'localstorage',
           useRefreshTokens: true,
           useRefreshTokensFallback: true
@@ -148,7 +153,15 @@
     })();
 
     window.auth = {
-      login: () => withClient(() => auth0Client.loginWithRedirect()),
+      login: () =>
+        withClient(() =>
+          auth0Client.loginWithRedirect({
+            authorizationParams: {
+              audience: AUDIENCE,
+              scope: 'openid profile email offline_access'
+            }
+          })
+        ),
       logout: () =>
         withClient(() =>
           auth0Client.logout({
@@ -159,6 +172,11 @@
       isAuthenticated: () => withClient(() => auth0Client.isAuthenticated(), false),
       getIdTokenClaims: () => withClient(() => auth0Client.getIdTokenClaims(), null),
       handleRedirectCallback: () => withClient(() => handleRedirectCallbackSafe())
+    };
+
+    window.getApiToken = async function getApiToken() {
+      await window.authReady;
+      return auth0Client.getTokenSilently({ authorizationParams: { audience: AUDIENCE } });
     };
 
     window.updateAuthUI = debouncedUpdateAuthUI;

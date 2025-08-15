@@ -1,12 +1,10 @@
 // api/posts/index.js
 const { query } = require('../../lib/db');
-const requireAdmin = require('../../lib/requireAdmin');
-const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
 const { ensureConfig } = require('../../lib/auth');
+const { requireAuth, requirePermission } = require('../lib/auth');
 
 module.exports = async (req, res) => {
   try {
-    ensureCsrf(req, res);
     if (req.method === 'GET') {
       ensureConfig(['DATABASE_URL']);
       const { rows } = await query(`
@@ -19,11 +17,9 @@ module.exports = async (req, res) => {
 
     if (req.method === 'POST') {
       ensureConfig();
-      const admin = await requireAdmin(req, res);
-      if (!admin) return;
-      if (!validateCsrf(req)) {
-        return res.status(403).json({ error: 'invalid_csrf_token' });
-      }
+      const auth = await requireAuth(req, res);
+      if (!auth) return;
+      if (!requirePermission('posts:write')(req, res)) return;
 
       const {
         title, slug,

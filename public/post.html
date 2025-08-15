@@ -8,8 +8,10 @@
   <link rel="canonical" href="/post.html" />
   <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID injected at build time -->
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com"><!-- Auth0 Domain injected at build time -->
+  <meta name="auth0-audience" content="__INJECTED__" />
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
+  <script src="/resources/roles.js" defer></script>
   <!-- Tailwind & Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -28,17 +30,6 @@
     let currentUser = null;
     let currentPostId = null;
 
-    function getCsrfToken() {
-      const match = document.cookie.split('; ').find(c => c.startsWith('csrf='));
-      return match ? match.split('=')[1].split('.')[0] : '';
-    }
-
-    function csrfFetch(url, options = {}) {
-      const headers = options.headers || {};
-      headers['X-CSRF-Token'] = getCsrfToken();
-      return fetch(url, { ...options, headers, credentials: 'include' });
-    }
-
     async function loadComments(postId) {
       try {
         const res = await fetch(`/api/comments?post_id=${postId}`);
@@ -50,7 +41,7 @@
               <div class="border-b pb-2">
                 <div class="flex items-center justify-between mb-1">
                   <div class="text-sm text-slate-500">${c.name || 'Anonymous'} &bull; ${new Date(c.created_at).toLocaleString()}</div>
-                  ${currentUser && (currentUser.role === 'admin' || currentUser.id === c.user_id)
+                  ${currentUser && (currentUser.sub === c.user_id || window.isAdmin)
                     ? `<button data-id="${c.id}" class="comment-delete text-xs text-red-500 hover:underline">Delete</button>`
                     : ''}
                 </div>
@@ -70,9 +61,13 @@
         const textarea = document.getElementById('comment-content');
         const content = textarea.value.trim();
         if (!content) return;
-        const res = await csrfFetch('/api/comments', {
+        const token = await getApiToken();
+        const res = await fetch('/api/comments', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ post_id: postId, content })
         });
         if (res.ok) {
@@ -100,6 +95,7 @@
 
         initAuth();
         await window.authReady;
+        if (typeof initRoles === 'function') await initRoles();
         let authHtml = '';
         if (await auth.isAuthenticated()) {
           currentUser = await auth.getUser();
@@ -130,7 +126,11 @@
           const btn = e.target.closest('.comment-delete');
           if (btn) {
             const id = btn.dataset.id;
-            const res = await csrfFetch(`/api/comments/${id}`, { method: 'DELETE' });
+            const token = await getApiToken();
+            const res = await fetch(`/api/comments/${id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (res.ok) {
               loadComments(currentPostId);
             } else {

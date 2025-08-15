@@ -1,14 +1,11 @@
 const db = require('../lib/db');
-const requireUser = require('../lib/requireUser');
-const requireAdmin = require('../lib/requireAdmin');
-const { ensureCsrf, validateCsrf } = require('../lib/csrf');
 const { ensureConfig } = require('../lib/auth');
+const { requireAuth, requirePermission } = require('./lib/auth');
 
 module.exports = async (req, res) => {
   const id = req.query && req.query.id;
   try {
     ensureConfig();
-    ensureCsrf(req, res);
 
     if (id) {
       if (req.method === 'GET') {
@@ -26,20 +23,9 @@ module.exports = async (req, res) => {
       }
 
       if (req.method === 'PATCH') {
-        const user = await requireUser(req, res);
-        if (!user) return;
-        if (!validateCsrf(req)) {
-          return res.status(403).json({ error: 'invalid_csrf_token' });
-        }
-        const { rows } = await db.query('SELECT user_id FROM comments WHERE id = $1', [id]);
-        const comment = rows[0];
-        if (!comment) {
-          return res.status(404).json({ error: 'not_found' });
-        }
-        if (user.id !== comment.user_id) {
-          const admin = await requireAdmin(req, res);
-          if (!admin) return;
-        }
+        const auth = await requireAuth(req, res);
+        if (!auth) return;
+        if (!requirePermission('comments:write')(req, res)) return;
         const { content } = req.body || {};
         if (!content) {
           return res.status(400).json({ error: 'content required' });
@@ -55,20 +41,9 @@ module.exports = async (req, res) => {
       }
 
       if (req.method === 'DELETE') {
-        const user = await requireUser(req, res);
-        if (!user) return;
-        if (!validateCsrf(req)) {
-          return res.status(403).json({ error: 'invalid_csrf_token' });
-        }
-        const { rows } = await db.query('SELECT user_id FROM comments WHERE id = $1', [id]);
-        const comment = rows[0];
-        if (!comment) {
-          return res.status(404).json({ error: 'not_found' });
-        }
-        if (user.id !== comment.user_id) {
-          const admin = await requireAdmin(req, res);
-          if (!admin) return;
-        }
+        const auth = await requireAuth(req, res);
+        if (!auth) return;
+        if (!requirePermission('comments:write')(req, res)) return;
         await db.query('DELETE FROM comments WHERE id = $1', [id]);
         return res.status(204).end();
       }
@@ -94,11 +69,9 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'POST') {
-      const user = await requireUser(req, res);
-      if (!user) return;
-      if (!validateCsrf(req)) {
-        return res.status(403).json({ error: 'invalid_csrf_token' });
-      }
+      const auth = await requireAuth(req, res);
+      if (!auth) return;
+      if (!requirePermission('comments:write')(req, res)) return;
       const { post_id, content } = req.body || {};
       if (!post_id || !content) {
         return res.status(400).json({ error: 'post_id and content are required' });
@@ -107,9 +80,9 @@ module.exports = async (req, res) => {
         INSERT INTO comments (post_id, user_id, content)
         VALUES ($1, $2, $3)
         RETURNING id, content, created_at, post_id, user_id
-      `, [post_id, user.id, content]);
+      `, [post_id, auth.sub, content]);
       const comment = rows[0];
-      comment.name = user.name;
+      comment.name = auth.name;
       return res.status(201).json(comment);
     }
 

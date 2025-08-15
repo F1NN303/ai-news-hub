@@ -1,13 +1,11 @@
 const db = require('../../lib/db');
-const requireAdmin = require('../../lib/requireAdmin');
-const { ensureCsrf, validateCsrf } = require('../../lib/csrf');
 const { ensureConfig } = require('../../lib/auth');
+const { requireAuth, requirePermission } = require('../lib/auth');
 
 module.exports = async (req, res) => {
   const id = req.query.id;
   try {
     ensureConfig();
-    ensureCsrf(req, res);
     if (req.method === 'GET') {
       const isNumeric = /^\d+$/.test(id);
       const query = isNumeric
@@ -18,11 +16,9 @@ module.exports = async (req, res) => {
       return res.status(200).json(rows[0]);
     }
     if (req.method === 'PUT') {
-      const admin = await requireAdmin(req, res);
-      if (!admin) return;
-      if (!validateCsrf(req)) {
-        return res.status(403).json({ error: 'invalid_csrf_token' });
-      }
+      const auth = await requireAuth(req, res);
+      if (!auth) return;
+      if (!requirePermission('posts:write')(req, res)) return;
 
       let body;
       try {
@@ -41,11 +37,9 @@ module.exports = async (req, res) => {
       return res.status(200).json(rows[0]);
     }
     if (req.method === 'DELETE') {
-      const admin = await requireAdmin(req, res);
-      if (!admin) return;
-      if (!validateCsrf(req)) {
-        return res.status(403).json({ error: 'invalid_csrf_token' });
-      }
+      const auth = await requireAuth(req, res);
+      if (!auth) return;
+      if (!requirePermission('posts:write')(req, res)) return;
 
       const isNumeric = /^\d+$/.test(id);
       const query = isNumeric

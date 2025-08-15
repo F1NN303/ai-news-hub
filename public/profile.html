@@ -6,6 +6,7 @@
   <title>Your Profile</title>
   <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID injected at build time -->
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com"><!-- Auth0 Domain injected at build time -->
+  <meta name="auth0-audience" content="__INJECTED__" />
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -21,7 +22,7 @@
   </div>
   <div id="profile-card" class="max-w-xl mx-auto bg-slate-100 dark:bg-slate-800 p-6 rounded shadow-md flex items-center gap-4">
     <img id="avatar" class="w-20 h-20 rounded-full object-cover" src="" alt="Profile picture">
-    <div id="avatar-placeholder" class="w-20 h-20 rounded-full bg-slate-400 flex items-center justify-center text-2xl font-semibold text-white hidden"></div>
+    <div id="avatar-placeholder" class="w-20 h-20 rounded-full bg-slate-400 dark:bg-slate-600 flex items-center justify-center text-2xl font-semibold text-white hidden"></div>
     <div>
       <h2 class="text-xl font-semibold flex items-center gap-2">
         <span id="name"></span>

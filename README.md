@@ -8,6 +8,10 @@ Create a `.env` file with the following variables.
 
 - `DATABASE_URL` – Postgres connection string (Neon requires SSL)
 
+### Auth0
+
+- `AUTH0_AUDIENCE` – `https://ai-news-hub.api`
+
 ## Auth0 Dashboard Settings
 
 In your Auth0 Single Page Application settings, configure:
@@ -18,6 +22,8 @@ In your Auth0 Single Page Application settings, configure:
 - **(Optional) Application Login URI**: `https://ai-news-hub-eta.vercel.app/`
 
 Enable Google and Username-Password-Authentication connections.
+
+We secure `/api` routes with Auth0 JWTs (audience: `https://ai-news-hub.api`). Mutating routes require `posts:write` or `admin:all`.
 
 ## Database Setup (Neon)
 

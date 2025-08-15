@@ -9,8 +9,10 @@
 
   <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID injected at build time -->
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com"><!-- Auth0 Domain injected at build time -->
+  <meta name="auth0-audience" content="__INJECTED__" />
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
+  <script src="/resources/roles.js" defer></script>
 
   <!-- Open Graph -->
   <meta property="og:title" content="AI News Hub" />
@@ -124,6 +126,7 @@
               <img id="profile-avatar" class="w-6 h-6 rounded-full mr-2 hidden" alt="Profile avatar" />
               Profile
             </a>
+            <a id="admin-link" href="/admin.html" class="hidden px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
           </div>
 
           <button id="theme-toggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700" aria-label="Toggle theme">
@@ -146,6 +149,7 @@
       <a href="#chatgpt" class="block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">ChatGPT Updates</a>
       <a href="#industry" class="block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">AI Industry</a>
       <a href="#research" class="block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Research &amp; Innovation</a>
+      <a id="admin-link-mobile" href="/admin.html" class="hidden block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
     </div>
   </nav>
   <div id="menu-backdrop" class="fixed inset-0 bg-black/50 z-40 hidden"></div>
@@ -472,17 +476,15 @@
     document.addEventListener('DOMContentLoaded', loadAll);
   </script>
   <script>
-  window.addEventListener('DOMContentLoaded', async () => {
-    initAuth();
-    await window.authReady;
-    updateAuthUI();
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) updateAuthUI();
-    });
-  });
-</script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
+      initAuth();
+      await window.authReady;
+      if (typeof initRoles === 'function') await initRoles();
+      updateAuthUI();
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) updateAuthUI();
+      });
+
       const menu = document.getElementById('mobile-menu');
       const backdrop = document.getElementById('menu-backdrop');
       const btn = document.getElementById('menu-button');
@@ -538,21 +540,17 @@
         if (e.key === 'Escape') closeMenu();
       });
 
-      if (window.authReady) {
-        window.authReady.then(async () => {
-          if (await auth.isAuthenticated()) {
-            let link = document.getElementById('profile-link-mobile');
-            if (!link) {
-              const menuLinks = document.getElementById('mobile-menu-links');
-              link = document.createElement('a');
-              link.id = 'profile-link-mobile';
-              link.href = '/profile.html';
-              link.className = 'block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800';
-              link.textContent = 'Profile';
-              menuLinks.appendChild(link);
-            }
-          }
-        });
+      if (await auth.isAuthenticated()) {
+        let link = document.getElementById('profile-link-mobile');
+        if (!link) {
+          const menuLinks = document.getElementById('mobile-menu-links');
+          link = document.createElement('a');
+          link.id = 'profile-link-mobile';
+          link.href = '/profile.html';
+          link.className = 'block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800';
+          link.textContent = 'Profile';
+          menuLinks.appendChild(link);
+        }
       }
     });
   </script>
