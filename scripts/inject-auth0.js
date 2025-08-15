@@ -4,8 +4,9 @@ const path = require('path');
 
 const clientId = process.env.AUTH0_CLIENT_ID;
 const domain = process.env.AUTH0_DOMAIN;
-if (!clientId || !domain) {
-  console.error('AUTH0_CLIENT_ID or AUTH0_DOMAIN not set');
+const audience = process.env.AUTH0_AUDIENCE;
+if (!clientId || !domain || !audience) {
+  console.error('AUTH0_CLIENT_ID, AUTH0_DOMAIN or AUTH0_AUDIENCE not set');
   process.exit(1);
 }
 
@@ -23,6 +24,7 @@ for (const file of files) {
   const src = fs.readFileSync(filePath, 'utf8');
   const updated = src
     .replace(/\$\{AUTH0_CLIENT_ID\}/g, clientId)
-    .replace(/\$\{AUTH0_DOMAIN\}/g, domain);
+    .replace(/\$\{AUTH0_DOMAIN\}/g, domain)
+    .replace(/__INJECTED__/g, audience);
   fs.writeFileSync(filePath, updated);
 }
