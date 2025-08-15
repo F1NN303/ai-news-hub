@@ -9,7 +9,6 @@
   
   async function updateAuthUI() {
     if (!window.auth) return;
-    const profileLink = document.getElementById('profile-link') || document.getElementById('dashboard-link');
     const profileAvatar = document.getElementById('profile-avatar');
     signInBtn = document.getElementById('sign-in-btn');
     signOutBtn = document.getElementById('sign-out-btn') || document.getElementById('logout-btn');
@@ -27,9 +26,6 @@
     if (signInBtn) {
       signInBtn.classList.toggle('hidden', isAuth);
     }
-    if (profileLink) {
-      profileLink.classList.toggle('hidden', !isAuth);
-    }
     if (profileAvatar) {
       if (isAuth && user && user.picture) {
         profileAvatar.src = user.picture;
@@ -39,7 +35,6 @@
         profileAvatar.removeAttribute('src');
       }
     }
-    toggleMobileProfileLink(isAuth);
     if (signOutBtn) {
       signOutBtn.onclick = () => window.auth.logout();
     }
@@ -48,13 +43,6 @@
   function debouncedUpdateAuthUI() {
     clearTimeout(updateAuthUITimer);
     updateAuthUITimer = setTimeout(updateAuthUI, 100);
-  }
-
-  function toggleMobileProfileLink(show) {
-    const mobileProfileLink = document.getElementById('profile-link-mobile');
-    if (mobileProfileLink) {
-      mobileProfileLink.classList.toggle('hidden', !show);
-    }
   }
 
   function showAuthError() {
@@ -242,7 +230,6 @@
 
     window.getApiToken = getApiToken;
     window.updateAuthUI = debouncedUpdateAuthUI;
-    window.toggleMobileProfileLink = toggleMobileProfileLink;
 
     window.authReady = window.authReady.then(refreshAuthState);
 

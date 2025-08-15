@@ -49,6 +49,12 @@
   #profile-link #profile-avatar {
     margin-right: 0;
   }
+  #profile-link-mobile .label {
+    display: none;
+  }
+  #profile-link-mobile #profile-avatar {
+    margin-right: 0;
+  }
 }
 
 /* Enlarged tap targets for navigation links */
