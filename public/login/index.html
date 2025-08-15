@@ -7,6 +7,10 @@
   <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID injected at build time -->
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com"><!-- Auth0 Domain injected at build time -->
   <meta name="auth0-audience" content="https://ai-news-hub.api" />
+  <script>
+    document.documentElement.dataset.theme = localStorage.theme || 'light';
+    if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
+  </script>
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
 </head>
