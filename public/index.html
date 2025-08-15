@@ -22,6 +22,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/resources/site.css">
+  <script src="/resources/site.js" defer></script>
 
   <script>
     tailwind.config = {
@@ -70,7 +72,6 @@
     body{font-family:'Inter',sans-serif;background:#f8fafc;color:#0f172a;transition:background-color .3s,color .3s}
     .dark body{background:#0f172a;color:#e2e8f0}
     .gradient-bg{background:linear-gradient(135deg,#0ea5e9,#06b6d4,#818cf8);background-size:200% 200%;animation:text-gradient 8s ease infinite}
-    .sticky-nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);transition:all .3s}
     .post-card{transition:transform .3s,box-shadow .3s;overflow:hidden}
     .post-card:hover{transform:translateY(-4px);box-shadow:0 20px 25px -5px rgb(0 0 0 / .1),0 10px 10px -5px rgb(0 0 0 / .04)}
     .hero-title{font-size:clamp(2rem,5vw,3.5rem);line-height:1.1;text-shadow:0 2px 10px rgb(0 0 0 / .2)}
@@ -95,9 +96,9 @@
   </div>
 
   <!-- Header -->
-  <header class="sticky-nav bg-white/80 dark:bg-dark/80 py-4 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-    <div class="max-w-6xl mx-auto px-4">
-      <div class="flex items-center justify-between">
+  <header class="sticky-nav bg-white/80 dark:bg-dark/80 border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 h-full">
+      <div class="flex items-center justify-between h-full">
         <a class="flex items-center" href="#">
           <span class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center mr-3">
             <i class="fa-solid fa-brain text-white text-lg"></i>
@@ -106,10 +107,10 @@
         </a>
 
         <nav class="hidden md:flex items-center gap-1">
-          <a href="#openai"   class="px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">OpenAI News</a>
-          <a href="#chatgpt"  class="px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">ChatGPT Updates</a>
-          <a href="#industry" class="px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">AI Industry</a>
-          <a href="#research" class="px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Research & Innovation</a>
+          <a href="#openai"   class="nav-link rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">OpenAI News</a>
+          <a href="#chatgpt"  class="nav-link rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">ChatGPT Updates</a>
+          <a href="#industry" class="nav-link rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">AI Industry</a>
+          <a href="#research" class="nav-link rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Research & Innovation</a>
         </nav>
 
         <div class="flex items-center gap-4">
@@ -120,10 +121,10 @@
           </div>
 
           <div id="auth-area" class="flex items-center gap-2">
-            <button id="sign-in-btn" onclick="(sessionStorage.setItem('postLoginRedirect', location.pathname+location.search), auth.login())" class="hidden px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</button>
-            <a id="profile-link" href="/profile.html" class="hidden px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center">
+            <button id="sign-in-btn" onclick="(sessionStorage.setItem('postLoginRedirect', location.pathname+location.search), auth.login())" class="nav-link hidden rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</button>
+            <a id="profile-link" href="/profile.html" class="nav-link hidden rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center">
               <img id="profile-avatar" class="w-6 h-6 rounded-full mr-2 hidden" alt="Profile avatar" />
-              Profile
+              <span class="label">Profile</span>
             </a>
           </div>
 
@@ -141,19 +142,20 @@
   </header>
 
   <!-- Mobile Menu -->
-  <nav id="mobile-menu" class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-dark transform -translate-x-full transition-transform z-50">
-    <div id="mobile-menu-links" class="pt-20 px-4 space-y-1">
-      <a href="#openai" class="block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">OpenAI News</a>
-      <a href="#chatgpt" class="block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">ChatGPT Updates</a>
-      <a href="#industry" class="block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">AI Industry</a>
-      <a href="#research" class="block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Research &amp; Innovation</a>
-      <a id="profile-link-mobile" href="/profile.html" class="hidden block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Profile</a>
+  <nav id="mobile-menu" class="mobile-nav bg-white dark:bg-dark shadow-md" aria-hidden="true">
+    <div id="mobile-menu-links" class="px-4 pt-16 pb-4 space-y-1">
+      <a href="#openai" class="nav-link rounded hover:bg-slate-100 dark:hover:bg-slate-800">OpenAI News</a>
+      <a href="#chatgpt" class="nav-link rounded hover:bg-slate-100 dark:hover:bg-slate-800">ChatGPT Updates</a>
+      <a href="#industry" class="nav-link rounded hover:bg-slate-100 dark:hover:bg-slate-800">AI Industry</a>
+      <a href="#research" class="nav-link rounded hover:bg-slate-100 dark:hover:bg-slate-800">Research &amp; Innovation</a>
+      <a id="profile-link-mobile" href="/profile.html" class="nav-link hidden rounded hover:bg-slate-100 dark:hover:bg-slate-800">Profile</a>
+      <a id="admin-link-mobile" href="/admin.html" class="nav-link hidden rounded hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
     </div>
   </nav>
-  <div id="menu-backdrop" class="fixed inset-0 bg-black/50 z-40 hidden"></div>
+  <div id="menu-backdrop" class="mobile-nav-backdrop"></div>
 
   <!-- Hero -->
-  <section class="relative py-16 md:py-24 bg-gradient-to-r from-blue-900 to-indigo-900 dark:from-slate-900 dark:to-slate-900 text-white overflow-hidden">
+  <section class="hero relative py-16 md:py-24 bg-gradient-to-r from-blue-900 to-indigo-900 dark:from-slate-900 dark:to-slate-900 text-white overflow-hidden">
     <div class="absolute inset-0 bg-grid-slate-900/[0.04] dark:bg-grid-slate-400/[0.05]"></div>
     <div class="max-w-6xl mx-auto px-4 relative z-10 text-center">
       <span class="px-4 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium inline-block mb-6">Breaking News</span>
@@ -299,17 +301,6 @@
 
   <!-- Scripts -->
   <script>
-    // -------- Theme toggle --------
-    const htmlEl = document.documentElement;
-    const themeToggle = document.getElementById('theme-toggle');
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') htmlEl.classList.add('dark');
-
-    themeToggle.addEventListener('click', () => {
-      htmlEl.classList.toggle('dark');
-      localStorage.setItem('theme', htmlEl.classList.contains('dark') ? 'dark' : 'light');
-    });
-
     // -------- Helpers --------
     const byId = id => document.getElementById(id);
     const openaiGrid   = byId('openai-grid');
@@ -478,31 +469,18 @@
       document.addEventListener('auth:ready', () => {
         const isAdmin = document.documentElement.dataset.admin === 'true';
         const authArea = document.getElementById('auth-area');
-        const mobileLinks = document.getElementById('mobile-menu-links');
-
         let adminLink = document.getElementById('admin-link');
         if (isAdmin) {
           if (!adminLink) {
             adminLink = document.createElement('a');
             adminLink.id = 'admin-link';
             adminLink.href = '/admin.html';
-            adminLink.className = 'px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800';
+            adminLink.className = 'nav-link rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800';
             adminLink.textContent = 'Admin';
             authArea.appendChild(adminLink);
           }
-          let adminLinkMobile = document.getElementById('admin-link-mobile');
-          if (!adminLinkMobile) {
-            adminLinkMobile = document.createElement('a');
-            adminLinkMobile.id = 'admin-link-mobile';
-            adminLinkMobile.href = '/admin.html';
-            adminLinkMobile.className = 'block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800';
-            adminLinkMobile.textContent = 'Admin';
-            mobileLinks.appendChild(adminLinkMobile);
-          }
-        } else {
-          if (adminLink) adminLink.remove();
-          const adminLinkMobile = document.getElementById('admin-link-mobile');
-          if (adminLinkMobile) adminLinkMobile.remove();
+        } else if (adminLink) {
+          adminLink.remove();
         }
       });
 
@@ -511,61 +489,6 @@
       updateAuthUI();
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) updateAuthUI();
-      });
-
-      const menu = document.getElementById('mobile-menu');
-      const backdrop = document.getElementById('menu-backdrop');
-      const btn = document.getElementById('menu-button');
-
-      let firstFocusable, lastFocusable;
-
-      function trapFocus(e) {
-        if (e.key !== 'Tab') return;
-        if (e.shiftKey) {
-          if (document.activeElement === firstFocusable) {
-            e.preventDefault();
-            lastFocusable.focus();
-          }
-        } else {
-          if (document.activeElement === lastFocusable) {
-            e.preventDefault();
-            firstFocusable.focus();
-          }
-        }
-      }
-
-      function openMenu() {
-        menu.classList.remove('-translate-x-full');
-        backdrop.classList.remove('hidden');
-        document.body.classList.add('overflow-hidden');
-        btn.setAttribute('aria-expanded', 'true');
-
-        const focusable = menu.querySelectorAll('a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        if (focusable.length) {
-          firstFocusable = focusable[0];
-          lastFocusable = focusable[focusable.length - 1];
-          firstFocusable.focus();
-          document.addEventListener('keydown', trapFocus);
-        }
-      }
-
-      function closeMenu() {
-        menu.classList.add('-translate-x-full');
-        backdrop.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-        btn.setAttribute('aria-expanded', 'false');
-        document.removeEventListener('keydown', trapFocus);
-        btn.focus();
-      }
-
-      btn.addEventListener('click', () => {
-        const expanded = btn.getAttribute('aria-expanded') === 'true';
-        expanded ? closeMenu() : openMenu();
-      });
-
-      backdrop.addEventListener('click', closeMenu);
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeMenu();
       });
     });
   </script>

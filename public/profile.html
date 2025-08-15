@@ -11,6 +11,8 @@
   <script src="/auth/auth.js" defer></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/resources/site.css">
+  <script src="/resources/site.js" defer></script>
 </head>
 <body class="p-6 bg-light dark:bg-dark">
   <div class="flex justify-between items-center mb-4">
@@ -23,8 +25,8 @@
     </div>
   </div>
   <div id="profile-card" class="max-w-xl mx-auto bg-slate-100 dark:bg-slate-800 p-6 rounded shadow-md flex items-center gap-4">
-    <img id="avatar" class="w-20 h-20 rounded-full object-cover" src="" alt="Profile picture">
-    <div id="avatar-placeholder" class="w-20 h-20 rounded-full bg-slate-400 dark:bg-slate-600 flex items-center justify-center text-2xl font-semibold text-white hidden"></div>
+    <img id="avatar" class="hidden sm:block w-20 h-20 rounded-full object-cover" src="" alt="Profile picture">
+    <div id="avatar-placeholder" class="flex sm:hidden w-20 h-20 rounded-full bg-slate-400 dark:bg-slate-600 items-center justify-center text-2xl font-semibold text-white"></div>
     <div>
       <h2 class="text-xl font-semibold flex items-center gap-2">
         <span id="name"></span>
@@ -38,17 +40,6 @@
     <p id="sub" class="mt-2 text-sm text-slate-500 break-all"></p>
   </details>
   <button id="logout-btn" class="mt-4 w-full sm:w-auto px-4 py-2 bg-secondary text-white rounded hover:bg-cyan-500">Sign out</button>
-  <script>
-    const htmlEl = document.documentElement;
-    const themeToggle = document.getElementById('theme-toggle');
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') htmlEl.classList.add('dark');
-
-    themeToggle.addEventListener('click', () => {
-      htmlEl.classList.toggle('dark');
-      localStorage.setItem('theme', htmlEl.classList.contains('dark') ? 'dark' : 'light');
-    });
-  </script>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
       document.addEventListener('auth:ready', () => {
@@ -78,13 +69,13 @@
       const user = await auth.getUser();
       const avatarImg = document.getElementById('avatar');
       const avatarPlaceholder = document.getElementById('avatar-placeholder');
+      const initial = (user.name || user.nickname || '?').charAt(0).toUpperCase();
+      avatarPlaceholder.textContent = initial;
       if (user.picture) {
         avatarImg.src = user.picture;
+        avatarImg.classList.remove('hidden');
       } else {
-        avatarImg.classList.add('hidden');
-        const initial = (user.name || user.nickname || '?').charAt(0).toUpperCase();
-        avatarPlaceholder.textContent = initial;
-        avatarPlaceholder.classList.remove('hidden');
+        avatarPlaceholder.classList.remove('sm:hidden');
       }
       document.getElementById('name').textContent = user.name || user.nickname || '';
       document.getElementById('email').textContent = user.email || '';
