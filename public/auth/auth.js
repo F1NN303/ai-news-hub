@@ -24,28 +24,22 @@
       }
       console.debug('Auth state', { isAuthenticated: isAuth, hasToken });
     }
-    if (isAuth) {
-      if (signInBtn) signInBtn.classList.add('hidden');
-      if (profileLink) profileLink.classList.remove('hidden');
-      if (profileAvatar) {
-        if (user && user.picture) {
-          profileAvatar.src = user.picture;
-          profileAvatar.classList.remove('hidden');
-        } else {
-          profileAvatar.classList.add('hidden');
-          profileAvatar.removeAttribute('src');
-        }
-      }
-      toggleMobileProfileLink(true);
-    } else {
-      if (signInBtn) signInBtn.classList.remove('hidden');
-      if (profileLink) profileLink.classList.add('hidden');
-      if (profileAvatar) {
+    if (signInBtn) {
+      signInBtn.classList.toggle('hidden', isAuth);
+    }
+    if (profileLink) {
+      profileLink.classList.toggle('hidden', !isAuth);
+    }
+    if (profileAvatar) {
+      if (isAuth && user && user.picture) {
+        profileAvatar.src = user.picture;
+        profileAvatar.classList.remove('hidden');
+      } else {
         profileAvatar.classList.add('hidden');
         profileAvatar.removeAttribute('src');
       }
-      toggleMobileProfileLink(false);
     }
+    toggleMobileProfileLink(isAuth);
     if (signOutBtn) {
       signOutBtn.onclick = () => window.auth.logout();
     }

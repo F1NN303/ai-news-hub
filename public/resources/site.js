@@ -42,12 +42,23 @@
       backdrop.addEventListener('click', closeNav);
     }
 
+    // Handle sign-in link click
+    const signInLinkMobile = document.getElementById('sign-in-link-mobile');
+    if (signInLinkMobile) {
+      signInLinkMobile.addEventListener('click', (e) => {
+        e.preventDefault();
+        sessionStorage.setItem('postLoginRedirect', location.pathname + location.search);
+        if (window.auth) window.auth.login();
+      });
+    }
+
     // Handle auth links in mobile menu
     document.addEventListener('auth:ready', () => {
       const links = document.getElementById('mobile-menu-links');
       if (!links) return;
       const profileLink = document.getElementById('profile-link-mobile');
       const adminLink = document.getElementById('admin-link-mobile');
+      const signInLink = document.getElementById('sign-in-link-mobile');
       const isAdmin = document.documentElement.dataset.admin === 'true';
       const isAuth = document.documentElement.dataset.auth === 'true';
       if (profileLink) {
@@ -55,6 +66,9 @@
       }
       if (adminLink) {
         adminLink.classList.toggle('hidden', !isAdmin);
+      }
+      if (signInLink) {
+        signInLink.classList.toggle('hidden', isAuth);
       }
     });
   });
