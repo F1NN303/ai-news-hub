@@ -365,7 +365,7 @@
         <article class="post-card bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-lg">
           <div class="relative">
             <img src="${p.hero_image || p.image_url || 'https://picsum.photos/800/400'}" alt="${p.title}" loading="lazy" class="w-full h-56 object-cover">
-            ${p.tags?.includes('Release') ? '<span class="absolute top-4 right-4 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">New</span>' : ''}
+            ${p.tags && p.tags.includes('Release') ? '<span class="absolute top-4 right-4 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-full">New</span>' : ''}
           </div>
           <div class="p-6">
             <div class="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-3">
@@ -441,7 +441,7 @@
         searchInput.addEventListener('input', () => {
           const q = searchInput.value.trim().toLowerCase();
           if (q.length < 2) { searchResults.classList.add('hidden'); return; }
-          const matches = posts.filter(p => p.title?.toLowerCase().includes(q)).slice(0,8);
+          const matches = posts.filter(p => p.title && p.title.toLowerCase().includes(q)).slice(0,8);
           searchResults.innerHTML = matches.length
             ? matches.map(m => `
               <a class="block p-3 hover:bg-slate-100 dark:hover:bg-slate-700 border-b border-slate-200 dark:border-slate-700 last:border-0" href="/post.html?slug=${encodeURIComponent(m.slug)}">
