@@ -1,11 +1,9 @@
 // Apply saved theme immediately and sync across tabs
 (function() {
   const applyTheme = () => {
-    if (localStorage.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    const theme = localStorage.theme === 'dark' ? 'dark' : 'light';
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.classList.toggle('dark', theme === 'dark');
   };
   applyTheme();
   window.addEventListener('storage', (e) => {
@@ -17,8 +15,7 @@
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
       themeToggle.addEventListener('click', () => {
-        document.documentElement.classList.toggle('dark');
-        localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        localStorage.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
         applyTheme();
       });
     }
