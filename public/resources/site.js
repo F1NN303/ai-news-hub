@@ -52,6 +52,15 @@
       });
     }
 
+    // Handle desktop sign-in button
+    const desktopBtn = document.getElementById('sign-in-btn');
+    if (desktopBtn) {
+      desktopBtn.addEventListener('click', () => {
+        sessionStorage.setItem('postLoginRedirect', location.pathname + location.search);
+        if (window.auth) window.auth.login();
+      });
+    }
+
     // Handle auth link visibility
     document.addEventListener('auth:ready', () => {
       const profileLinkDesktop = document.getElementById('profile-link') || document.getElementById('dashboard-link');
