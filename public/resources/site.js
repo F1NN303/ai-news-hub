@@ -52,17 +52,19 @@
       });
     }
 
-    // Handle auth links in mobile menu
+    // Handle auth link visibility
     document.addEventListener('auth:ready', () => {
-      const links = document.getElementById('mobile-menu-links');
-      if (!links) return;
-      const profileLink = document.getElementById('profile-link-mobile');
+      const profileLinkDesktop = document.getElementById('profile-link') || document.getElementById('dashboard-link');
+      const profileLinkMobile = document.getElementById('profile-link-mobile');
       const adminLink = document.getElementById('admin-link-mobile');
       const signInLink = document.getElementById('sign-in-link-mobile');
       const isAdmin = document.documentElement.dataset.admin === 'true';
       const isAuth = document.documentElement.dataset.auth === 'true';
-      if (profileLink) {
-        profileLink.classList.toggle('hidden', !isAuth);
+      if (profileLinkDesktop) {
+        profileLinkDesktop.classList.toggle('hidden', !isAuth);
+      }
+      if (profileLinkMobile) {
+        profileLinkMobile.classList.toggle('hidden', !isAuth);
       }
       if (adminLink) {
         adminLink.classList.toggle('hidden', !isAdmin);
