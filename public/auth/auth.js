@@ -5,7 +5,8 @@
   let signOutBtn;
   let updateAuthUITimer;
   const authDebug = new URLSearchParams(window.location.search).get('auth_debug') === '1';
-  const AUDIENCE = document.querySelector('meta[name="auth0-audience"]')?.content;
+  const audMeta = document.querySelector('meta[name="auth0-audience"]');
+  const AUDIENCE = audMeta ? audMeta.content : '';
   
   async function updateAuthUI() {
     if (!window.auth) return;

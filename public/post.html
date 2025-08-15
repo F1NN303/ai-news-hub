@@ -44,7 +44,7 @@
               <div class="border-b pb-2">
                 <div class="flex items-center justify-between mb-1">
                   <div class="text-sm text-slate-500">${c.name || 'Anonymous'} &bull; ${new Date(c.created_at).toLocaleString()}</div>
-                  ${currentUser && (currentUser.sub === c.user_id || window.__auth?.isAdmin)
+                  ${currentUser && (currentUser.sub === c.user_id || (window.__auth && window.__auth.isAdmin))
                     ? `<button data-id="${c.id}" class="comment-delete text-xs text-red-500 hover:underline">Delete</button>`
                     : ''}
                 </div>
