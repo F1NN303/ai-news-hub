@@ -154,7 +154,7 @@
       <a href="#research" class="nav-link rounded hover:bg-slate-100 dark:hover:bg-slate-800">Research &amp; Innovation</a>
       <a id="sign-in-link-mobile" href="#" class="nav-link hidden rounded hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</a>
       <a id="profile-link-mobile" href="/profile.html" class="nav-link hidden rounded hover:bg-slate-100 dark:hover:bg-slate-800">Profile</a>
-      <a id="admin-link-mobile" href="/admin.html" class="nav-link hidden rounded hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
+      <a id="admin-link-mobile" href="/admin/" class="nav-link hidden rounded hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
     </div>
   </nav>
   <div id="menu-backdrop" class="mobile-nav-backdrop"></div>
@@ -479,7 +479,7 @@
           if (!adminLink) {
             adminLink = document.createElement('a');
             adminLink.id = 'admin-link';
-            adminLink.href = '/admin.html';
+            adminLink.href = '/admin/';
             adminLink.className = 'nav-link rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800';
             adminLink.textContent = 'Admin';
             authArea.appendChild(adminLink);
