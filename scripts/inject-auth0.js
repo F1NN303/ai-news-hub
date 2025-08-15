@@ -10,17 +10,27 @@ if (!clientId || !domain || !audience) {
   process.exit(1);
 }
 
-const files = [
-  'public/index.html',
-  'public/login/index.html',
-  'public/signup/index.html',
-  'public/auth/callback.html',
-  'public/profile.html',
-  'public/post.html'
-];
+const rootDir = path.join(__dirname, '..');
+const publicDir = path.join(rootDir, 'public');
+
+function getHtmlFiles(dir) {
+  const dirents = fs.readdirSync(dir, { withFileTypes: true });
+  let results = [];
+  for (const dirent of dirents) {
+    const fullPath = path.join(dir, dirent.name);
+    if (dirent.isDirectory()) {
+      results = results.concat(getHtmlFiles(fullPath));
+    } else if (dirent.isFile() && path.extname(dirent.name) === '.html') {
+      results.push(path.relative(rootDir, fullPath));
+    }
+  }
+  return results;
+}
+
+const files = getHtmlFiles(publicDir);
 
 for (const file of files) {
-  const filePath = path.join(__dirname, '..', file);
+  const filePath = path.join(rootDir, file);
   const src = fs.readFileSync(filePath, 'utf8');
   const updated = src
     .replace(/\$\{AUTH0_CLIENT_ID\}/g, clientId)
