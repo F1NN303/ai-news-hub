@@ -12,7 +12,6 @@
   <meta name="auth0-audience" content="__INJECTED__" />
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
-  <script src="/resources/roles.js" defer></script>
 
   <!-- Open Graph -->
   <meta property="og:title" content="AI News Hub" />
@@ -477,9 +476,19 @@
   </script>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
+      const applyAdminUI = () => {
+        const isAdmin = window.__auth?.isAdmin;
+        const adminLink = document.getElementById('admin-link');
+        const adminLinkMobile = document.getElementById('admin-link-mobile');
+        if (adminLink) adminLink.classList.toggle('hidden', !isAdmin);
+        if (adminLinkMobile) adminLinkMobile.classList.toggle('hidden', !isAdmin);
+      };
+
+      document.addEventListener('auth:ready', applyAdminUI);
+
       initAuth();
       await window.authReady;
-      if (typeof initRoles === 'function') await initRoles();
+      applyAdminUI();
       updateAuthUI();
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) updateAuthUI();
