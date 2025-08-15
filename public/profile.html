@@ -15,10 +15,12 @@
 <body class="p-6 bg-light dark:bg-dark">
   <div class="flex justify-between items-center mb-4">
     <h1 class="text-2xl font-bold">Profile</h1>
-    <button id="theme-toggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700" aria-label="Toggle theme">
-      <i class="fa-solid fa-sun block dark:hidden text-yellow-500"></i>
-      <i class="fa-solid fa-moon hidden dark:block text-slate-200"></i>
-    </button>
+    <div id="profile-links" class="flex items-center gap-2">
+      <button id="theme-toggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700" aria-label="Toggle theme">
+        <i class="fa-solid fa-sun block dark:hidden text-yellow-500"></i>
+        <i class="fa-solid fa-moon hidden dark:block text-slate-200"></i>
+      </button>
+    </div>
   </div>
   <div id="profile-card" class="max-w-xl mx-auto bg-slate-100 dark:bg-slate-800 p-6 rounded shadow-md flex items-center gap-4">
     <img id="avatar" class="w-20 h-20 rounded-full object-cover" src="" alt="Profile picture">
@@ -49,6 +51,24 @@
   </script>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
+      document.addEventListener('auth:ready', () => {
+        const isAdmin = document.documentElement.dataset.admin === 'true';
+        const links = document.getElementById('profile-links');
+        let adminLink = document.getElementById('admin-link');
+        if (isAdmin) {
+          if (!adminLink) {
+            adminLink = document.createElement('a');
+            adminLink.id = 'admin-link';
+            adminLink.href = '/admin.html';
+            adminLink.className = 'px-4 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700';
+            adminLink.textContent = 'Admin';
+            links.prepend(adminLink);
+          }
+        } else if (adminLink) {
+          adminLink.remove();
+        }
+      });
+
       initAuth();
       await window.authReady;
       if (!(await auth.isAuthenticated())) {

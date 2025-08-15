@@ -125,7 +125,6 @@
               <img id="profile-avatar" class="w-6 h-6 rounded-full mr-2 hidden" alt="Profile avatar" />
               Profile
             </a>
-            <a id="admin-link" href="/admin.html" class="hidden px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
           </div>
 
           <button id="theme-toggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700" aria-label="Toggle theme">
@@ -148,7 +147,7 @@
       <a href="#chatgpt" class="block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">ChatGPT Updates</a>
       <a href="#industry" class="block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">AI Industry</a>
       <a href="#research" class="block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Research &amp; Innovation</a>
-      <a id="admin-link-mobile" href="/admin.html" class="hidden block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
+      <a id="profile-link-mobile" href="/profile.html" class="hidden block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Profile</a>
     </div>
   </nav>
   <div id="menu-backdrop" class="fixed inset-0 bg-black/50 z-40 hidden"></div>
@@ -476,19 +475,39 @@
   </script>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
-      const applyAdminUI = () => {
-        const isAdmin = window.__auth?.isAdmin;
-        const adminLink = document.getElementById('admin-link');
-        const adminLinkMobile = document.getElementById('admin-link-mobile');
-        if (adminLink) adminLink.classList.toggle('hidden', !isAdmin);
-        if (adminLinkMobile) adminLinkMobile.classList.toggle('hidden', !isAdmin);
-      };
+      document.addEventListener('auth:ready', () => {
+        const isAdmin = document.documentElement.dataset.admin === 'true';
+        const authArea = document.getElementById('auth-area');
+        const mobileLinks = document.getElementById('mobile-menu-links');
 
-      document.addEventListener('auth:ready', applyAdminUI);
+        let adminLink = document.getElementById('admin-link');
+        if (isAdmin) {
+          if (!adminLink) {
+            adminLink = document.createElement('a');
+            adminLink.id = 'admin-link';
+            adminLink.href = '/admin.html';
+            adminLink.className = 'px-4 py-4 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800';
+            adminLink.textContent = 'Admin';
+            authArea.appendChild(adminLink);
+          }
+          let adminLinkMobile = document.getElementById('admin-link-mobile');
+          if (!adminLinkMobile) {
+            adminLinkMobile = document.createElement('a');
+            adminLinkMobile.id = 'admin-link-mobile';
+            adminLinkMobile.href = '/admin.html';
+            adminLinkMobile.className = 'block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800';
+            adminLinkMobile.textContent = 'Admin';
+            mobileLinks.appendChild(adminLinkMobile);
+          }
+        } else {
+          if (adminLink) adminLink.remove();
+          const adminLinkMobile = document.getElementById('admin-link-mobile');
+          if (adminLinkMobile) adminLinkMobile.remove();
+        }
+      });
 
       initAuth();
       await window.authReady;
-      applyAdminUI();
       updateAuthUI();
       document.addEventListener('visibilitychange', () => {
         if (!document.hidden) updateAuthUI();
@@ -548,19 +567,6 @@
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closeMenu();
       });
-
-      if (await auth.isAuthenticated()) {
-        let link = document.getElementById('profile-link-mobile');
-        if (!link) {
-          const menuLinks = document.getElementById('mobile-menu-links');
-          link = document.createElement('a');
-          link.id = 'profile-link-mobile';
-          link.href = '/profile.html';
-          link.className = 'block px-4 py-4 rounded hover:bg-slate-100 dark:hover:bg-slate-800';
-          link.textContent = 'Profile';
-          menuLinks.appendChild(link);
-        }
-      }
     });
   </script>
 </body>
