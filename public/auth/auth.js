@@ -153,6 +153,7 @@
       getUser: () => withClient(() => auth0Client.getUser(), null),
       isAuthenticated: () => withClient(() => auth0Client.isAuthenticated(), false),
       getIdTokenClaims: () => withClient(() => auth0Client.getIdTokenClaims(), null),
+      getApiToken,
       handleRedirectCallback: () =>
         withClient(async () => {
           const res = await handleRedirectCallbackSafe();
@@ -228,7 +229,6 @@
       debouncedUpdateAuthUI();
     }
 
-    window.getApiToken = getApiToken;
     window.updateAuthUI = debouncedUpdateAuthUI;
 
     window.authReady = window.authReady.then(refreshAuthState);
