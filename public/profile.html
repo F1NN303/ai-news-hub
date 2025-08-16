@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Your Profile</title>
-  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID injected at build time -->
-  <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com"><!-- Auth0 Domain injected at build time -->
-  <meta name="auth0-audience" content="https://ai-news-hub.api" />
+  <meta name="auth0-client-id" content="${AUTH0_CLIENT_ID}"><!-- Auth0 Client ID injected at build time -->
+  <meta name="auth0-domain" content="${AUTH0_DOMAIN}"><!-- Auth0 Domain injected at build time -->
+  <meta name="auth0-audience" content="__INJECTED__" />
   <script>
     document.documentElement.dataset.theme = localStorage.theme || 'light';
     if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
@@ -22,6 +22,7 @@
   <div class="flex justify-between items-center mb-4">
     <h1 class="text-2xl font-bold">Profile</h1>
     <div id="profile-links" class="flex items-center gap-2">
+      <a id="admin-link" href="/admin/index.html" class="hidden px-4 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700">Admin</a>
       <button id="theme-toggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700" aria-label="Toggle theme">
         <i class="fa-solid fa-sun block dark:hidden text-yellow-500"></i>
         <i class="fa-solid fa-moon hidden dark:block text-slate-200"></i>
@@ -45,27 +46,8 @@
   </details>
   <button id="logout-btn" class="mt-4 w-full sm:w-auto px-4 py-2 bg-secondary text-white rounded hover:bg-cyan-500">Sign out</button>
   <script type="module">
-    function handleAuthReady() {
-      const isAdmin = document.documentElement.dataset.admin === 'true';
-      const links = document.getElementById('profile-links');
-      let adminLink = document.getElementById('admin-link');
-      if (isAdmin) {
-        if (!adminLink) {
-          adminLink = document.createElement('a');
-          adminLink.id = 'admin-link';
-          adminLink.href = '/admin/';
-          adminLink.className = 'px-4 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700';
-          adminLink.textContent = 'Admin';
-          links.prepend(adminLink);
-        }
-      } else if (adminLink) {
-        adminLink.remove();
-      }
-    }
-
-    document.addEventListener('auth:ready', handleAuthReady);
     await window.authReady;
-    handleAuthReady();
+    updateAuthUI();
     if (!(await auth.isAuthenticated())) {
       location.replace('/login/index.html');
       return;

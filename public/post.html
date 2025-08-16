@@ -6,9 +6,9 @@
   <title>AI News Hub | Article</title>
   <meta name="description" content="Read the full article on AI News Hub.">
   <link rel="canonical" href="/post.html" />
-  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID injected at build time -->
-  <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com"><!-- Auth0 Domain injected at build time -->
-  <meta name="auth0-audience" content="https://ai-news-hub.api" />
+  <meta name="auth0-client-id" content="${AUTH0_CLIENT_ID}"><!-- Auth0 Client ID injected at build time -->
+  <meta name="auth0-domain" content="${AUTH0_DOMAIN}"><!-- Auth0 Domain injected at build time -->
+  <meta name="auth0-audience" content="__INJECTED__" />
   <script type="module">
     document.documentElement.dataset.theme = localStorage.theme || 'light';
     if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
@@ -53,6 +53,8 @@
               </div>`).join('')
           : '<p class="text-slate-500">No comments yet.</p>';
       } catch (err) {
+        const list = document.getElementById('comment-list');
+        if (list) list.innerHTML = '<p class="text-red-500">Failed to load comments.</p>';
         console.error('Failed to load comments', err);
       }
     }
