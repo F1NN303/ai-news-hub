@@ -12,6 +12,11 @@
     if (!window.auth) return;
     const profileAvatar = document.getElementById('profile-avatar');
     signInBtn = document.getElementById('sign-in-btn');
+    const signInLinkMobile = document.getElementById('sign-in-link-mobile');
+    const profileLinkDesktop = document.getElementById('profile-link') || document.getElementById('dashboard-link');
+    const profileLinkMobile = document.getElementById('profile-link-mobile');
+    const adminLinkDesktop = document.getElementById('admin-link');
+    const adminLinkMobile = document.getElementById('admin-link-mobile');
     signOutBtn = document.getElementById('sign-out-btn') || document.getElementById('logout-btn');
     const isAuth = await window.auth.isAuthenticated();
     const user = isAuth ? await window.auth.getUser() : null;
@@ -24,9 +29,13 @@
       }
       console.debug('Auth state', { isAuthenticated: isAuth, hasToken });
     }
-    if (signInBtn) {
-      signInBtn.classList.toggle('hidden', isAuth);
-    }
+    if (signInBtn) signInBtn.classList.toggle('hidden', isAuth);
+    if (signInLinkMobile) signInLinkMobile.classList.toggle('hidden', isAuth);
+    if (profileLinkDesktop) profileLinkDesktop.classList.toggle('hidden', !isAuth);
+    if (profileLinkMobile) profileLinkMobile.classList.toggle('hidden', !isAuth);
+    const isAdmin = document.documentElement.dataset.admin === 'true';
+    if (adminLinkDesktop) adminLinkDesktop.classList.toggle('hidden', !isAdmin);
+    if (adminLinkMobile) adminLinkMobile.classList.toggle('hidden', !isAdmin);
     if (profileAvatar) {
       if (isAuth && user && user.picture) {
         profileAvatar.src = user.picture;
@@ -60,6 +69,7 @@
     if (typeof alert === 'function') {
       alert('Authentication is currently unavailable. Please try again later.');
     }
+    debouncedUpdateAuthUI();
   }
   window.showAuthError = showAuthError;
 
@@ -100,7 +110,7 @@
     const redirect_uri = window.location.origin + '/auth/callback.html';
     if (authDebug) console.debug('Auth0 config', { domain, clientId, redirect_uri, audience: AUDIENCE });
     signInBtn = document.getElementById('sign-in-btn');
-    if (!domain || !clientId) {
+    if (!domain || !clientId || !AUDIENCE) {
       showAuthError();
       window.authReady = Promise.resolve();
       return window.authReady;
@@ -195,6 +205,7 @@
         return null;
       }
     }
+    if (window.auth) window.auth.getApiToken = getApiToken;
 
     function parseJwt(token) {
       try {

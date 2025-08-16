@@ -10,7 +10,15 @@ Create a `.env` file with the following variables.
 
 ### Auth0
 
+- `AUTH0_DOMAIN` – Auth0 tenant domain (e.g. `your-tenant.auth0.com`)
+- `AUTH0_CLIENT_ID` – Auth0 SPA Client ID
+- `AUTH0_CLIENT_SECRET` – Auth0 Client Secret
+- `AUTH0_BASE_URL` – Base URL of the app
+- `AUTH0_ISSUER_BASE_URL` – Issuer URL (`https://your-tenant.auth0.com`)
+- `AUTH0_SECRET` – Session secret
 - `AUTH0_AUDIENCE` – `https://ai-news-hub.api`
+
+Ensure these variables are present in the Vercel project settings so builds can inject the required Auth0 meta tags.
 
 ## Auth0 Dashboard Settings
 
