@@ -61,7 +61,8 @@
     // Handle desktop sign-in button
     const desktopBtn = document.getElementById('sign-in-btn');
     if (desktopBtn) {
-      desktopBtn.addEventListener('click', () => {
+      desktopBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         sessionStorage.setItem('postLoginRedirect', location.pathname + location.search);
         if (window.auth) {
           window.auth.login();
