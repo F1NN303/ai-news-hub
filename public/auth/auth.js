@@ -7,6 +7,46 @@
   const authDebug = new URLSearchParams(window.location.search).get('auth_debug') === '1';
   const audMeta = document.querySelector('meta[name="auth0-audience"]');
   const AUDIENCE = audMeta ? audMeta.content : '';
+
+  let authReadyResolve,
+    authReadyReject;
+  window.authReady = new Promise((resolve, reject) => {
+    authReadyResolve = resolve;
+    authReadyReject = reject;
+  });
+
+  async function getApiToken() {
+    if (!auth0Client) return null;
+    try {
+      return await auth0Client.getTokenSilently({
+        authorizationParams: { audience: AUDIENCE, scope: 'manage:site' }
+      });
+    } catch (e) {
+      if (authDebug) console.debug('getApiToken failed', e);
+      return null;
+    }
+  }
+
+  window.auth = {
+    login: () => showAuthError(),
+    logout: () => showAuthError(),
+    getUser: () => null,
+    isAuthenticated: () => false,
+    getIdTokenClaims: () => null,
+    getApiToken,
+    handleRedirectCallback: () => {
+      showAuthError();
+      return Promise.reject(new Error('Auth not available'));
+    }
+  };
+
+  function finalizeAuthState() {
+    window.__auth = { user: null, isAuthenticated: false, isAdmin: false, getApiToken };
+    document.documentElement.dataset.admin = 'false';
+    document.documentElement.dataset.auth = 'false';
+    document.dispatchEvent(new CustomEvent('auth:ready', { detail: window.__auth }));
+    debouncedUpdateAuthUI();
+  }
   
   async function updateAuthUI() {
     if (!window.auth) return;
@@ -55,19 +95,19 @@
     updateAuthUITimer = setTimeout(updateAuthUI, 100);
   }
 
-  function showAuthError() {
+  function showAuthError(message) {
     if (authErrorShown) return;
     authErrorShown = true;
-    // Ensure UI shows an error without altering sign-in button state
+    const text = message || 'Authentication is currently unavailable. Please try again later.';
     if (!document.getElementById('auth-error')) {
       const msg = document.createElement('div');
       msg.id = 'auth-error';
       msg.className = 'bg-red-100 text-red-700 p-2 text-center';
-      msg.textContent = 'Authentication is currently unavailable. Please try again later.';
+      msg.textContent = text;
       document.body.prepend(msg);
     }
     if (typeof alert === 'function') {
-      alert('Authentication is currently unavailable. Please try again later.');
+      alert(text);
     }
     debouncedUpdateAuthUI();
   }
@@ -92,7 +132,12 @@
   }
 
   async function withClient(fn, fallback) {
-    await window.authReady;
+    try {
+      await window.authReady;
+    } catch (e) {
+      showAuthError();
+      return typeof fallback === 'function' ? fallback() : fallback;
+    }
     if (!auth0Client) {
       showAuthError();
       return typeof fallback === 'function' ? fallback() : fallback;
@@ -101,7 +146,8 @@
   }
 
   window.initAuth = function initAuth() {
-    if (window.authReady) return window.authReady;
+    if (window.authInitialized) return window.authReady;
+    window.authInitialized = true;
     if (authDebug) console.debug('initAuth called');
     const domainMeta = document.querySelector('meta[name="auth0-domain"]');
     const domain = domainMeta ? domainMeta.content : (window.AUTH0_DOMAIN || '');
@@ -111,8 +157,10 @@
     if (authDebug) console.debug('Auth0 config', { domain, clientId, redirect_uri, audience: AUDIENCE });
     signInBtn = document.getElementById('sign-in-btn');
     if (!domain || !clientId || !AUDIENCE) {
-      showAuthError();
-      window.authReady = Promise.resolve();
+      showAuthError('Auth0 init failed — missing domain/client/audience');
+      authReadyReject(new Error('Missing Auth0 config'));
+      finalizeAuthState();
+      window.authReady.catch(() => {});
       return window.authReady;
     }
     const sdkLoaded =
@@ -120,11 +168,13 @@
       (window.auth0 && typeof window.auth0.createAuth0Client === 'function');
     if (!sdkLoaded) {
       showAuthError();
-      window.authReady = Promise.resolve();
+      authReadyReject(new Error('Auth0 SDK not loaded'));
+      finalizeAuthState();
+      window.authReady.catch(() => {});
       return window.authReady;
     }
 
-    window.authReady = (async () => {
+    (async () => {
       try {
         try {
           await fetch(`https://${domain}/.well-known/health`, { mode: 'cors' });
@@ -138,9 +188,7 @@
             : (window.auth0 && typeof window.auth0.createAuth0Client === 'function'
                 ? window.auth0.createAuth0Client
                 : null);
-        if (!createClientFn) {
-          throw new Error('Auth0 SPA SDK not loaded');
-        }
+        if (!createClientFn) throw new Error('Auth0 SPA SDK not loaded');
         auth0Client = await createClientFn({
           domain,
           clientId,
@@ -160,54 +208,47 @@
       }
       if (!auth0Client) {
         showAuthError();
-        if (authDebug) console.debug('Auth0 client unavailable');
+        authReadyReject(new Error('Auth0 client unavailable'));
+        finalizeAuthState();
+        return;
       }
-      if (auth0Client && authDebug) console.debug('Auth0 ready');
+      if (authDebug) console.debug('Auth0 ready');
+      window.auth = {
+        login: () =>
+          withClient(() =>
+            auth0Client.loginWithRedirect({
+              authorizationParams: {
+                audience: AUDIENCE,
+                scope: 'openid profile email offline_access'
+              }
+            })
+          ),
+        logout: () =>
+          withClient(() =>
+            auth0Client.logout({
+              logoutParams: { returnTo: window.location.origin + '/' }
+            })
+          ),
+        getUser: () => withClient(() => auth0Client.getUser(), null),
+        isAuthenticated: () => withClient(() => auth0Client.isAuthenticated(), false),
+        getIdTokenClaims: () => withClient(() => auth0Client.getIdTokenClaims(), null),
+        getApiToken,
+        handleRedirectCallback: () =>
+          withClient(async () => {
+            const res = await handleRedirectCallbackSafe();
+            await refreshAuthState();
+            return res;
+          })
+      };
+      authReadyResolve();
+      await refreshAuthState();
     })();
 
-    window.auth = {
-      login: () =>
-        withClient(() =>
-          auth0Client.loginWithRedirect({
-            authorizationParams: {
-              audience: AUDIENCE,
-              scope: 'openid profile email offline_access'
-            }
-          })
-        ),
-      logout: () =>
-        withClient(() =>
-          auth0Client.logout({
-            logoutParams: { returnTo: window.location.origin + '/' }
-          })
-        ),
-      getUser: () => withClient(() => auth0Client.getUser(), null),
-      isAuthenticated: () => withClient(() => auth0Client.isAuthenticated(), false),
-      getIdTokenClaims: () => withClient(() => auth0Client.getIdTokenClaims(), null),
-      getApiToken,
-      handleRedirectCallback: () =>
-        withClient(async () => {
-          const res = await handleRedirectCallbackSafe();
-          await refreshAuthState();
-          return res;
-        })
-    };
+    window.authReady.catch(() => {});
+    return window.authReady;
+  };
 
-    async function getApiToken() {
-      if (!auth0Client) await window.authReady;
-      if (!auth0Client) return null;
-      try {
-        return await auth0Client.getTokenSilently({
-          authorizationParams: { audience: AUDIENCE, scope: 'manage:site' }
-        });
-      } catch (e) {
-        if (authDebug) console.debug('getApiToken failed', e);
-        return null;
-      }
-    }
-    if (window.auth) window.auth.getApiToken = getApiToken;
-
-    function parseJwt(token) {
+  function parseJwt(token) {
       try {
         const base64Url = token.split('.')[1];
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -262,8 +303,6 @@
     }
 
     window.updateAuthUI = debouncedUpdateAuthUI;
-
-    window.authReady = window.authReady.then(refreshAuthState);
 
     return window.authReady;
   };

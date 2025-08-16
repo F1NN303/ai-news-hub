@@ -15,11 +15,21 @@
   <script src="/auth/auth.js" defer></script>
 </head>
 <body>
-  <p>Redirecting…</p>
+  <p id="login-status">Redirecting…</p>
   <script type="module">
-    await window.authReady;
-    sessionStorage.setItem('postLoginRedirect', '/profile.html');
-    auth.login();
+    try {
+      await window.authReady;
+      sessionStorage.setItem('postLoginRedirect', '/profile.html');
+      auth.login();
+    } catch (e) {
+      const p = document.getElementById('login-status');
+      p.textContent = 'Auth0 init failed — missing domain/client/audience';
+      const link = document.createElement('a');
+      link.href = '/';
+      link.textContent = 'Back to Home';
+      document.body.appendChild(document.createTextNode(' '));
+      document.body.appendChild(link);
+    }
   </script>
 </body>
 </html>
