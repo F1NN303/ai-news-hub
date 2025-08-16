@@ -7,9 +7,9 @@
   <meta name="description" content="Stay updated with the latest AI news, OpenAI developments, ChatGPT updates, and innovations in artificial intelligence.">
   <link rel="canonical" href="/" />
 
-  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID injected at build time -->
-  <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com"><!-- Auth0 Domain injected at build time -->
-  <meta name="auth0-audience" content="https://ai-news-hub.api" />
+  <meta name="auth0-client-id" content="${AUTH0_CLIENT_ID}"><!-- Auth0 Client ID injected at build time -->
+  <meta name="auth0-domain" content="${AUTH0_DOMAIN}"><!-- Auth0 Domain injected at build time -->
+  <meta name="auth0-audience" content="__INJECTED__" />
   <script>
     document.documentElement.dataset.theme = localStorage.theme || 'light';
     if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
@@ -131,7 +131,7 @@
               <img id="profile-avatar" class="w-6 h-6 rounded-full mr-2 hidden" alt="Profile avatar" />
               <span class="label">Profile</span>
             </a>
-            <a id="admin-link" href="/admin/" class="nav-link hidden rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
+            <a id="admin-link" href="/admin/index.html" class="nav-link hidden rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
           </div>
 
           <button id="theme-toggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700" aria-label="Toggle theme">
@@ -155,7 +155,7 @@
       <a href="#industry" class="nav-link rounded hover:bg-slate-100 dark:hover:bg-slate-800">AI Industry</a>
       <a id="sign-in-link-mobile" href="/login/" class="nav-link rounded hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</a>
       <a id="profile-link-mobile" href="/profile.html" class="nav-link hidden rounded hover:bg-slate-100 dark:hover:bg-slate-800">Profile</a>
-      <a id="admin-link-mobile" href="/admin/" class="nav-link hidden rounded hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
+      <a id="admin-link-mobile" href="/admin/index.html" class="nav-link hidden rounded hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
     </div>
   </nav>
   <div id="menu-backdrop" class="mobile-nav-backdrop"></div>
@@ -316,6 +316,13 @@
     const searchInput  = byId('search-input');
     const searchResults= byId('search-results');
     const grids = [openaiGrid, chatgptGrid, industryGrid, researchGrid];
+    const mainEl = document.querySelector('main');
+    const sections = {
+      openai: openaiGrid.parentElement,
+      chatgpt: chatgptGrid.parentElement,
+      industry: industryGrid.parentElement,
+      research: researchGrid.parentElement
+    };
 
     const fmtDate = (iso) => new Date(iso || Date.now()).toISOString().slice(0,10);
 
@@ -355,6 +362,7 @@
 
     function computeTrendingByCategory(groups){
       return Object.entries(groups)
+        .filter(([,list]) => list.length > 0)
         .map(([cat,list]) => [cat, list.length])
         .sort((a,b)=>b[1]-a[1]);
     }
@@ -425,10 +433,37 @@
             groups[cat].push(p);
           });
 
-          openaiGrid.innerHTML   = groups['OpenAI News'].map(renderMasonryPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
-          chatgptGrid.innerHTML  = groups['ChatGPT Updates'].map(renderCardPost).join('') || '<p class="text-slate-500">No updates yet.</p>';
-          industryGrid.innerHTML = groups['AI Industry'].map(renderCardPost).join('') || '<p class="text-slate-500">No news yet.</p>';
-          researchGrid.innerHTML = groups['Research & Innovation'].map(renderCardPost).join('') || '<p class="text-slate-500">No research yet.</p>';
+          const openaiPosts = groups['OpenAI News'];
+          if (openaiPosts.length) {
+            openaiGrid.innerHTML = openaiPosts.map(renderMasonryPost).join('');
+            sections.openai.classList.remove('hidden');
+          } else {
+            sections.openai.classList.add('hidden');
+          }
+
+          const chatgptPosts = groups['ChatGPT Updates'];
+          if (chatgptPosts.length) {
+            chatgptGrid.innerHTML = chatgptPosts.map(renderCardPost).join('');
+            sections.chatgpt.classList.remove('hidden');
+          } else {
+            sections.chatgpt.classList.add('hidden');
+          }
+
+          const industryPosts = groups['AI Industry'];
+          if (industryPosts.length) {
+            industryGrid.innerHTML = industryPosts.map(renderCardPost).join('');
+            sections.industry.classList.remove('hidden');
+          } else {
+            sections.industry.classList.add('hidden');
+          }
+
+          const researchPosts = groups['Research & Innovation'];
+          if (researchPosts.length) {
+            researchGrid.innerHTML = researchPosts.map(renderCardPost).join('');
+            sections.research.classList.remove('hidden');
+          } else {
+            sections.research.classList.add('hidden');
+          }
 
           const trending = computeTrendingByCategory(groups);
           trendingList.innerHTML = trending.length
@@ -462,9 +497,16 @@
         } catch (err) {
           if (attempt === 0) continue;
           console.error('Load error:', err);
-          showToast('Failed to load posts.');
-          grids.forEach(g => g.innerHTML = '<p class="text-red-500">Failed to load posts.</p>');
+          if (mainEl && !document.getElementById('posts-error')) {
+            const errBox = document.createElement('div');
+            errBox.id = 'posts-error';
+            errBox.className = 'bg-red-100 text-red-700 p-4 rounded mb-4';
+            errBox.textContent = 'Failed to load posts.';
+            mainEl.prepend(errBox);
+          }
+          grids.forEach(g => g.innerHTML = '');
           trendingList.innerHTML = '';
+          Object.values(sections).forEach(sec => sec.classList.add('hidden'));
         }
       }
     }

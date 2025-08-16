@@ -44,54 +44,15 @@
   // Handle sign-in link click
   const signInLinkMobile = document.getElementById('sign-in-link-mobile');
   if (signInLinkMobile) {
-    signInLinkMobile.addEventListener('click', (e) => {
+    signInLinkMobile.addEventListener('click', () => {
       sessionStorage.setItem('postLoginRedirect', location.pathname + location.search);
-      if (window.auth) {
-        e.preventDefault();
-        window.auth.login();
-      } else if (window.showAuthError) {
-        window.showAuthError();
-      }
     });
   }
 
-  // Handle desktop sign-in button
   const desktopBtn = document.getElementById('sign-in-btn');
   if (desktopBtn) {
-    desktopBtn.addEventListener('click', (e) => {
+    desktopBtn.addEventListener('click', () => {
       sessionStorage.setItem('postLoginRedirect', location.pathname + location.search);
-      if (window.auth) {
-        e.preventDefault();
-        window.auth.login();
-      } else if (window.showAuthError) {
-        window.showAuthError();
-      }
     });
   }
-
-  // Handle auth link visibility
-  document.addEventListener('auth:ready', () => {
-    const profileLinkDesktop = document.getElementById('profile-link') || document.getElementById('dashboard-link');
-    const profileLinkMobile = document.getElementById('profile-link-mobile');
-    const adminLinkDesktop = document.getElementById('admin-link');
-    const adminLinkMobile = document.getElementById('admin-link-mobile');
-    const signInLink = document.getElementById('sign-in-link-mobile');
-    const isAdmin = document.documentElement.dataset.admin === 'true';
-    const isAuth = document.documentElement.dataset.auth === 'true';
-    if (profileLinkDesktop) {
-      profileLinkDesktop.classList.toggle('hidden', !isAuth);
-    }
-    if (profileLinkMobile) {
-      profileLinkMobile.classList.toggle('hidden', !isAuth);
-    }
-    if (adminLinkDesktop) {
-      adminLinkDesktop.classList.toggle('hidden', !isAdmin);
-    }
-    if (adminLinkMobile) {
-      adminLinkMobile.classList.toggle('hidden', !isAdmin);
-    }
-    if (signInLink) {
-      signInLink.classList.toggle('hidden', isAuth);
-    }
-  });
 })();

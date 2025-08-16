@@ -7,11 +7,29 @@
   const authDebug = new URLSearchParams(window.location.search).get('auth_debug') === '1';
   const audMeta = document.querySelector('meta[name="auth0-audience"]');
   const AUDIENCE = audMeta ? audMeta.content : '';
+
+  // Expose a safe default auth object so other scripts can always call it
+  window.auth = {
+    login: showAuthError,
+    logout: showAuthError,
+    getUser: async () => null,
+    isAuthenticated: async () => false,
+    getIdTokenClaims: async () => null,
+    getApiToken: async () => null,
+    handleRedirectCallback: showAuthError
+  };
+  window.authReady = Promise.reject(new Error('Auth not initialized'));
+  window.authReady.catch(() => {});
   
   async function updateAuthUI() {
     if (!window.auth) return;
     const profileAvatar = document.getElementById('profile-avatar');
     signInBtn = document.getElementById('sign-in-btn');
+    const signInLinkMobile = document.getElementById('sign-in-link-mobile');
+    const profileLinkDesktop = document.getElementById('profile-link') || document.getElementById('dashboard-link');
+    const profileLinkMobile = document.getElementById('profile-link-mobile');
+    const adminLinkDesktop = document.getElementById('admin-link');
+    const adminLinkMobile = document.getElementById('admin-link-mobile');
     signOutBtn = document.getElementById('sign-out-btn') || document.getElementById('logout-btn');
     const isAuth = await window.auth.isAuthenticated();
     const user = isAuth ? await window.auth.getUser() : null;
@@ -24,9 +42,13 @@
       }
       console.debug('Auth state', { isAuthenticated: isAuth, hasToken });
     }
-    if (signInBtn) {
-      signInBtn.classList.toggle('hidden', isAuth);
-    }
+    if (signInBtn) signInBtn.classList.toggle('hidden', isAuth);
+    if (signInLinkMobile) signInLinkMobile.classList.toggle('hidden', isAuth);
+    if (profileLinkDesktop) profileLinkDesktop.classList.toggle('hidden', !isAuth);
+    if (profileLinkMobile) profileLinkMobile.classList.toggle('hidden', !isAuth);
+    const isAdmin = document.documentElement.dataset.admin === 'true';
+    if (adminLinkDesktop) adminLinkDesktop.classList.toggle('hidden', !isAdmin);
+    if (adminLinkMobile) adminLinkMobile.classList.toggle('hidden', !isAdmin);
     if (profileAvatar) {
       if (isAuth && user && user.picture) {
         profileAvatar.src = user.picture;
@@ -60,6 +82,7 @@
     if (typeof alert === 'function') {
       alert('Authentication is currently unavailable. Please try again later.');
     }
+    debouncedUpdateAuthUI();
   }
   window.showAuthError = showAuthError;
 
@@ -82,7 +105,12 @@
   }
 
   async function withClient(fn, fallback) {
-    await window.authReady;
+    try {
+      await window.authReady;
+    } catch (e) {
+      showAuthError();
+      return typeof fallback === 'function' ? fallback() : fallback;
+    }
     if (!auth0Client) {
       showAuthError();
       return typeof fallback === 'function' ? fallback() : fallback;
@@ -100,9 +128,10 @@
     const redirect_uri = window.location.origin + '/auth/callback.html';
     if (authDebug) console.debug('Auth0 config', { domain, clientId, redirect_uri, audience: AUDIENCE });
     signInBtn = document.getElementById('sign-in-btn');
-    if (!domain || !clientId) {
+    if (!domain || !clientId || !AUDIENCE) {
       showAuthError();
-      window.authReady = Promise.resolve();
+      window.authReady = Promise.reject(new Error('Missing Auth0 configuration'));
+      window.authReady.catch(() => {});
       return window.authReady;
     }
     const sdkLoaded =
@@ -110,7 +139,8 @@
       (window.auth0 && typeof window.auth0.createAuth0Client === 'function');
     if (!sdkLoaded) {
       showAuthError();
-      window.authReady = Promise.resolve();
+      window.authReady = Promise.reject(new Error('Auth0 SPA SDK not loaded'));
+      window.authReady.catch(() => {});
       return window.authReady;
     }
 
@@ -143,14 +173,15 @@
           useRefreshTokens: true,
           useRefreshTokensFallback: true
         });
+        if (!auth0Client) {
+          throw new Error('Auth0 client unavailable');
+        }
         if (authDebug) console.debug('Auth0 client created');
       } catch (e) {
         if (authDebug) console.debug('Auth0 init failed', e);
         console.error('Auth0 init failed', e);
-      }
-      if (!auth0Client) {
         showAuthError();
-        if (authDebug) console.debug('Auth0 client unavailable');
+        throw e;
       }
       if (auth0Client && authDebug) console.debug('Auth0 ready');
     })();
@@ -184,9 +215,9 @@
     };
 
     async function getApiToken() {
-      if (!auth0Client) await window.authReady;
-      if (!auth0Client) return null;
       try {
+        if (!auth0Client) await window.authReady;
+        if (!auth0Client) return null;
         return await auth0Client.getTokenSilently({
           authorizationParams: { audience: AUDIENCE, scope: 'manage:site' }
         });
@@ -195,6 +226,7 @@
         return null;
       }
     }
+    if (window.auth) window.auth.getApiToken = getApiToken;
 
     function parseJwt(token) {
       try {
@@ -253,6 +285,7 @@
     window.updateAuthUI = debouncedUpdateAuthUI;
 
     window.authReady = window.authReady.then(refreshAuthState);
+    window.authReady.catch(() => {});
 
     return window.authReady;
   };
