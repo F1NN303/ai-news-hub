@@ -60,6 +60,18 @@
       msg.textContent = 'Authentication is currently unavailable. Please try again later.';
       document.body.prepend(msg);
     }
+    if (typeof alert === 'function') {
+      alert('Authentication is currently unavailable. Please try again later.');
+    }
+  }
+
+  // Show an auth error if the Auth0 SDK script fails to load
+  const auth0Script = document.querySelector('script[src*="auth0-spa-js"]');
+  if (auth0Script) {
+    auth0Script.addEventListener('error', () => {
+      if (authDebug) console.debug('Auth0 SDK script failed to load');
+      showAuthError();
+    });
   }
 
   async function handleRedirectCallbackSafe() {
@@ -90,6 +102,14 @@
     const redirect_uri = window.location.origin + '/auth/callback.html';
     if (authDebug) console.debug('Auth0 config', { domain, clientId, redirect_uri, audience: AUDIENCE });
     signInBtn = document.getElementById('sign-in-btn');
+    const sdkLoaded =
+      typeof createAuth0Client === 'function' ||
+      (window.auth0 && typeof window.auth0.createAuth0Client === 'function');
+    if (!sdkLoaded) {
+      showAuthError();
+      window.authReady = Promise.resolve();
+      return window.authReady;
+    }
 
     window.authReady = (async () => {
       try {
