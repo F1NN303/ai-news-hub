@@ -48,7 +48,13 @@
       signInLinkMobile.addEventListener('click', (e) => {
         e.preventDefault();
         sessionStorage.setItem('postLoginRedirect', location.pathname + location.search);
-        if (window.auth) window.auth.login();
+        if (window.auth) {
+          window.auth.login();
+        } else if (typeof showToast === 'function') {
+          showToast('Authentication is currently unavailable. Please try again later.');
+        } else {
+          alert('Authentication is currently unavailable. Please try again later.');
+        }
       });
     }
 
@@ -57,7 +63,13 @@
     if (desktopBtn) {
       desktopBtn.addEventListener('click', () => {
         sessionStorage.setItem('postLoginRedirect', location.pathname + location.search);
-        if (window.auth) window.auth.login();
+        if (window.auth) {
+          window.auth.login();
+        } else if (typeof showToast === 'function') {
+          showToast('Authentication is currently unavailable. Please try again later.');
+        } else {
+          alert('Authentication is currently unavailable. Please try again later.');
+        }
       });
     }
 

@@ -49,10 +49,7 @@
   function showAuthError() {
     if (authErrorShown) return;
     authErrorShown = true;
-    if (signInBtn) {
-      signInBtn.disabled = false;
-      signInBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-    }
+    // Ensure UI shows an error without altering sign-in button state
     if (!document.getElementById('auth-error')) {
       const msg = document.createElement('div');
       msg.id = 'auth-error';
@@ -149,11 +146,7 @@
         showAuthError();
         if (authDebug) console.debug('Auth0 client unavailable');
       }
-      if (signInBtn) {
-        signInBtn.disabled = false;
-        signInBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        if (auth0Client && authDebug) console.debug('Auth0 ready');
-      }
+      if (auth0Client && authDebug) console.debug('Auth0 ready');
     })();
 
     window.auth = {
