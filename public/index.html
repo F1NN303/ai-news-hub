@@ -401,66 +401,70 @@
     // -------- Fetch + render --------
     async function loadAll() {
       showSkeletons();
-      try {
-        const url = new URL('/api/posts', window.location.origin);
-        const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
-        if (!res.ok) throw new Error(`API ${res.status}`);
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const url = new URL('/api/posts', window.location.origin);
+          const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+          if (!res.ok) throw new Error(`API ${res.status}`);
 
-        const data = await res.json();
-        const posts = Array.isArray(data) ? data : (data.rows || data.result || data.posts || []);
-        if (!posts.length) throw new Error('No posts');
+          const data = await res.json();
+          const posts = Array.isArray(data) ? data : (data.rows || data.result || data.posts || []);
+          if (!posts.length) throw new Error('No posts');
 
-        const groups = {
-          'OpenAI News': [],
-          'ChatGPT Updates': [],
-          'AI Industry': [],
-          'Research & Innovation': []
-        };
+          const groups = {
+            'OpenAI News': [],
+            'ChatGPT Updates': [],
+            'AI Industry': [],
+            'Research & Innovation': []
+          };
 
-        posts.forEach(p => {
-          const cat = deriveCategory(p);
-          p.category = cat;
-          groups[cat].push(p);
-        });
+          posts.forEach(p => {
+            const cat = deriveCategory(p);
+            p.category = cat;
+            groups[cat].push(p);
+          });
 
-        openaiGrid.innerHTML   = groups['OpenAI News'].map(renderMasonryPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
-        chatgptGrid.innerHTML  = groups['ChatGPT Updates'].map(renderCardPost).join('') || '<p class="text-slate-500">No updates yet.</p>';
-        industryGrid.innerHTML = groups['AI Industry'].map(renderCardPost).join('') || '<p class="text-slate-500">No news yet.</p>';
-        researchGrid.innerHTML = groups['Research & Innovation'].map(renderCardPost).join('') || '<p class="text-slate-500">No research yet.</p>';
+          openaiGrid.innerHTML   = groups['OpenAI News'].map(renderMasonryPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
+          chatgptGrid.innerHTML  = groups['ChatGPT Updates'].map(renderCardPost).join('') || '<p class="text-slate-500">No updates yet.</p>';
+          industryGrid.innerHTML = groups['AI Industry'].map(renderCardPost).join('') || '<p class="text-slate-500">No news yet.</p>';
+          researchGrid.innerHTML = groups['Research & Innovation'].map(renderCardPost).join('') || '<p class="text-slate-500">No research yet.</p>';
 
-        const trending = computeTrendingByCategory(groups);
-        trendingList.innerHTML = trending.length
-          ? trending.map(([cat,count]) =>
-              `<li class="flex items-center justify-between">
-                 <a href="#${categoryToId[cat]}" class="hover:text-primary">${cat}</a>
-                 <span class="ml-3 bg-slate-200 dark:bg-slate-700 text-xs px-2 py-1 rounded-full">${count}</span>
-               </li>`).join('')
-          : '<li class="text-slate-500">No data yet.</li>';
+          const trending = computeTrendingByCategory(groups);
+          trendingList.innerHTML = trending.length
+            ? trending.map(([cat,count]) =>
+                `<li class="flex items-center justify-between">
+                   <a href="#${categoryToId[cat]}" class="hover:text-primary">${cat}</a>
+                   <span class="ml-3 bg-slate-200 dark:bg-slate-700 text-xs px-2 py-1 rounded-full">${count}</span>
+                 </li>`).join('')
+            : '<li class="text-slate-500">No data yet.</li>';
 
-        searchInput.addEventListener('input', () => {
-          const q = searchInput.value.trim().toLowerCase();
-          if (q.length < 2) { searchResults.classList.add('hidden'); return; }
-          const matches = posts.filter(p => p.title && p.title.toLowerCase().includes(q)).slice(0,8);
-          searchResults.innerHTML = matches.length
-            ? matches.map(m => `
-              <a class="block p-3 hover:bg-slate-100 dark:hover:bg-slate-700 border-b border-slate-200 dark:border-slate-700 last:border-0" href="/post.html?slug=${encodeURIComponent(m.slug)}">
-                <div class="font-semibold">${m.title}</div>
-                <div class="text-xs text-slate-500">${m.category}</div>
-              </a>`).join('')
-            : '<div class="p-3 text-slate-500 text-sm">No results</div>';
-          searchResults.classList.remove('hidden');
-        });
-        document.addEventListener('click', (e) => {
-          if (!searchResults.contains(e.target) && e.target !== searchInput) {
-            searchResults.classList.add('hidden');
-          }
-        });
+          searchInput.addEventListener('input', () => {
+            const q = searchInput.value.trim().toLowerCase();
+            if (q.length < 2) { searchResults.classList.add('hidden'); return; }
+            const matches = posts.filter(p => p.title && p.title.toLowerCase().includes(q)).slice(0,8);
+            searchResults.innerHTML = matches.length
+              ? matches.map(m => `
+                <a class="block p-3 hover:bg-slate-100 dark:hover:bg-slate-700 border-b border-slate-200 dark:border-slate-700 last:border-0" href="/post.html?slug=${encodeURIComponent(m.slug)}">
+                  <div class="font-semibold">${m.title}</div>
+                  <div class="text-xs text-slate-500">${m.category}</div>
+                </a>`).join('')
+              : '<div class="p-3 text-slate-500 text-sm">No results</div>';
+            searchResults.classList.remove('hidden');
+          });
+          document.addEventListener('click', (e) => {
+            if (!searchResults.contains(e.target) && e.target !== searchInput) {
+              searchResults.classList.add('hidden');
+            }
+          });
 
-      } catch (err) {
-        console.error('Load error:', err);
-        showToast('Failed to load posts.');
-        grids.forEach(g => g.innerHTML = '<p class="text-red-500">Failed to load posts.</p>');
-        trendingList.innerHTML = '';
+          return;
+        } catch (err) {
+          if (attempt === 0) continue;
+          console.error('Load error:', err);
+          showToast('Failed to load posts.');
+          grids.forEach(g => g.innerHTML = '<p class="text-red-500">Failed to load posts.</p>');
+          trendingList.innerHTML = '';
+        }
       }
     }
 
