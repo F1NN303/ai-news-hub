@@ -40,6 +40,7 @@
         const comments = (await res.json()).reverse();
         const list = document.getElementById('comment-list');
         list.innerHTML = comments.length
+          // Show delete button only for comment owner or admin
           ? comments.map(c => `
               <div class="border-b pb-2">
                 <div class="flex items-center justify-between mb-1">
