@@ -131,6 +131,7 @@
               <img id="profile-avatar" class="w-6 h-6 rounded-full mr-2 hidden" alt="Profile avatar" />
               <span class="label">Profile</span>
             </a>
+            <a id="admin-link" href="/admin/" class="nav-link hidden rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Admin</a>
           </div>
 
           <button id="theme-toggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700" aria-label="Toggle theme">
@@ -479,24 +480,6 @@
   </script>
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
-      document.addEventListener('auth:ready', () => {
-        const isAdmin = document.documentElement.dataset.admin === 'true';
-        const authArea = document.getElementById('auth-area');
-        let adminLink = document.getElementById('admin-link');
-        if (isAdmin) {
-          if (!adminLink) {
-            adminLink = document.createElement('a');
-            adminLink.id = 'admin-link';
-            adminLink.href = '/admin/';
-            adminLink.className = 'nav-link rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800';
-            adminLink.textContent = 'Admin';
-            authArea.appendChild(adminLink);
-          }
-        } else if (adminLink) {
-          adminLink.remove();
-        }
-      });
-
       initAuth();
       await window.authReady;
       updateAuthUI();

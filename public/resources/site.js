@@ -77,7 +77,8 @@
     document.addEventListener('auth:ready', () => {
       const profileLinkDesktop = document.getElementById('profile-link') || document.getElementById('dashboard-link');
       const profileLinkMobile = document.getElementById('profile-link-mobile');
-      const adminLink = document.getElementById('admin-link-mobile');
+      const adminLinkDesktop = document.getElementById('admin-link');
+      const adminLinkMobile = document.getElementById('admin-link-mobile');
       const signInLink = document.getElementById('sign-in-link-mobile');
       const isAdmin = document.documentElement.dataset.admin === 'true';
       const isAuth = document.documentElement.dataset.auth === 'true';
@@ -87,8 +88,11 @@
       if (profileLinkMobile) {
         profileLinkMobile.classList.toggle('hidden', !isAuth);
       }
-      if (adminLink) {
-        adminLink.classList.toggle('hidden', !isAdmin);
+      if (adminLinkDesktop) {
+        adminLinkDesktop.classList.toggle('hidden', !isAdmin);
+      }
+      if (adminLinkMobile) {
+        adminLinkMobile.classList.toggle('hidden', !isAdmin);
       }
       if (signInLink) {
         signInLink.classList.toggle('hidden', isAuth);
