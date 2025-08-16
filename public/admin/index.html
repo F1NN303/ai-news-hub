@@ -49,15 +49,11 @@
     </div>
   </section>
 
-  <script>
-    window.addEventListener('DOMContentLoaded', async () => {
-      initAuth();
-      await window.authReady;
-      if (document.documentElement.dataset.admin !== 'true') {
-        window.location.replace('/profile.html?unauthorized=1');
-        return;
-      }
-    });
+  <script type="module">
+    await window.authReady;
+    if (document.documentElement.dataset.admin !== 'true') {
+      window.location.replace('/profile.html?unauthorized=1');
+    }
   </script>
 </body>
 </html>

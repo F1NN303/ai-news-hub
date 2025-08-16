@@ -472,20 +472,17 @@
     byId('year').textContent = new Date().getFullYear();
 
     if (window.fetch && window.URL) {
-      document.addEventListener('DOMContentLoaded', loadAll);
+      loadAll();
     } else {
       document.getElementById('openai-grid').textContent =
         'Your browser is not supported.';
     }
   </script>
-  <script>
-    window.addEventListener('DOMContentLoaded', async () => {
-      initAuth();
-      await window.authReady;
-      updateAuthUI();
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) updateAuthUI();
-      });
+  <script type="module">
+    await window.authReady;
+    updateAuthUI();
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) updateAuthUI();
     });
   </script>
 </body>

@@ -16,13 +16,10 @@
 </head>
 <body>
   <p>Redirecting…</p>
-  <script>
-    window.addEventListener('DOMContentLoaded', async () => {
-      initAuth();
-      await window.authReady;
-      sessionStorage.setItem('postLoginRedirect', '/profile.html');
-      auth.login();
-    });
+  <script type="module">
+    await window.authReady;
+    sessionStorage.setItem('postLoginRedirect', '/profile.html');
+    auth.login();
   </script>
 </body>
 </html>

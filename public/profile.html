@@ -44,52 +44,51 @@
     <p id="sub" class="mt-2 text-sm text-slate-500 break-all"></p>
   </details>
   <button id="logout-btn" class="mt-4 w-full sm:w-auto px-4 py-2 bg-secondary text-white rounded hover:bg-cyan-500">Sign out</button>
-  <script>
-    window.addEventListener('DOMContentLoaded', async () => {
-      document.addEventListener('auth:ready', () => {
-        const isAdmin = document.documentElement.dataset.admin === 'true';
-        const links = document.getElementById('profile-links');
-        let adminLink = document.getElementById('admin-link');
-        if (isAdmin) {
-          if (!adminLink) {
-            adminLink = document.createElement('a');
-            adminLink.id = 'admin-link';
-            adminLink.href = '/admin/';
-            adminLink.className = 'px-4 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700';
-            adminLink.textContent = 'Admin';
-            links.prepend(adminLink);
-          }
-        } else if (adminLink) {
-          adminLink.remove();
+  <script type="module">
+    function handleAuthReady() {
+      const isAdmin = document.documentElement.dataset.admin === 'true';
+      const links = document.getElementById('profile-links');
+      let adminLink = document.getElementById('admin-link');
+      if (isAdmin) {
+        if (!adminLink) {
+          adminLink = document.createElement('a');
+          adminLink.id = 'admin-link';
+          adminLink.href = '/admin/';
+          adminLink.className = 'px-4 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-700';
+          adminLink.textContent = 'Admin';
+          links.prepend(adminLink);
         }
-      });
+      } else if (adminLink) {
+        adminLink.remove();
+      }
+    }
 
-      initAuth();
-      await window.authReady;
-      if (!(await auth.isAuthenticated())) {
-        location.replace('/login/index.html');
-        return;
-      }
-      const user = await auth.getUser();
-      const avatarImg = document.getElementById('avatar');
-      const avatarPlaceholder = document.getElementById('avatar-placeholder');
-      const initial = (user.name || user.nickname || '?').charAt(0).toUpperCase();
-      avatarPlaceholder.textContent = initial;
-      if (user.picture) {
-        avatarImg.src = user.picture;
-        avatarImg.classList.remove('hidden');
-      } else {
-        avatarPlaceholder.classList.remove('sm:hidden');
-      }
-      document.getElementById('name').textContent = user.name || user.nickname || '';
-      document.getElementById('email').textContent = user.email || '';
-      document.getElementById('sub').textContent = user.sub || '';
-      if (user.email_verified) {
-        document.getElementById('verified').classList.remove('hidden');
-      }
-      const signOutBtn = document.getElementById('logout-btn');
-      if (signOutBtn) signOutBtn.addEventListener('click', () => auth.logout());
-    });
+    document.addEventListener('auth:ready', handleAuthReady);
+    await window.authReady;
+    handleAuthReady();
+    if (!(await auth.isAuthenticated())) {
+      location.replace('/login/index.html');
+      return;
+    }
+    const user = await auth.getUser();
+    const avatarImg = document.getElementById('avatar');
+    const avatarPlaceholder = document.getElementById('avatar-placeholder');
+    const initial = (user.name || user.nickname || '?').charAt(0).toUpperCase();
+    avatarPlaceholder.textContent = initial;
+    if (user.picture) {
+      avatarImg.src = user.picture;
+      avatarImg.classList.remove('hidden');
+    } else {
+      avatarPlaceholder.classList.remove('sm:hidden');
+    }
+    document.getElementById('name').textContent = user.name || user.nickname || '';
+    document.getElementById('email').textContent = user.email || '';
+    document.getElementById('sub').textContent = user.sub || '';
+    if (user.email_verified) {
+      document.getElementById('verified').classList.remove('hidden');
+    }
+    const signOutBtn = document.getElementById('logout-btn');
+    if (signOutBtn) signOutBtn.addEventListener('click', () => auth.logout());
   </script>
 </body>
 </html>
