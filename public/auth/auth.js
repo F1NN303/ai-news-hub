@@ -305,6 +305,6 @@
     window.updateAuthUI = debouncedUpdateAuthUI;
 
     return window.authReady;
-  };
+  }
   window.initAuth();
 })();
