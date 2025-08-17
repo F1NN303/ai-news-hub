@@ -1,14 +1,56 @@
-(() => {
+(async () => {
+  const domainMeta = document.querySelector('meta[name="auth0-domain"]');
+  const domain = domainMeta ? domainMeta.content : (window.AUTH0_DOMAIN || '');
+  const clientMeta = document.querySelector('meta[name="auth0-client-id"]');
+  const clientId = clientMeta ? clientMeta.content : (window.AUTH0_CLIENT_ID || '');
+  const redirect_uri = window.location.origin + '/auth/callback.html';
   let auth0Client;
+  const signInBtn = document.getElementById('sign-in-btn');
+  const signOutBtn = document.getElementById('sign-out-btn');
+  if (signInBtn) signInBtn.disabled = true;
+
+  let authErrorShown = false;
+  function showAuthError() {
+    if (authErrorShown) return;
+    authErrorShown = true;
+    [signInBtn, signOutBtn].forEach(btn => {
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+    });
+    if (!document.getElementById('auth-error')) {
+      const msg = document.createElement('div');
+      msg.id = 'auth-error';
+      msg.className = 'bg-red-100 text-red-700 p-2 text-center';
+      msg.textContent = 'Authentication is currently unavailable. Please try again later.';
+      document.body.prepend(msg);
+    }
+  }
+
   const ready = (async () => {
     try {
-      auth0Client = await createAuth0Client({
+      const createClientFn =
+        typeof createAuth0Client === 'function'
+          ? createAuth0Client
+          : (window.auth0 && typeof window.auth0.createAuth0Client === 'function'
+              ? window.auth0.createAuth0Client
+              : null);
+      if (!createClientFn) {
+        throw new Error('Auth0 SPA SDK not loaded');
+      }
+      auth0Client = await createClientFn({
         domain,
         clientId,
         authorizationParams: { redirect_uri }
       });
     } catch (e) {
       console.error('Auth0 init failed', e);
+    }
+    if (!auth0Client) {
+      showAuthError();
+    } else if (signInBtn) {
+      signInBtn.disabled = false;
     }
   })();
 
@@ -21,8 +63,12 @@
     }
   }
 
-  async function withClient(fn) {
+  async function withClient(fn, fallback) {
     await ready;
+    if (!auth0Client) {
+      showAuthError();
+      return typeof fallback === 'function' ? fallback() : fallback;
+    }
     return fn();
   }
 
@@ -34,70 +80,10 @@
           logoutParams: { returnTo: window.location.origin + '/' }
         })
       ),
-    getUser: () => withClient(() => auth0Client.getUser()),
-    isAuthenticated: () => withClient(() => auth0Client.isAuthenticated()),
-    getIdTokenClaims: () => withClient(() => auth0Client.getIdTokenClaims()),
+    getUser: () => withClient(() => auth0Client.getUser(), null),
+    isAuthenticated: () => withClient(() => auth0Client.isAuthenticated(), false),
+    getIdTokenClaims: () => withClient(() => auth0Client.getIdTokenClaims(), null),
     handleRedirectCallback: () => withClient(() => handleRedirectCallbackSafe()),
     ready
   };
-
-  function parseJwt(token) {
-      try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-          atob(base64)
-            .split('')
-            .map(c => `%${('00' + c.charCodeAt(0).toString(16)).slice(-2)}`)
-            .join('')
-        );
-        return JSON.parse(jsonPayload);
-      } catch (e) {
-        return {};
-      }
-    }
-
-    async function refreshAuthState() {
-      const isAuthenticated = await window.auth.isAuthenticated();
-      let user = null;
-      let idTokenClaims = null;
-      let apiToken = null;
-      if (isAuthenticated) {
-        user = await window.auth.getUser();
-        try {
-          idTokenClaims = await window.auth.getIdTokenClaims();
-        } catch (e) {
-          idTokenClaims = null;
-        }
-        apiToken = await getApiToken();
-      }
-
-      let isAdmin = false;
-      if (apiToken) {
-        const { permissions = [] } = parseJwt(apiToken);
-        if (Array.isArray(permissions)) {
-          isAdmin = permissions.includes('manage:site');
-        }
-      }
-      if (!isAdmin && idTokenClaims) {
-        const roles = idTokenClaims['https://ai-news-hub/roles'];
-        if (Array.isArray(roles)) {
-          isAdmin = roles.includes('admin');
-        } else if (typeof roles === 'string') {
-          isAdmin = roles.split(' ').includes('admin');
-        }
-      }
-
-      window.__auth = { user, isAuthenticated, isAdmin, getApiToken };
-      document.documentElement.dataset.admin = isAdmin ? 'true' : 'false';
-      document.documentElement.dataset.auth = isAuthenticated ? 'true' : 'false';
-      document.dispatchEvent(new CustomEvent('auth:ready', { detail: window.__auth }));
-      debouncedUpdateAuthUI();
-    }
-
-    window.updateAuthUI = debouncedUpdateAuthUI;
-
-    return window.authReady;
-  };
-  window.initAuth();
 })();
