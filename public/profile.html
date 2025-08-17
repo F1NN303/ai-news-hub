@@ -106,18 +106,32 @@
     .copy{margin-left:8px; padding:4px 8px; border-radius:8px; border:1px solid var(--border); background:#0b1428; color:#cbd5e1; font-size:.8rem}
     .copy.ok{border-color:rgba(16,185,129,.5); color:#bbf7d0}
   </style>
+  <script>
+    (function(){
+      const root = document.documentElement;
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      root.dataset.theme = theme;
+      root.classList.toggle('dark', theme === 'dark');
+      window.toggleTheme = function(){
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        root.classList.toggle('dark', next === 'dark');
+        localStorage.setItem('theme', next);
+      };
+    })();
+  </script>
 </head>
 <body>
   <header>
     <div id="site-header"></div>
   </header>
   <script src="/scripts/include-header.js" defer></script>
-  <script src="/scripts/theme.js" defer></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       await window.mountHeader('#site-header');
       window.initHeaderAuth();
-      window.initThemeToggle();
     });
   </script>
   <div class="wrap">

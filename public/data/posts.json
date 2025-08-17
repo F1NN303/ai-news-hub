@@ -1,10 +1,18 @@
 [
   {
-    "id": "p-001",
-    "title": "OpenAI releases GPT-5 preview",
-    "date": "2025-08-15",
-    "category": "OpenAI",
-    "href": "/posts/gpt5-preview.html",
-    "excerpt": "Enhanced reasoning, longer context, and safer defaults…"
+    "title": "OpenAI unveils GPT-5",
+    "slug": "openai-unveils-gpt-5",
+    "date": "2025-08-08",
+    "excerpt": "Highlights of the next-gen model.",
+    "image": "/assets/covers/gpt5.jpg",
+    "tags": ["openai-news", "gpt-5", "release"]
+  },
+  {
+    "title": "ChatGPT gets new planner",
+    "slug": "chatgpt-planner-feature",
+    "date": "2025-08-12",
+    "excerpt": "A new planning mode arrives.",
+    "image": "/assets/covers/planner.jpg",
+    "tags": ["chatgpt-updates"]
   }
 ]

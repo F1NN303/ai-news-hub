@@ -1,17 +1,17 @@
 <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-  <a href="/" class="flex items-center gap-2">
-    <img src="/logo.png" alt="AI News Hub" class="w-10 h-10 rounded-full"/>
-    <span class="text-2xl font-bold">AI News Hub</span>
+  <a href="/" class="brand" aria-label="AI News Hub — Home">
+    <img class="brand__img" src="/assets/brand/logo-full.svg" alt="AI News Hub logo">
+    <span class="brand__text hidden sm:inline">AI News Hub</span>
   </a>
   <nav class="hidden md:flex items-center gap-4">
     <a href="/openai-news.html" class="px-3 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">OpenAI News</a>
-    <a href="/updates.html" class="px-3 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">ChatGPT Updates</a>
-    <a href="/industry.html" class="px-3 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">AI Industry</a>
-    <a href="/research.html" class="px-3 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Research &amp; Innovation</a>
+    <a href="/category.html?tag=chatgpt-updates" class="px-3 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">ChatGPT Updates</a>
+    <a href="/category.html?tag=ai-industry" class="px-3 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">AI Industry</a>
+    <a href="/category.html?tag=research-innovation" class="px-3 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Research &amp; Innovation</a>
   </nav>
   <div class="flex items-center gap-3">
     <input type="text" placeholder="Search" class="hidden sm:block px-2 py-1 border rounded-md text-sm"/>
-    <button id="themeToggle" class="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700">
+    <button id="themeToggle" type="button" aria-label="Toggle theme" onclick="toggleTheme()" class="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700">
       <i class="fa-solid fa-sun dark:hidden"></i>
       <i class="fa-solid fa-moon hidden dark:inline"></i>
     </button>
