@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Privacy Policy - AI News Hub</title>
+
+  <!-- Auth0: DO NOT CHANGE -->
+  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK">
+  <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
+  <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api">
+
   <script>
     document.documentElement.dataset.theme = localStorage.theme || 'light';
     if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
@@ -14,14 +20,18 @@
       darkMode: 'class',
       theme: {
         extend: {
-          colors: { primary: '#0ea5e9', secondary: '#06b6d4', dark: '#0f172a', light: '#f8fafc', accent: '#818cf8' },
-          fontFamily: { inter: ['Inter', 'sans-serif'] }
+          colors: { primary:'#0ea5e9', secondary:'#06b6d4', dark:'#0f172a', light:'#f8fafc', accent:'#818cf8' },
+          fontFamily: { inter: ['Inter','system-ui','sans-serif'] }
         }
       }
     };
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/resources/site.css" />
+  <script src="/auth/auth.js" defer></script>
+  <script src="/public/js/cookie-banner.js" defer></script>
 </head>
+
 <body class="bg-light dark:bg-dark text-slate-900 dark:text-slate-100 font-inter">
   <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
@@ -34,129 +44,94 @@
   </header>
 
   <main class="max-w-3xl mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-2">Privacy Policy</h1>
-    <p class="text-slate-500 dark:text-slate-400 mb-8">Last updated: <span id="pp-date"></span></p>
+    <div class="flex items-center justify-between mb-3">
+      <h1 class="text-3xl font-bold">Privacy Policy</h1>
+      <button id="printBtn" class="text-sm px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">Print / Save PDF</button>
+    </div>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-8">Last updated: <span id="pp-date">2025-01-01</span></p>
 
-    <section class="space-y-8 text-slate-700 dark:text-slate-300 leading-relaxed">
-      <p>This Privacy Policy explains how <strong>AI News Hub</strong> (“we,” “us,” or “our”) collects, uses, discloses, and protects information when you use our website and services (the “Service”).</p>
+    <section class="space-y-6 text-slate-700 dark:text-slate-300 leading-relaxed">
+      <h2 id="who" class="text-xl font-semibold">1) Who we are & how to contact us</h2>
+      <p>We operate the Service known as <strong>AI News Hub</strong>. If you have a question or wish to exercise your privacy rights, contact us at <a href="mailto:service.ainews.hub@gmail.com" class="text-primary">service.ainews.hub@gmail.com</a>.</p>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">1) Who we are & how to contact us</h2>
-        <p>We operate the Service known as <strong>AI News Hub</strong>. If you have a question or wish to exercise your privacy rights, contact us at: 
-          <a href="mailto:service.ainews.hub@gmail.com" class="text-primary hover:underline">service.ainews.hub@gmail.com</a>.
-        </p>
-      </div>
+      <h2 id="info" class="text-xl font-semibold">2) Information we collect</h2>
+      <ul class="list-disc pl-6">
+        <li><strong>Account &amp; Profile Data</strong> (via Auth0 and/or Google Sign-In): email address, name, profile picture, identity provider ID (e.g., <code>sub</code>), and timestamps.</li>
+        <li><strong>Technical &amp; Security Data:</strong> IP address, device/browser info, pages visited, referrer, error logs, session metadata (primarily for authentication and security).</li>
+        <li><strong>User Content:</strong> comments or other content you submit.</li>
+        <li><strong>Cookies &amp; Local Storage:</strong> strictly necessary authentication/session cookies or tokens required by Auth0 to keep you signed in. No analytics/ads cookies.</li>
+      </ul>
+      <p>We do not intentionally collect sensitive personal information (e.g., health, precise location, government IDs).</p>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">2) Information we collect</h2>
-        <ul class="list-disc pl-6 space-y-1">
-          <li><strong>Account & Profile Data</strong> (via Auth0 / Google Sign-In): email, name, profile picture, identity provider ID, timestamps.</li>
-          <li><strong>Technical & Security Data</strong>: IP address, device/browser info, pages visited, referrer, error logs, session metadata.</li>
-          <li><strong>User Content</strong>: comments or content you submit.</li>
-          <li><strong>Cookies & Local Storage</strong>: only necessary authentication/session cookies and tokens for login.</li>
-        </ul>
-        <p>We do not intentionally collect sensitive personal information (health, IDs, precise location).</p>
-      </div>
+      <h2 id="sources" class="text-xl font-semibold">3) Sources of information</h2>
+      <ul class="list-disc pl-6">
+        <li>Directly from you during registration, login, or content submission.</li>
+        <li>From Auth0 and Google as your authentication providers.</li>
+        <li>Automatically via your browser (basic technical/HTTP data).</li>
+      </ul>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">3) Sources of information</h2>
-        <ul class="list-disc pl-6 space-y-1">
-          <li>Directly from you when you register, log in, or submit content.</li>
-          <li>From Auth0 and Google as authentication providers.</li>
-          <li>Automatically via your browser (basic technical/HTTP data).</li>
-        </ul>
-      </div>
+      <h2 id="use" class="text-xl font-semibold">4) How we use information</h2>
+      <ul class="list-disc pl-6">
+        <li>Provide, maintain, and secure authentication and access control.</li>
+        <li>Operate features like profiles and comments.</li>
+        <li>Prevent fraud/abuse and enforce our Terms.</li>
+        <li>Communicate with you (support or important notices).</li>
+        <li>Comply with legal obligations.</li>
+      </ul>
+      <p>We do <strong>not</strong> use your information for targeted advertising or behavioral profiling.</p>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">4) How we use information</h2>
-        <ul class="list-disc pl-6 space-y-1">
-          <li>Provide and secure authentication/access control.</li>
-          <li>Operate profiles, comments, and features.</li>
-          <li>Enforce Terms, prevent abuse, and protect the Service.</li>
-          <li>Communicate with you (support, notices).</li>
-          <li>Comply with legal obligations.</li>
-        </ul>
-        <p>We do not use your data for targeted advertising or profiling.</p>
-      </div>
+      <h2 id="legal" class="text-xl font-semibold">5) Legal bases for processing (GDPR, where applicable)</h2>
+      <ul class="list-disc pl-6">
+        <li>Performance of a contract (to provide your account and the Service).</li>
+        <li>Legitimate interests (security, preventing abuse, reliability) balanced against your rights.</li>
+        <li>Consent where explicitly requested (you can withdraw it).</li>
+      </ul>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">5) Legal bases for processing (GDPR)</h2>
-        <ul class="list-disc pl-6 space-y-1">
-          <li>Performance of contract (provide account/service).</li>
-          <li>Legitimate interests (security, reliability).</li>
-          <li>Consent (when explicitly requested).</li>
-        </ul>
-      </div>
+      <h2 id="sharing" class="text-xl font-semibold">6) Sharing &amp; third parties</h2>
+      <p>We share data only with providers acting on our behalf:</p>
+      <ul class="list-disc pl-6">
+        <li>Auth0 (authentication and authorization).</li>
+        <li>Google (when you choose Google Sign-In).</li>
+        <li>Vercel (hosting); Neon or similar (database for comments/content, if used).</li>
+        <li>Email delivery provider (for account/verification emails, if enabled).</li>
+      </ul>
+      <p>We do not sell or “share” personal information as defined by the CPRA. We may disclose data if required by law.</p>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">6) Sharing & third parties</h2>
-        <ul class="list-disc pl-6 space-y-1">
-          <li><strong>Auth0 (Okta, Inc.)</strong> – authentication.</li>
-          <li><strong>Google</strong> – optional login provider.</li>
-          <li><strong>Vercel</strong> – hosting infrastructure.</li>
-          <li><strong>Neon/Postgres</strong> – database (comments/content).</li>
-          <li><strong>Email delivery</strong> – Gmail/Google services.</li>
-        </ul>
-        <p>We do not sell or “share” personal info under CPRA. Data may be disclosed if legally required.</p>
-      </div>
+      <h2 id="transfers" class="text-xl font-semibold">7) International data transfers</h2>
+      <p>The Service is primarily operated in the United States. Your information may be transferred to and processed in the US (and where our providers operate). Where required, our providers use appropriate safeguards.</p>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">7) International data transfers</h2>
-        <p>Our Service may process data in the United States and where our providers operate. Safeguards like SCCs are applied where required.</p>
-      </div>
+      <h2 id="retention" class="text-xl font-semibold">8) Data retention</h2>
+      <ul class="list-disc pl-6">
+        <li>Account data: retained while your account is active; deleted or de-identified upon request (subject to legal holds/backups).</li>
+        <li>Security logs: typically up to 90 days for security and troubleshooting.</li>
+        <li>Backups: time-limited and automatically purged.</li>
+      </ul>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">8) Data retention</h2>
-        <ul class="list-disc pl-6 space-y-1">
-          <li>Account data: kept while active, deleted on request (subject to legal holds/backups).</li>
-          <li>Security logs: up to 90 days.</li>
-          <li>Backups: time-limited, auto-purged.</li>
-        </ul>
-      </div>
+      <h2 id="rights" class="text-xl font-semibold">9) Your rights</h2>
+      <p>Depending on your location, you may have the rights to access, correct, delete, restrict, port, or object to certain processing, and to withdraw consent.</p>
+      <p>To exercise any right, email <a href="mailto:service.ainews.hub@gmail.com" class="text-primary">service.ainews.hub@gmail.com</a>.</p>
+      <p class="mt-2"><strong>California (CCPA/CPRA):</strong> We do not sell/share personal information. You have the rights to know, delete, correct, and to be free from discrimination for exercising your rights.</p>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">9) Your rights</h2>
-        <ul class="list-disc pl-6 space-y-1">
-          <li>Access, correct, or delete your data.</li>
-          <li>Restrict or object to processing.</li>
-          <li>Data portability.</li>
-          <li>Withdraw consent.</li>
-        </ul>
-        <p>Email requests to 
-          <a href="mailto:service.ainews.hub@gmail.com" class="text-primary hover:underline">service.ainews.hub@gmail.com</a>.
-        </p>
-        <div class="p-3 border rounded-md bg-slate-100 dark:bg-slate-800 mt-2">
-          <strong>California (CCPA/CPRA):</strong> We do not sell/share data. You have rights to know, delete, correct, and not be discriminated against. Submit requests by email.
-        </div>
-      </div>
+      <h2 id="cookies" class="text-xl font-semibold">10) Cookies &amp; local storage</h2>
+      <p>We use only necessary cookies/local storage to enable login and keep you signed in (managed by Auth0). Blocking cookies may break the Service.</p>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">10) Cookies & local storage</h2>
-        <p>We use only essential cookies/local storage for Auth0 login. Blocking cookies may break functionality.</p>
-      </div>
+      <h2 id="security" class="text-xl font-semibold">11) Security</h2>
+      <p>We use reasonable technical and organizational measures and rely on Auth0’s security model for authentication. No system is perfectly secure.</p>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">11) Security</h2>
-        <p>We use reasonable security measures and rely on Auth0’s model. No system is fully secure.</p>
-      </div>
+      <h2 id="children" class="text-xl font-semibold">12) Children’s privacy</h2>
+      <p>The Service is not directed to children under 13 (or 16 in the EU). If you believe a child provided data, contact us to delete it.</p>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">12) Children’s privacy</h2>
-        <p>Our Service is not directed to children under 13 (16 in EU). We do not knowingly collect such data.</p>
-      </div>
+      <h2 id="changes" class="text-xl font-semibold">13) Changes to this Policy</h2>
+      <p>We may update this Policy. We will post updates with a new “Last updated” date.</p>
 
-      <div>
-        <h2 class="text-xl font-semibold mb-2">13) Changes to this Policy</h2>
-        <p>We may update this Policy. Updates will show a new “Last updated” date.</p>
-      </div>
-
-      <div>
-        <h2 class="text-xl font-semibold mb-2">14) Contact</h2>
-        <p>Questions or requests: 
-          <a href="mailto:service.ainews.hub@gmail.com" class="text-primary hover:underline">service.ainews.hub@gmail.com</a>.
-        </p>
-      </div>
+      <h2 id="contact" class="text-xl font-semibold">14) Contact</h2>
+      <p>Questions or requests: <a href="mailto:service.ainews.hub@gmail.com" class="text-primary">service.ainews.hub@gmail.com</a></p>
     </section>
+
+    <div class="mt-8 flex gap-3">
+      <a href="/privacy-center.html" class="px-4 py-2 rounded bg-primary text-white hover:opacity-90">Open Privacy Center</a>
+      <button id="copyLink" class="px-4 py-2 rounded border border-slate-300 dark:border-slate-700">Copy page link</button>
+    </div>
   </main>
 
   <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12">
@@ -184,7 +159,10 @@
     </div>
     <script>
       document.getElementById('year').textContent = new Date().getFullYear();
-      document.getElementById('pp-date').textContent = new Date().toISOString().slice(0,10);
+      document.getElementById('printBtn').onclick = () => window.print();
+      document.getElementById('copyLink').onclick = async () => {
+        try { await navigator.clipboard.writeText(location.href); alert('Link copied'); } catch {}
+      };
     </script>
   </footer>
 </body>
