@@ -62,49 +62,68 @@
   </div>
 
   <script>
-    (async () => {
-      const app    = document.getElementById('adminApp');
-      const forbid = document.getElementById('forbidden');
+  (async () => {
+    const app    = document.getElementById('adminApp');
+    const forbid = document.getElementById('forbidden');
 
-      // Warten bis dein Auth-Helper bereit ist
-      if (!window.auth || !window.auth.ready) {
-        forbid.style.display = 'block';
-        return;
+    // 1) Auf deinen Auth-Helper warten
+    if (!window.auth || !window.auth.ready) {
+      forbid.style.display = 'block';
+      return;
+    }
+    try {
+      await window.auth.ready;
+    } catch {
+      forbid.style.display = 'block';
+      return;
+    }
+
+    const isAuthed = await window.auth.isAuthenticated();
+    const user     = isAuthed ? await window.auth.getUser() : null;
+
+    // 2) Erst per Permission aus dem Access-Token prüfen (RBAC)
+    let isAdminByPermission = false;
+    try {
+      // dein Helper aus auth.js stellt window.__auth.getApiToken bereit
+      const tok = await (window.__auth?.getApiToken?.('manage:site'));
+      if (tok) {
+        const payload = JSON.parse(
+          atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))
+        );
+        const perms = payload?.permissions || [];
+        isAdminByPermission = perms.includes('manage:site');
       }
-      try {
-        await window.auth.ready;
-      } catch {
-        forbid.style.display = 'block';
-        return;
-      }
+    } catch (_) {
+      // still bleiben; wir versuchen gleich den Rollen-Fallback
+    }
 
-      const isAuthed = await window.auth.isAuthenticated();
-      const user     = isAuthed ? await window.auth.getUser() : null;
-
-      // Rollen aus Custom Claim ODER user.roles lesen
+    // 3) Fallback: Rollen im (ID-)Token / user-Objekt
+    let isAdminByRole = false;
+    if (user) {
       const claim =
-        user?.['https://ai-news-hub/roles'] ||
-        user?.['https://ai-news-hub/roles/'] ||
-        user?.roles || [];
-      const roles = Array.isArray(claim) ? claim : (typeof claim === 'string' ? claim.split(' ') : []);
+        user['https://ai-news-hub/roles'] ||
+        user['https://ai-news-hub/roles/'] ||
+        user.roles || [];
+      const roles = Array.isArray(claim)
+        ? claim
+        : (typeof claim === 'string' ? claim.split(' ') : []);
+      isAdminByRole = roles.includes('admin') || roles.includes('Administrator');
+    }
 
-      // <<< WICHTIG: akzeptiert "admin" ODER "Administrator"
-      const isAdmin = isAuthed && (roles.includes('admin') || roles.includes('Administrator'));
+    const isAdmin = isAuthed && (isAdminByPermission || isAdminByRole);
 
-      // Flag für CSS/JS (optional nützlich)
-      document.documentElement.dataset.admin = isAdmin ? 'true' : 'false';
+    // 4) Ergebnis anwenden
+    document.documentElement.dataset.admin = isAdmin ? 'true' : 'false';
 
-      if (!isAdmin) {
-        forbid.style.display = 'block';
-        // sanft zum Profil weiterleiten
-        setTimeout(() => { window.location.replace('/profile.html?unauthorized=1'); }, 1200);
-        return;
-      }
+    if (!isAdmin) {
+      forbid.style.display = 'block';
+      setTimeout(() => { window.location.replace('/profile.html?unauthorized=1'); }, 1200);
+      return;
+    }
 
-      // Admin: App freigeben
-      app.classList.remove('guard');
-      app.style.display = 'block';
-    })();
-  </script>
+    app.classList.remove('guard');
+    app.style.display = 'block';
+  })();
+</script>
 </body>
 </html>
