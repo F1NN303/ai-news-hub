@@ -57,11 +57,12 @@
         clientId: CLIENT,
         authorizationParams: {
           redirect_uri: CALLBACK,
-          audience: AUDIENCE
-        },
-        cacheLocation: 'localstorage',  // critical for iOS Safari
-        useRefreshTokens: true
-      });
+          audience: AUDIENCE,
+          scope: 'openid profile email offline_access'
+         },
+         cacheLocation: 'localstorage',  // critical for iOS Safari
+         useRefreshTokens: true
+       });
     } catch (e) {
       console.error('Auth0 init failed', e);
       showAuthError();
@@ -116,8 +117,13 @@
     if (!auth0Client) return showAuthError();
     sessionStorage.setItem('app:returnTo', window.location.pathname + window.location.search);
     await auth0Client.loginWithRedirect({
-      authorizationParams: { redirect_uri: CALLBACK, audience: AUDIENCE }
-    });
+   authorizationParams: {
+     redirect_uri: CALLBACK,
+     audience: AUDIENCE,
+     scope: 'openid profile email offline_access'
+   }
+ });
+
   };
 
   window.signOut = async () => {
