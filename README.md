@@ -16,7 +16,7 @@ Create a `.env` file with the following variables.
 - `AUTH0_BASE_URL` – Base URL of the app
 - `AUTH0_ISSUER_BASE_URL` – Issuer URL (`https://your-tenant.auth0.com`)
 - `AUTH0_SECRET` – Session secret
-- `AUTH0_AUDIENCE` – `https://ai-news-hub.api`
+- `AUTH0_AUDIENCE` – `https://ai-news-hub-eta.vercel.app/api`
 
 Ensure these variables are present in the Vercel project settings so builds can inject the required Auth0 meta tags.
 
@@ -31,7 +31,7 @@ In your Auth0 Single Page Application settings, configure:
 
 Enable Google and Username-Password-Authentication connections.
 
-We secure `/api` routes with Auth0 JWTs (audience: `https://ai-news-hub.api`). Mutating routes require `posts:write` or `admin:all`.
+We secure `/api` routes with Auth0 JWTs (audience: `https://ai-news-hub-eta.vercel.app/api`). Mutating routes require `posts:write` or `admin:all`.
 
 ## Database Setup (Neon)
 
