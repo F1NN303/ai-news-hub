@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AI Glossary - AI News Hub</title>
-  <script>
-    document.documentElement.dataset.theme = localStorage.theme || 'light';
-    if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
-  </script>
+  <script src="/scripts/theme.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -21,17 +18,19 @@
     };
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/resources/site.css" />
 </head>
-<body class="bg-light dark:bg-dark text-slate-900 dark:text-slate-100 font-inter">
-  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
-      <a href="/" class="text-xl font-bold">AI News Hub</a>
-      <nav class="flex gap-4 text-sm">
-        <a href="/login" class="hover:underline">Sign in</a>
-        <a href="/signup" class="hover:underline">Sign up</a>
-      </nav>
-    </div>
-  </header>
+  <body class="bg-light dark:bg-dark text-slate-900 dark:text-slate-100 font-inter">
+    <header>
+      <div id="site-header"></div>
+    </header>
+    <script src="/scripts/include-header.js" defer></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        await window.mountHeader('#site-header');
+        window.initHeaderAuth();
+      });
+    </script>
   <main class="max-w-3xl mx-auto p-6">
     <h1 class="text-3xl font-bold mb-4">AI Glossary</h1>
     <section class="space-y-4 text-slate-700 dark:text-slate-300">
@@ -41,6 +40,10 @@
   <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12">
     <div class="max-w-7xl mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-slate-500">
       <div>
+        <a href="/" class="brand mb-2 inline-flex" aria-label="AI News Hub — Home">
+          <img class="brand__img" src="/assets/brand/logo-full.svg" alt="AI News Hub logo">
+          <span class="brand__text hidden sm:inline">AI News Hub</span>
+        </a>
         <h3 class="text-slate-800 dark:text-slate-200 font-semibold mb-2">Resources</h3>
         <ul class="space-y-1">
           <li><a href="/resources/glossary.html" class="hover:underline">AI Glossary</a></li>

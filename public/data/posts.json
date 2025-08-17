@@ -1,0 +1,34 @@
+[
+  {
+    "title": "OpenAI unveils GPT-5",
+    "slug": "openai-unveils-gpt-5",
+    "date": "2025-08-08",
+    "excerpt": "Highlights of the next-gen model.",
+    "image": "/assets/brand/logo-mark.svg",
+    "tags": ["openai-news", "gpt-5", "release"]
+  },
+  {
+    "title": "ChatGPT gets new planner",
+    "slug": "chatgpt-planner-feature",
+    "date": "2025-08-12",
+    "excerpt": "A new planning mode arrives.",
+    "image": "/assets/brand/logo-mark.svg",
+    "tags": ["chatgpt-updates"]
+  },
+  {
+    "title": "AI startup raises record funding",
+    "slug": "ai-startup-funding",
+    "date": "2025-08-10",
+    "excerpt": "An AI startup secured massive Series B.",
+    "image": "/assets/brand/logo-mark.svg",
+    "tags": ["ai-industry"]
+  },
+  {
+    "title": "New breakthrough in AI research",
+    "slug": "new-ai-research-breakthrough",
+    "date": "2025-08-05",
+    "excerpt": "Researchers achieved state-of-the-art results.",
+    "image": "/assets/brand/logo-mark.svg",
+    "tags": ["research-innovation"]
+  }
+]
