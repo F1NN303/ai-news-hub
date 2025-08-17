@@ -5,253 +5,217 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Your Profile</title>
 
-  <!-- These 3 meta tags must already be injected by your script or build step -->
+  <!-- These 3 meta tags MUST be present (they’re injected by your build step) -->
   <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK">
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
   <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api">
 
-  <!-- Shared site styles (keep these if you already use them) -->
-  <link rel="stylesheet" href="/resources/site.css">
-  <script defer src="/resources/site.js"></script>
+  <!-- (Optional) shared site styles/scripts if you have them -->
+  <link rel="stylesheet" href="/resources/site.css" />
 
-  <!-- Page-only polish (tiny, safe to keep inline) -->
+  <!-- 1) Load Auth0 SPA SDK FIRST -->
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+  <!-- 2) Then your auth helper -->
+  <script src="/auth/auth.js" defer></script>
+
   <style>
-    :root {
-      --card-bg: #0f172a;
-      --card-fg: #e2e8f0;
-      --muted: #94a3b8;
-      --ok: #10b981;
-      --warn: #f59e0b;
-      --danger: #ef4444;
-      --ring: rgba(59,130,246,.35);
-      --link: #3b82f6;
-      --chip: #1f2937;
-      --chip-fg: #cbd5e1;
-      --border: rgba(148,163,184,.2);
-      --surface: #0b1220;
-      --page: #0a1020;
-      color-scheme: light dark;
+    /* Small, page-only polish */
+    :root{
+      --ok:#10b981; --muted:#94a3b8; --card:#0f172a; --chip:#334155;
+      --link:#2563eb; --danger:#ef4444; --fg:#e2e8f0; --bg:#0b1226;
     }
-    [data-theme="light"] {
-      --page: #f8fafc;
-      --surface: #ffffff;
-      --card-bg: #ffffff;
-      --card-fg: #0f172a;
-      --muted: #475569;
-      --chip: #e5e7eb;
-      --chip-fg: #111827;
-      --border: rgba(15,23,42,.08);
-    }
-    html, body { margin: 0; height: 100%; background: var(--page); color: var(--card-fg); font: 16px/1.4 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Apple Color Emoji","Segoe UI Emoji"; }
-    .wrap { max-width: 960px; margin: 0 auto; padding: 24px; }
-    header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
-    header h1 { font-size: clamp(20px, 3vw, 28px); margin:0; }
-    .theme-toggle { border:1px solid var(--border); background:var(--surface); border-radius:999px; padding:6px 10px; cursor:pointer; }
-    .grid { display:grid; grid-template-columns: 1fr; gap:16px; }
-    @media (min-width: 880px){ .grid { grid-template-columns: 2fr 1fr; } }
-
-    .card { background:var(--card-bg); color:var(--card-fg); border:1px solid var(--border); border-radius:14px; padding:18px; box-shadow: 0 1px 0 rgba(0,0,0,.05); }
-    .row { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-    .avatar { width:72px; height:72px; border-radius:50%; object-fit:cover; background:#0b1220; border: 2px solid var(--border); }
-    .name { font-size:20px; font-weight:700; display:flex; align-items:center; gap:8px; }
-    .chip { display:inline-flex; align-items:center; gap:6px; background:var(--chip); color:var(--chip-fg); border-radius:999px; padding:4px 10px; font-size:12px; }
-    .verified { color: var(--ok); }
-    .muted { color: var(--muted); }
-    .kv { display:grid; grid-template-columns: 160px 1fr; gap:8px 12px; margin-top:12px; }
-    .kv div:nth-child(odd){ color:var(--muted); }
-    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
-    .btn { border:1px solid var(--border); background:var(--surface); color:var(--card-fg); padding:10px 14px; border-radius:12px; cursor:pointer; text-decoration:none; }
-    .btn.primary { background:#2563eb; color:#fff; border-color:#1d4ed8; }
-    .btn.danger  { background: #fee2e2; color:#991b1b; border-color:#fecaca; }
-    [data-theme="light"] .btn.danger { background: #fee2e2; }
-    details { border:1px solid var(--border); border-radius:12px; padding:10px 12px; background:var(--surface); }
-    details > summary { cursor:pointer; list-style: none; }
-    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
-    pre { background: var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px; overflow:auto; }
-    .roles { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-    .empty { padding:18px; border:1px dashed var(--border); border-radius:12px; text-align:center; color:var(--muted); }
-    .warn { color: var(--warn); }
+    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif; margin:0; background:var(--bg); color:var(--fg)}
+    a{color:var(--link); text-decoration:none}
+    .wrap{max-width:960px; margin:24px auto; padding:0 16px}
+    h1 { font-size:1.8rem; margin:0 0 16px }
+    .grid{display:grid; gap:12px}
+    .card{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:16px}
+    .row{display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+    .avatar{width:64px;height:64px;border-radius:50%;background:#111;border:1px solid rgba(255,255,255,.15)}
+    .chip{display:inline-flex;align-items:center;gap:6px;background:var(--chip);color:#cbd5e1;border-radius:999px;padding:2px 10px;font-size:.8rem}
+    .ok{color:var(--ok)} .danger{color:var(--danger)} .muted{color:var(--muted)}
+    .kv{display:grid;grid-template-columns:140px 1fr;gap:6px 10px;margin-top:10px}
+    .btn{background:#1f2937;color:#fff;border:1px solid rgba(255,255,255,.1);padding:8px 12px;border-radius:8px;cursor:pointer}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    details{margin-top:6px}
+    .inline-list{display:flex;gap:8px;flex-wrap:wrap}
+    .toolbar{display:flex; gap:8px; align-items:center}
+    .note{margin-bottom:8px; font-size:.9rem}
   </style>
 </head>
+
 <body>
   <div class="wrap">
-    <header>
-      <h1>Profile</h1>
-      <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌓</button>
-    </header>
+    <h1><span style="color:#60a5fa">Pro</span>file</h1>
 
-    <noscript>
-      <p class="empty">This page needs JavaScript to display your Auth0 profile.</p>
-    </noscript>
+    <div id="authError" class="note danger" style="display:none">
+      Authentication is currently unavailable. Please try again later.
+    </div>
 
-    <section class="grid" id="profileGrid" hidden>
-      <!-- Left column -->
-      <div class="left">
-        <div class="card" id="cardOverview">
-          <div class="row">
-            <img id="avatar" class="avatar" alt="Avatar">
-            <div style="min-width:240px">
-              <div class="name">
-                <span id="displayName">—</span>
-                <span id="verifiedBadge" class="chip verified" title="Email verified" hidden>✔ Verified</span>
-                <span id="adminBadge" class="chip" title="Admin" hidden>⚙ Admin</span>
-              </div>
-              <div class="muted" id="emailLine">—</div>
-            </div>
-          </div>
-
-          <div class="kv">
-            <div>User ID</div><div id="sub">—</div>
-            <div>Updated</div><div id="updatedAt">—</div>
-            <div>Auth Status</div><div id="authStatus">—</div>
-          </div>
-
-          <div class="actions">
-            <a class="btn" href="/">← Back to Home</a>
-            <button id="btnManagePwd" class="btn">Change password</button>
-            <button id="btnLogout" class="btn danger">Sign out</button>
+    <div class="grid">
+      <!-- Profile header -->
+      <section class="card">
+        <div class="row">
+          <img id="avatar" class="avatar" alt="Avatar" />
+          <div class="inline-list">
+            <span id="verifiedChip" class="chip" style="display:none">✓ Verified</span>
+            <span id="adminChip" class="chip" style="display:none">🛡 Admin</span>
           </div>
         </div>
 
-        <div class="card">
-          <h3 style="margin:0 0 8px">Roles & Permissions</h3>
-          <div id="rolesWrap" class="roles"></div>
-          <div id="noRoles" class="empty" hidden>No roles found for this account.</div>
+        <div class="kv">
+          <div>User ID</div><div id="userId" class="muted">—</div>
+          <div>Updated</div><div id="updatedAt" class="muted">—</div>
+          <div>Auth Status</div><div id="authStatus" class="muted">—</div>
         </div>
 
-        <div class="card">
-          <h3 style="margin:0 0 8px">Account details (raw)</h3>
-          <details>
-            <summary>Show JSON</summary>
-            <pre id="jsonDump" aria-live="polite">{}</pre>
-          </details>
+        <div class="toolbar" style="margin-top:12px">
+          <a href="/" class="btn">← Back to Home</a>
+          <a id="pwdLink" class="btn" href="#" rel="nofollow">Change password</a>
+          <button id="signOutBtn" class="btn">Sign out</button>
         </div>
-      </div>
+      </section>
 
-      <!-- Right column -->
-      <aside class="right">
-        <div class="card">
-          <h3 style="margin:0 0 8px">Security</h3>
-          <ul style="margin:0; padding-left:18px">
-            <li>Email verification: <strong id="emailVerified">—</strong></li>
-            <li>Token scope (if available): <code id="tokenScope">—</code></li>
-          </ul>
-          <div id="securityHint" class="muted" style="margin-top:10px"></div>
+      <!-- Roles / permissions -->
+      <section class="card">
+        <h3>Roles & Permissions</h3>
+        <div class="kv">
+          <div>Roles</div><div id="roles">—</div>
+          <div>Permissions</div><div id="perms">—</div>
         </div>
+      </section>
 
-        <div class="card">
-          <h3 style="margin:0 0 8px">Shortcuts</h3>
-          <ul style="margin:0; padding-left:18px">
-            <li><a class="link" href="/admin/index.html" id="adminLink" hidden>Open Admin Dashboard</a></li>
-            <li><a class="link" href="/legal/privacy.html">Privacy</a></li>
-            <li><a class="link" href="/legal/terms.html">Terms</a></li>
-          </ul>
-        </div>
+      <!-- Raw JSON -->
+      <section class="card">
+        <h3>Account details (raw)</h3>
+        <details>
+          <summary>Show JSON</summary>
+          <pre id="rawJson" style="white-space:pre-wrap;overflow:auto;margin-top:10px"></pre>
+        </details>
+      </section>
 
-        <div class="card" id="notLogged" hidden>
-          <p class="warn"><strong>Not signed in.</strong></p>
-          <p><a class="btn primary" href="/login">Sign in</a></p>
+      <!-- Security sidebar -->
+      <section class="card">
+        <h3>Security</h3>
+        <div class="kv">
+          <div>Email verification</div><div id="emailVerified" class="muted">—</div>
+          <div>Token scope (if available)</div><div id="tokenScope" class="muted">—</div>
         </div>
-      </aside>
-    </section>
+      </section>
+
+      <section class="card">
+        <h3>Shortcuts</h3>
+        <ul style="margin:6px 0 0 18px">
+          <li><a href="/legal/privacy.html">Privacy</a></li>
+          <li><a href="/legal/terms.html">Terms</a></li>
+        </ul>
+      </section>
+    </div>
   </div>
 
-  <!-- Auth client (your existing wrapper) -->
-  <script src="/auth/auth.js"></script>
   <script>
-    (function () {
-      const $ = (s, r = document) => r.querySelector(s);
-      const setText = (id, v) => { const el = typeof id === 'string' ? $(id) : id; if (el) el.textContent = v ?? '—'; };
-      const setHidden = (el, hidden) => { if (el) el.hidden = !!hidden; };
-
-      const themeBtn = $('#themeToggle');
-      themeBtn?.addEventListener('click', () => {
-        const root = document.documentElement;
-        const next = (root.dataset.theme === 'dark') ? 'light' : 'dark';
-        root.dataset.theme = next;
-        localStorage.theme = next;
-      });
-      // apply persisted theme
-      document.documentElement.dataset.theme = localStorage.theme || document.documentElement.dataset.theme || 'light';
-
-      function ensureAuthReady() {
-        // window.__auth is set by auth.js once initialized
-        if (window.__auth) return Promise.resolve(window.__auth);
-        return new Promise((res) => {
-          window.addEventListener('auth:ready', () => res(window.__auth), { once: true });
-        });
+    (async () => {
+      // Guard: ensure the SDK is present
+      if (typeof window.createAuth0Client !== 'function') {
+        document.getElementById('authError').style.display = 'block';
+        console.error('Auth0 SPA SDK not loaded');
+        return;
       }
 
-      function renderProfile(auth) {
-        const grid = $('#profileGrid');
-        const notLogged = $('#notLogged');
-        if (!auth?.isAuthenticated) {
-          setHidden(grid, true);
-          setHidden(notLogged, false);
-          return;
+      // Wait for your helper to init (from /auth/auth.js).
+      // Your helper should set window.authReady (Promise) and window.__auth.
+      try {
+        if (typeof window.initAuth === 'function') {
+          // If your helper exposes an explicit init
+          await window.initAuth();
+        } else if (window.authReady && typeof window.authReady.then === 'function') {
+          await window.authReady;
         }
-
-        setHidden(notLogged, true);
-        setHidden(grid, false);
-
-        const u = auth.user || {};
-        const avatar = $('#avatar');
-        avatar.src = u.picture || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(u.name || u.nickname || 'User');
-        avatar.alt = (u.name || u.nickname || 'User') + ' avatar';
-
-        const name = u.name || u.nickname || '(no name)';
-        setText('#displayName', name);
-        setText('#emailLine', u.email || '(no email)');
-        setHidden($('#verifiedBadge'), !u.email_verified);
-        setHidden($('#adminBadge'), !auth.isAdmin);
-
-        setText('#sub', u.sub || '—');
-        setText('#updatedAt', u.updated_at ? new Date(u.updated_at).toLocaleString() : '—');
-        setText('#authStatus', auth.isAuthenticated ? 'Authenticated' : '—');
-        setText('#emailVerified', u.email_verified ? 'Yes' : 'No');
-
-        // Roles (supports namespaced or plain)
-        const roleClaim = u['https://ai-news-hub/roles'] || u.roles || [];
-        const roles = Array.isArray(roleClaim) ? roleClaim :
-                      (typeof roleClaim === 'string' ? roleClaim.split(/\s+/) : []);
-        const rolesWrap = $('#rolesWrap');
-        rolesWrap.innerHTML = '';
-        if (!roles.length) {
-          setHidden($('#noRoles'), false);
-        } else {
-          setHidden($('#noRoles'), true);
-          roles.forEach(r => {
-            const chip = document.createElement('span');
-            chip.className = 'chip';
-            chip.textContent = r;
-            rolesWrap.appendChild(chip);
-          });
-        }
-
-        // Raw JSON
-        $('#jsonDump').textContent = JSON.stringify(u, null, 2);
-
-        // Token scope (if we can fetch one silently)
-        (async () => {
-          try {
-            const token = await auth.getApiToken?.();
-            if (!token) return;
-            const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
-            setText('#tokenScope', Array.isArray(payload.scope) ? payload.scope.join(' ') : (payload.scope || '—'));
-          } catch {}
-        })();
+      } catch (e) {
+        console.error('Auth init failed', e);
       }
 
-      // Actions
-      $('#btnLogout').addEventListener('click', () => location.href = '/logout');
-      $('#btnManagePwd').addEventListener('click', () => {
-        // Universal Logout / password change: send to hosted page
-        // If you have a dedicated route, update this link:
-        location.href = '/login?action=reset';
+      const auth = window.__auth || {};
+      const user = auth.user || null;
+      const isAuthed = !!auth.isAuthenticated;
+
+      if (!isAuthed || !user) {
+        document.getElementById('authError').style.display = 'block';
+        updateBasic('Auth Status', 'Signed out');
+        return;
+      }
+
+      // Fill basics
+      const avatar = document.getElementById('avatar');
+      avatar.src = (user.picture || '');
+      avatar.alt = user.name || user.email || 'Avatar';
+
+      if (user.email_verified) {
+        document.getElementById('verifiedChip').style.display = 'inline-flex';
+      }
+
+      // Admin chip via custom claim "https://ai-news-hub/roles" OR array "roles"
+      const claimRoles =
+        user['https://ai-news-hub/roles'] ||
+        user['https://ai-news-hub/roles/'] || // just in case
+        user.roles || [];
+      const roles = Array.isArray(claimRoles) ? claimRoles : typeof claimRoles === 'string' ? claimRoles.split(' ') : [];
+      const isAdmin = roles.includes('admin');
+      if (isAdmin) document.getElementById('adminChip').style.display = 'inline-flex';
+
+      // Fields
+      document.getElementById('userId').textContent = user.sub || '—';
+      document.getElementById('updatedAt').textContent = user.updated_at ? new Date(user.updated_at).toLocaleString() : '—';
+      document.getElementById('authStatus').textContent = 'Signed in';
+
+      // Roles & permissions display
+      document.getElementById('roles').textContent = roles.length ? roles.join(', ') : '—';
+
+      // Try to read scope from an access token if your helper exposes it
+      let scopeText = '—';
+      try {
+        if (typeof auth.getApiToken === 'function') {
+          const t = await auth.getApiToken();
+          if (t) {
+            const payload = JSON.parse(atob(t.split('.')[1]));
+            if (payload && payload.scope) scopeText = payload.scope;
+            // Example permissions claim (if you added RBAC):
+            const perms = payload.permissions || [];
+            document.getElementById('perms').textContent = perms.length ? perms.join(', ') : '—';
+          }
+        }
+      } catch (e) {
+        console.debug('No token scope available', e);
+      }
+      document.getElementById('tokenScope').textContent = scopeText;
+
+      // Raw JSON
+      document.getElementById('rawJson').textContent = JSON.stringify(user, null, 2);
+
+      // Change password (Universal Login will handle username/email)
+      const domain = document.querySelector('meta[name="auth0-domain"]').content.trim();
+      const clientId = document.querySelector('meta[name="auth0-client-id"]').content.trim();
+      const returnTo = window.location.origin + '/';
+      // Best-effort: direct link to the password reset request page
+      document.getElementById('pwdLink').href = `https://${domain}/u/reset-password/request/index?client_id=${encodeURIComponent(clientId)}&returnTo=${encodeURIComponent(returnTo)}`;
+
+      // Sign out
+      document.getElementById('signOutBtn').addEventListener('click', async () => {
+        try {
+          if (window.auth0Client && typeof window.auth0Client.logout === 'function') {
+            await window.auth0Client.logout({ logoutParams: { returnTo: window.location.origin } });
+          } else {
+            // Fallback: navigate to the tenant logout
+            window.location.href = `https://${domain}/v2/logout?client_id=${encodeURIComponent(clientId)}&returnTo=${encodeURIComponent(returnTo)}`;
+          }
+        } catch (e) {
+          console.error('Logout failed', e);
+        }
       });
 
-      // Kick off
-      ensureAuthReady().then(renderProfile);
+      function updateBasic(label, value){
+        if (label === 'Auth Status') document.getElementById('authStatus').textContent = value;
+      }
     })();
   </script>
 </body>
