@@ -194,19 +194,33 @@
   </div>
 
   <script>
-    // Page logic: relies on /auth/auth.js exposing window.auth.ready, getUser(), isAuthenticated(), logout(), getIdTokenClaims()
+  // Run only after all deferred scripts (incl. /auth/auth.js) are executed
+  window.addEventListener('load', () => {
     (async () => {
       const $ = (id) => document.getElementById(id);
       const showErr = (msg) => { const b = $('authError'); if (b) { b.textContent = msg || b.textContent; b.style.display = 'block'; } };
       const set = (id, v) => { const el = $(id); if (!el) return; el.textContent = v; el.classList.remove('skeleton'); };
 
-      // Guard: helper present?
-      if (!window.auth || !window.auth.ready) { showErr('Auth helper not available'); return; }
-      try { await window.auth.ready; } catch (e) { showErr('Authentication failed'); return; }
+      // Wait up to 6s for /auth/auth.js to attach window.auth.ready
+      async function waitForAuthHelper(timeoutMs = 6000) {
+        const start = Date.now();
+        while (!(window.auth && window.auth.ready)) {
+          if (Date.now() - start > timeoutMs) throw new Error('auth helper timeout');
+          await new Promise(r => setTimeout(r, 50));
+        }
+      }
+
+      try {
+        await waitForAuthHelper();
+        await window.auth.ready; // promise set by /auth/auth.js
+      } catch (e) {
+        console.error(e);
+        showErr('Auth helper not available');
+        return;
+      }
 
       const isAuthed = await window.auth.isAuthenticated();
       const user = isAuthed ? await window.auth.getUser() : null;
-
       if (!isAuthed || !user) { showErr('Signed out'); set('authStatus','Signed out'); return; }
 
       // Fill identity
@@ -214,17 +228,12 @@
       avatar.classList.remove('skeleton');
       avatar.src = user.picture || '';
       avatar.alt = user.name || user.email || 'Avatar';
-
-      set('name', user.name || '—');
+      set('name',  user.name  || '—');
       set('email', user.email || '—');
-
       if (user.email_verified) $('verifiedChip').style.display = 'inline-flex';
 
-      // Roles from custom claim or array
-      const claim =
-        user['https://ai-news-hub/roles'] ||
-        user['https://ai-news-hub/roles/'] ||
-        user.roles || [];
+      // Roles via custom claim or array
+      const claim = user['https://ai-news-hub/roles'] || user['https://ai-news-hub/roles/'] || user.roles || [];
       const roles = Array.isArray(claim) ? claim : (typeof claim === 'string' ? claim.split(' ') : []);
       if (roles.includes('admin')) $('adminChip').style.display = 'inline-flex';
 
@@ -250,11 +259,11 @@
       } catch {}
       set('tokenScope', scopeText);
 
-      // Raw user JSON
+      // Raw JSON
       $('rawJson').textContent = JSON.stringify(user, null, 2);
 
       // Change password & logout
-      const domain = document.querySelector('meta[name="auth0-domain"]').content.trim();
+      const domain   = document.querySelector('meta[name="auth0-domain"]').content.trim();
       const clientId = document.querySelector('meta[name="auth0-client-id"]').content.trim();
       const returnTo = window.location.origin + '/';
       $('pwdLink').href = `https://${domain}/u/reset-password/request/index?client_id=${encodeURIComponent(clientId)}&returnTo=${encodeURIComponent(returnTo)}`;
@@ -264,6 +273,7 @@
         catch { window.location.href = `https://${domain}/v2/logout?client_id=${encodeURIComponent(clientId)}&returnTo=${encodeURIComponent(returnTo)}`; }
       });
     })();
-  </script>
+  });
+</script>
 </body>
 </html>
