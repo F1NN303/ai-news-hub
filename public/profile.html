@@ -113,110 +113,99 @@
     </div>
   </div>
 
-  <script>
-    (async () => {
-      // Guard: ensure the SDK is present
-      if (typeof window.createAuth0Client !== 'function') {
-        document.getElementById('authError').style.display = 'block';
-        console.error('Auth0 SPA SDK not loaded');
-        return;
-      }
+<script>
+  (async () => {
+    // 1) Warte ausschließlich auf deine Helfer-API
+    if (!window.auth || !window.auth.ready) {
+      // Falls /auth/auth.js nicht geladen wurde
+      document.getElementById('authError').style.display = 'block';
+      console.error('Auth helper not available');
+      return;
+    }
+    try {
+      await window.auth.ready; // von deiner neuen auth.js
+    } catch (e) {
+      document.getElementById('authError').style.display = 'block';
+      console.error('Auth init failed', e);
+      return;
+    }
 
-      // Wait for your helper to init (from /auth/auth.js).
-      // Your helper should set window.authReady (Promise) and window.__auth.
+    // 2) Status & User laden
+    const isAuthed = await window.auth.isAuthenticated();
+    const user = isAuthed ? await window.auth.getUser() : null;
+
+    if (!isAuthed || !user) {
+      document.getElementById('authError').style.display = 'block';
+      setField('authStatus', 'Signed out');
+      return;
+    }
+
+    // 3) Profil füllen
+    const avatar = document.getElementById('avatar');
+    avatar.src = user.picture || '';
+    avatar.alt = user.name || user.email || 'Avatar';
+
+    if (user.email_verified) {
+      document.getElementById('verifiedChip').style.display = 'inline-flex';
+    }
+
+    // Rollen (custom claim oder plain roles)
+    const claimRoles =
+      user['https://ai-news-hub/roles'] ||
+      user['https://ai-news-hub/roles/'] ||
+      user.roles || [];
+    const roles = Array.isArray(claimRoles)
+      ? claimRoles
+      : (typeof claimRoles === 'string' ? claimRoles.split(' ') : []);
+
+    if (roles.includes('admin')) {
+      document.getElementById('adminChip').style.display = 'inline-flex';
+    }
+
+    setField('userId', user.sub || '—');
+    setField('updatedAt', user.updated_at ? new Date(user.updated_at).toLocaleString() : '—');
+    setField('authStatus', 'Signed in');
+    document.getElementById('roles').textContent = roles.length ? roles.join(', ') : '—';
+
+    // Scope/Permissions (nur wenn es ein API-Token gibt)
+    let scopeText = '—';
+    try {
+      if (typeof window.auth.getIdTokenClaims === 'function') {
+        const idc = await window.auth.getIdTokenClaims();
+        if (idc && idc.__raw) {
+          const payload = JSON.parse(atob(idc.__raw.split('.')[1] || ''));
+          if (payload && payload.scope) scopeText = payload.scope;
+          const perms = payload?.permissions || [];
+          document.getElementById('perms').textContent = perms.length ? perms.join(', ') : '—';
+        }
+      }
+    } catch (_) {}
+    setField('tokenScope', scopeText);
+
+    // Rohdaten
+    document.getElementById('rawJson').textContent = JSON.stringify(user, null, 2);
+
+    // 4) „Change password“ (Universal Login)
+    const domain = document.querySelector('meta[name="auth0-domain"]').content.trim();
+    const clientId = document.querySelector('meta[name="auth0-client-id"]').content.trim();
+    const returnTo = window.location.origin + '/';
+    document.getElementById('pwdLink').href =
+      `https://${domain}/u/reset-password/request/index?client_id=${encodeURIComponent(clientId)}&returnTo=${encodeURIComponent(returnTo)}`;
+
+    // 5) Logout über deine helper-API
+    document.getElementById('signOutBtn').addEventListener('click', async () => {
       try {
-        if (typeof window.initAuth === 'function') {
-          // If your helper exposes an explicit init
-          await window.initAuth();
-        } else if (window.authReady && typeof window.authReady.then === 'function') {
-          await window.authReady;
-        }
+        await window.auth.logout();
       } catch (e) {
-        console.error('Auth init failed', e);
+        console.error('Logout failed', e);
+        // Fallback: direkte Logout-URL
+        window.location.href = `https://${domain}/v2/logout?client_id=${encodeURIComponent(clientId)}&returnTo=${encodeURIComponent(returnTo)}`;
       }
+    });
 
-      const auth = window.__auth || {};
-      const user = auth.user || null;
-      const isAuthed = !!auth.isAuthenticated;
-
-      if (!isAuthed || !user) {
-        document.getElementById('authError').style.display = 'block';
-        updateBasic('Auth Status', 'Signed out');
-        return;
-      }
-
-      // Fill basics
-      const avatar = document.getElementById('avatar');
-      avatar.src = (user.picture || '');
-      avatar.alt = user.name || user.email || 'Avatar';
-
-      if (user.email_verified) {
-        document.getElementById('verifiedChip').style.display = 'inline-flex';
-      }
-
-      // Admin chip via custom claim "https://ai-news-hub/roles" OR array "roles"
-      const claimRoles =
-        user['https://ai-news-hub/roles'] ||
-        user['https://ai-news-hub/roles/'] || // just in case
-        user.roles || [];
-      const roles = Array.isArray(claimRoles) ? claimRoles : typeof claimRoles === 'string' ? claimRoles.split(' ') : [];
-      const isAdmin = roles.includes('admin');
-      if (isAdmin) document.getElementById('adminChip').style.display = 'inline-flex';
-
-      // Fields
-      document.getElementById('userId').textContent = user.sub || '—';
-      document.getElementById('updatedAt').textContent = user.updated_at ? new Date(user.updated_at).toLocaleString() : '—';
-      document.getElementById('authStatus').textContent = 'Signed in';
-
-      // Roles & permissions display
-      document.getElementById('roles').textContent = roles.length ? roles.join(', ') : '—';
-
-      // Try to read scope from an access token if your helper exposes it
-      let scopeText = '—';
-      try {
-        if (typeof auth.getApiToken === 'function') {
-          const t = await auth.getApiToken();
-          if (t) {
-            const payload = JSON.parse(atob(t.split('.')[1]));
-            if (payload && payload.scope) scopeText = payload.scope;
-            // Example permissions claim (if you added RBAC):
-            const perms = payload.permissions || [];
-            document.getElementById('perms').textContent = perms.length ? perms.join(', ') : '—';
-          }
-        }
-      } catch (e) {
-        console.debug('No token scope available', e);
-      }
-      document.getElementById('tokenScope').textContent = scopeText;
-
-      // Raw JSON
-      document.getElementById('rawJson').textContent = JSON.stringify(user, null, 2);
-
-      // Change password (Universal Login will handle username/email)
-      const domain = document.querySelector('meta[name="auth0-domain"]').content.trim();
-      const clientId = document.querySelector('meta[name="auth0-client-id"]').content.trim();
-      const returnTo = window.location.origin + '/';
-      // Best-effort: direct link to the password reset request page
-      document.getElementById('pwdLink').href = `https://${domain}/u/reset-password/request/index?client_id=${encodeURIComponent(clientId)}&returnTo=${encodeURIComponent(returnTo)}`;
-
-      // Sign out
-      document.getElementById('signOutBtn').addEventListener('click', async () => {
-        try {
-          if (window.auth0Client && typeof window.auth0Client.logout === 'function') {
-            await window.auth0Client.logout({ logoutParams: { returnTo: window.location.origin } });
-          } else {
-            // Fallback: navigate to the tenant logout
-            window.location.href = `https://${domain}/v2/logout?client_id=${encodeURIComponent(clientId)}&returnTo=${encodeURIComponent(returnTo)}`;
-          }
-        } catch (e) {
-          console.error('Logout failed', e);
-        }
-      });
-
-      function updateBasic(label, value){
-        if (label === 'Auth Status') document.getElementById('authStatus').textContent = value;
-      }
-    })();
-  </script>
-</body>
-</html>
+    function setField(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+  })();
+</script>
