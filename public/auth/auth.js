@@ -8,11 +8,9 @@
   const audMeta = document.querySelector('meta[name="auth0-audience"]');
   const AUDIENCE = audMeta ? audMeta.content : '';
 
-  let authReadyResolve,
-    authReadyReject;
-  window.authReady = new Promise((resolve, reject) => {
+  let authReadyResolve;
+  window.authReady = new Promise(resolve => {
     authReadyResolve = resolve;
-    authReadyReject = reject;
   });
 
   async function getApiToken() {
@@ -39,6 +37,16 @@
       return Promise.reject(new Error('Auth not available'));
     }
   };
+
+  function validateSettings() {
+    const domainMeta = document.querySelector('meta[name="auth0-domain"]');
+    const clientMeta = document.querySelector('meta[name="auth0-client-id"]');
+    const domain = domainMeta ? domainMeta.content.trim() : '';
+    const clientId = clientMeta ? clientMeta.content.trim() : '';
+    const audience = AUDIENCE.trim();
+    const valid = !!(domain && clientId && audience);
+    return { domain, clientId, audience, valid };
+  }
 
   function finalizeAuthState() {
     window.__auth = { user: null, isAuthenticated: false, isAdmin: false, getApiToken };
@@ -132,13 +140,8 @@
   }
 
   async function withClient(fn, fallback) {
-    try {
-      await window.authReady;
-    } catch (e) {
-      showAuthError();
-      return typeof fallback === 'function' ? fallback() : fallback;
-    }
-    if (!auth0Client) {
+    const ready = await window.authReady;
+    if (!ready || !auth0Client) {
       showAuthError();
       return typeof fallback === 'function' ? fallback() : fallback;
     }
@@ -149,18 +152,15 @@
     if (window.authInitialized) return window.authReady;
     window.authInitialized = true;
     if (authDebug) console.debug('initAuth called');
-    const domainMeta = document.querySelector('meta[name="auth0-domain"]');
-    const domain = domainMeta ? domainMeta.content : (window.AUTH0_DOMAIN || '');
-    const clientMeta = document.querySelector('meta[name="auth0-client-id"]');
-    const clientId = clientMeta ? clientMeta.content : (window.AUTH0_CLIENT_ID || '');
+    const cfg = validateSettings();
+    const { domain, clientId } = cfg;
     const redirect_uri = window.location.origin + '/auth/callback.html';
     if (authDebug) console.debug('Auth0 config', { domain, clientId, redirect_uri, audience: AUDIENCE });
     signInBtn = document.getElementById('sign-in-btn');
-    if (!domain || !clientId || !AUDIENCE) {
+    if (!cfg.valid) {
       showAuthError('Auth0 init failed — missing domain/client/audience');
-      authReadyReject(new Error('Missing Auth0 config'));
+      authReadyResolve(false);
       finalizeAuthState();
-      window.authReady.catch(() => {});
       return window.authReady;
     }
     const sdkLoaded =
@@ -168,9 +168,8 @@
       (window.auth0 && typeof window.auth0.createAuth0Client === 'function');
     if (!sdkLoaded) {
       showAuthError();
-      authReadyReject(new Error('Auth0 SDK not loaded'));
+      authReadyResolve(false);
       finalizeAuthState();
-      window.authReady.catch(() => {});
       return window.authReady;
     }
 
@@ -208,7 +207,7 @@
       }
       if (!auth0Client) {
         showAuthError();
-        authReadyReject(new Error('Auth0 client unavailable'));
+        authReadyResolve(false);
         finalizeAuthState();
         return;
       }
@@ -240,11 +239,9 @@
             return res;
           })
       };
-      authReadyResolve();
+      authReadyResolve(true);
       await refreshAuthState();
     })();
-
-    window.authReady.catch(() => {});
     return window.authReady;
   };
 
