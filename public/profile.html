@@ -5,215 +5,265 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Your Profile</title>
 
-  <!-- These 3 meta tags MUST be present (they’re injected by your build step) -->
+  <!-- DO NOT CHANGE: injected by your build step -->
   <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK">
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
   <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api">
 
-  <!-- (Optional) shared site styles/scripts if you have them -->
+  <!-- Site-wide resources (if present) -->
   <link rel="stylesheet" href="/resources/site.css" />
 
-  <!-- 1) Load Auth0 SPA SDK FIRST -->
+  <!-- Load Auth0 SDK first, then your helper -->
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
-  <!-- 2) Then your auth helper -->
   <script src="/auth/auth.js" defer></script>
 
   <style>
-    /* Small, page-only polish */
     :root{
-      --ok:#10b981; --muted:#94a3b8; --card:#0f172a; --chip:#334155;
-      --link:#2563eb; --danger:#ef4444; --fg:#e2e8f0; --bg:#0b1226;
+      --bg: #0b1226; --fg:#e2e8f0; --muted:#94a3b8; --link:#60a5fa;
+      --card:#0f172a; --border:#1e293b; --chip:#1f2937;
+      --ok:#10b981; --warn:#f59e0b; --danger:#ef4444;
+      --shadow: 0 8px 28px rgba(2,6,23,.35);
     }
-    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif; margin:0; background:var(--bg); color:var(--fg)}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:radial-gradient(1200px 700px at 20% -10%, rgba(59,130,246,.12), transparent 60%),
+                 radial-gradient(900px 600px at 100% 10%, rgba(99,102,241,.10), transparent 60%), var(--bg);
+      color:var(--fg); font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;
+    }
     a{color:var(--link); text-decoration:none}
-    .wrap{max-width:960px; margin:24px auto; padding:0 16px}
-    h1 { font-size:1.8rem; margin:0 0 16px }
-    .grid{display:grid; gap:12px}
-    .card{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:16px}
-    .row{display:flex; gap:16px; align-items:center; flex-wrap:wrap}
-    .avatar{width:64px;height:64px;border-radius:50%;background:#111;border:1px solid rgba(255,255,255,.15)}
-    .chip{display:inline-flex;align-items:center;gap:6px;background:var(--chip);color:#cbd5e1;border-radius:999px;padding:2px 10px;font-size:.8rem}
-    .ok{color:var(--ok)} .danger{color:var(--danger)} .muted{color:var(--muted)}
-    .kv{display:grid;grid-template-columns:140px 1fr;gap:6px 10px;margin-top:10px}
-    .btn{background:#1f2937;color:#fff;border:1px solid rgba(255,255,255,.1);padding:8px 12px;border-radius:8px;cursor:pointer}
-    .btn:disabled{opacity:.6;cursor:not-allowed}
-    details{margin-top:6px}
-    .inline-list{display:flex;gap:8px;flex-wrap:wrap}
-    .toolbar{display:flex; gap:8px; align-items:center}
-    .note{margin-bottom:8px; font-size:.9rem}
+    .wrap{max-width:1100px; margin:28px auto; padding:0 20px}
+
+    /* Page header */
+    .page-head{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px}
+    .title{display:flex; align-items:center; gap:10px}
+    .title .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#60a5fa,#22d3ee)}
+    h1{font-size:1.9rem; margin:0; letter-spacing:.2px}
+    .back{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid var(--border); border-radius:10px; background:#0b1428}
+    .back:hover{border-color:#2b3a55}
+
+    /* Layout */
+    .layout{display:grid; grid-template-columns: 1.35fr .9fr; gap:18px}
+    @media (max-width:920px){ .layout{grid-template-columns:1fr} }
+
+    .card{
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:18px;
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(6px);
+    }
+    .card h2{font-size:1.05rem; margin:0 0 12px; color:#cbd5e1; letter-spacing:.2px}
+
+    /* Profile header block */
+    .profile{
+      display:flex; gap:18px; align-items:center; flex-wrap:wrap;
+      border-bottom:1px dashed rgba(148,163,184,.18); padding-bottom:14px; margin-bottom:14px;
+    }
+    .avatar{width:84px;height:84px;border-radius:50%; background:#0b1428; border:1px solid var(--border)}
+    .identity{display:flex; flex-direction:column; gap:6px}
+    .name{font-size:1.15rem; font-weight:600}
+    .email{color:var(--muted); font-size:.95rem}
+    .chips{display:flex; gap:8px; flex-wrap:wrap}
+    .chip{
+      display:inline-flex; align-items:center; gap:6px; padding:4px 10px;
+      background:var(--chip); border:1px solid var(--border); border-radius:999px; color:#cbd5e1; font-size:.8rem;
+    }
+    .chip.ok{border-color:rgba(16,185,129,.45)}
+    .chip.admin{border-color:rgba(99,102,241,.45)}
+
+    .kv{display:grid; grid-template-columns:160px 1fr; gap:8px 12px}
+    .label{color:var(--muted)}
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:.9rem}
+
+    .toolbar{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+    .btn{
+      padding:10px 14px; border-radius:10px; border:1px solid var(--border); color:var(--fg); background:#0b1428; cursor:pointer;
+    }
+    .btn:hover{border-color:#2b3a55}
+    .btn.primary{background:linear-gradient(135deg,#2563eb,#0891b2); border:0}
+    .btn.danger{background:#1d1b22; border-color:#3b1f25; color:#fecaca}
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+
+    /* Secondary blocks */
+    .list{display:grid; gap:6px; margin-top:6px}
+    .pill{display:inline-block; padding:6px 10px; border-radius:999px; background:#0b1428; border:1px solid var(--border); font-size:.85rem}
+    .muted{color:var(--muted)}
+
+    /* JSON viewer */
+    details summary{cursor:pointer; color:#cbd5e1}
+    pre{
+      margin:10px 0 0; padding:12px; border-radius:12px; background:#0b1428; border:1px solid var(--border);
+      max-height:360px; overflow:auto; font-size:.9rem;
+    }
+
+    /* Error + skeleton */
+    .banner{
+      display:none; padding:10px 14px; border:1px solid rgba(239,68,68,.35);
+      background:rgba(239,68,68,.08); color:#fecaca; border-radius:12px; margin:0 0 16px;
+    }
+    .skeleton{position:relative; overflow:hidden; background:#0b1428; border-radius:10px}
+    .skeleton::after{
+      content:""; position:absolute; inset:0; transform:translateX(-100%);
+      background:linear-gradient(90deg, transparent, rgba(148,163,184,.12), transparent);
+      animation:shimmer 1.2s infinite;
+    }
+    @keyframes shimmer{100%{transform:translateX(100%)}}
+
+    /* Copy button */
+    .copy{margin-left:8px; padding:4px 8px; border-radius:8px; border:1px solid var(--border); background:#0b1428; color:#cbd5e1; font-size:.8rem}
+    .copy.ok{border-color:rgba(16,185,129,.5); color:#bbf7d0}
   </style>
 </head>
-
 <body>
   <div class="wrap">
-    <h1><span style="color:#60a5fa">Pro</span>file</h1>
-
-    <div id="authError" class="note danger" style="display:none">
-      Authentication is currently unavailable. Please try again later.
+    <div class="page-head">
+      <div class="title"><span class="dot"></span><h1>Profile</h1></div>
+      <a href="/" class="back">← Back to Home</a>
     </div>
 
-    <div class="grid">
-      <!-- Profile header -->
+    <div id="authError" class="banner">Authentication is currently unavailable. Please try again later.</div>
+
+    <div class="layout">
+      <!-- Left: main profile -->
       <section class="card">
-        <div class="row">
-          <img id="avatar" class="avatar" alt="Avatar" />
-          <div class="inline-list">
-            <span id="verifiedChip" class="chip" style="display:none">✓ Verified</span>
-            <span id="adminChip" class="chip" style="display:none">🛡 Admin</span>
+        <div class="profile">
+          <img id="avatar" class="avatar skeleton" alt="Avatar" />
+          <div class="identity">
+            <div id="name" class="name skeleton" style="width:240px;height:20px"></div>
+            <div id="email" class="email skeleton" style="width:280px;height:16px"></div>
+            <div class="chips">
+              <span id="verifiedChip" class="chip ok" style="display:none">✓ Verified</span>
+              <span id="adminChip" class="chip admin" style="display:none">🛡 Admin</span>
+            </div>
           </div>
         </div>
 
         <div class="kv">
-          <div>User ID</div><div id="userId" class="muted">—</div>
-          <div>Updated</div><div id="updatedAt" class="muted">—</div>
-          <div>Auth Status</div><div id="authStatus" class="muted">—</div>
+          <div class="label">User ID</div>
+          <div><span id="userId" class="mono">—</span> <button id="copyId" class="copy" title="Copy ID">Copy</button></div>
+
+          <div class="label">Updated</div>
+          <div id="updatedAt" class="muted">—</div>
+
+          <div class="label">Auth Status</div>
+          <div id="authStatus" class="muted">—</div>
         </div>
 
-        <div class="toolbar" style="margin-top:12px">
-          <a href="/" class="btn">← Back to Home</a>
-          <a id="pwdLink" class="btn" href="#" rel="nofollow">Change password</a>
-          <button id="signOutBtn" class="btn">Sign out</button>
+        <div class="toolbar">
+          <a id="pwdLink" class="btn">Change password</a>
+          <button id="signOutBtn" class="btn danger">Sign out</button>
         </div>
       </section>
 
-      <!-- Roles / permissions -->
+      <!-- Right: security & quick links -->
+      <aside class="card">
+        <h2>Security</h2>
+        <div class="list">
+          <div><span class="label">Email verification:</span> <span id="emailVerified" class="muted">—</span></div>
+          <div><span class="label">Token scope (if available):</span> <span id="tokenScope" class="muted">—</span></div>
+        </div>
+
+        <div style="height:10px"></div>
+        <h2>Shortcuts</h2>
+        <div class="list">
+          <a class="pill" href="/legal/privacy.html">Privacy</a>
+          <a class="pill" href="/legal/terms.html">Terms</a>
+        </div>
+      </aside>
+
+      <!-- Roles -->
       <section class="card">
-        <h3>Roles & Permissions</h3>
-        <div class="kv">
-          <div>Roles</div><div id="roles">—</div>
-          <div>Permissions</div><div id="perms">—</div>
+        <h2>Roles & Permissions</h2>
+        <div class="list">
+          <div><span class="label">Roles:</span> <span id="roles" class="muted">—</span></div>
+          <div><span class="label">Permissions:</span> <span id="perms" class="muted">—</span></div>
         </div>
       </section>
 
       <!-- Raw JSON -->
       <section class="card">
-        <h3>Account details (raw)</h3>
+        <h2>Account details (raw)</h2>
         <details>
           <summary>Show JSON</summary>
-          <pre id="rawJson" style="white-space:pre-wrap;overflow:auto;margin-top:10px"></pre>
+          <pre id="rawJson" aria-live="polite"></pre>
         </details>
-      </section>
-
-      <!-- Security sidebar -->
-      <section class="card">
-        <h3>Security</h3>
-        <div class="kv">
-          <div>Email verification</div><div id="emailVerified" class="muted">—</div>
-          <div>Token scope (if available)</div><div id="tokenScope" class="muted">—</div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h3>Shortcuts</h3>
-        <ul style="margin:6px 0 0 18px">
-          <li><a href="/legal/privacy.html">Privacy</a></li>
-          <li><a href="/legal/terms.html">Terms</a></li>
-        </ul>
       </section>
     </div>
   </div>
 
-<script>
-  window.addEventListener('DOMContentLoaded', () => {
+  <script>
+    // Page logic: relies on /auth/auth.js exposing window.auth.ready, getUser(), isAuthenticated(), logout(), getIdTokenClaims()
     (async () => {
-      // ... dein bestehender Code unverändert ...
-      // (beginnt aktuell mit:  if (typeof window.createAuth0Client !== 'function') { ... }
-    // 1) Warte ausschließlich auf deine Helfer-API
-    if (!window.auth || !window.auth.ready) {
-      // Falls /auth/auth.js nicht geladen wurde
-      document.getElementById('authError').style.display = 'block';
-      console.error('Auth helper not available');
-      return;
-    }
-    try {
-      await window.auth.ready; // von deiner neuen auth.js
-    } catch (e) {
-      document.getElementById('authError').style.display = 'block';
-      console.error('Auth init failed', e);
-      return;
-    }
+      const $ = (id) => document.getElementById(id);
+      const showErr = (msg) => { const b = $('authError'); if (b) { b.textContent = msg || b.textContent; b.style.display = 'block'; } };
+      const set = (id, v) => { const el = $(id); if (!el) return; el.textContent = v; el.classList.remove('skeleton'); };
 
-    // 2) Status & User laden
-    const isAuthed = await window.auth.isAuthenticated();
-    const user = isAuthed ? await window.auth.getUser() : null;
+      // Guard: helper present?
+      if (!window.auth || !window.auth.ready) { showErr('Auth helper not available'); return; }
+      try { await window.auth.ready; } catch (e) { showErr('Authentication failed'); return; }
 
-    if (!isAuthed || !user) {
-      document.getElementById('authError').style.display = 'block';
-      setField('authStatus', 'Signed out');
-      return;
-    }
+      const isAuthed = await window.auth.isAuthenticated();
+      const user = isAuthed ? await window.auth.getUser() : null;
 
-    // 3) Profil füllen
-    const avatar = document.getElementById('avatar');
-    avatar.src = user.picture || '';
-    avatar.alt = user.name || user.email || 'Avatar';
+      if (!isAuthed || !user) { showErr('Signed out'); set('authStatus','Signed out'); return; }
 
-    if (user.email_verified) {
-      document.getElementById('verifiedChip').style.display = 'inline-flex';
-    }
+      // Fill identity
+      const avatar = $('avatar');
+      avatar.classList.remove('skeleton');
+      avatar.src = user.picture || '';
+      avatar.alt = user.name || user.email || 'Avatar';
 
-    // Rollen (custom claim oder plain roles)
-    const claimRoles =
-      user['https://ai-news-hub/roles'] ||
-      user['https://ai-news-hub/roles/'] ||
-      user.roles || [];
-    const roles = Array.isArray(claimRoles)
-      ? claimRoles
-      : (typeof claimRoles === 'string' ? claimRoles.split(' ') : []);
+      set('name', user.name || '—');
+      set('email', user.email || '—');
 
-    if (roles.includes('admin')) {
-      document.getElementById('adminChip').style.display = 'inline-flex';
-    }
+      if (user.email_verified) $('verifiedChip').style.display = 'inline-flex';
 
-    setField('userId', user.sub || '—');
-    setField('updatedAt', user.updated_at ? new Date(user.updated_at).toLocaleString() : '—');
-    setField('authStatus', 'Signed in');
-    document.getElementById('roles').textContent = roles.length ? roles.join(', ') : '—';
+      // Roles from custom claim or array
+      const claim =
+        user['https://ai-news-hub/roles'] ||
+        user['https://ai-news-hub/roles/'] ||
+        user.roles || [];
+      const roles = Array.isArray(claim) ? claim : (typeof claim === 'string' ? claim.split(' ') : []);
+      if (roles.includes('admin')) $('adminChip').style.display = 'inline-flex';
 
-    // Scope/Permissions (nur wenn es ein API-Token gibt)
-    let scopeText = '—';
-    try {
-      if (typeof window.auth.getIdTokenClaims === 'function') {
-        const idc = await window.auth.getIdTokenClaims();
-        if (idc && idc.__raw) {
-          const payload = JSON.parse(atob(idc.__raw.split('.')[1] || ''));
-          if (payload && payload.scope) scopeText = payload.scope;
-          const perms = payload?.permissions || [];
-          document.getElementById('perms').textContent = perms.length ? perms.join(', ') : '—';
-        }
-      }
-    } catch (_) {}
-    setField('tokenScope', scopeText);
+      $('userId').textContent = user.sub || '—';
+      $('copyId').addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(user.sub || ''); $('copyId').classList.add('ok'); $('copyId').textContent = 'Copied'; setTimeout(()=>{$('copyId').classList.remove('ok'); $('copyId').textContent='Copy';},1200); } catch {}
+      });
 
-    // Rohdaten
-    document.getElementById('rawJson').textContent = JSON.stringify(user, null, 2);
+      set('updatedAt', user.updated_at ? new Date(user.updated_at).toLocaleString() : '—');
+      set('authStatus', 'Signed in');
+      $('roles').textContent = roles.length ? roles.join(', ') : '—';
 
-    // 4) „Change password“ (Universal Login)
-    const domain = document.querySelector('meta[name="auth0-domain"]').content.trim();
-    const clientId = document.querySelector('meta[name="auth0-client-id"]').content.trim();
-    const returnTo = window.location.origin + '/';
-    document.getElementById('pwdLink').href =
-      `https://${domain}/u/reset-password/request/index?client_id=${encodeURIComponent(clientId)}&returnTo=${encodeURIComponent(returnTo)}`;
-
-    // 5) Logout über deine helper-API
-    document.getElementById('signOutBtn').addEventListener('click', async () => {
+      // Token info (scope/permissions) from ID token if available
+      let scopeText = '—';
       try {
-        await window.auth.logout();
-      } catch (e) {
-        console.error('Logout failed', e);
-        // Fallback: direkte Logout-URL
-        window.location.href = `https://${domain}/v2/logout?client_id=${encodeURIComponent(clientId)}&returnTo=${encodeURIComponent(returnTo)}`;
-      }
-    });
+        const idc = await window.auth.getIdTokenClaims?.();
+        if (idc && idc.__raw) {
+          const payload = JSON.parse(atob((idc.__raw.split('.')[1]||'').replace(/-/g,'+').replace(/_/g,'/')));
+          if (payload?.scope) scopeText = payload.scope;
+          const perms = payload?.permissions || [];
+          $('perms').textContent = perms.length ? perms.join(', ') : '—';
+        }
+      } catch {}
+      set('tokenScope', scopeText);
 
-    function setField(id, value) {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    }
-    })().catch(e => {
-      console.error(e);
-      const el = document.getElementById('authError');
-      if (el) el.style.display = 'block';
-    });
-  });
-</script>
+      // Raw user JSON
+      $('rawJson').textContent = JSON.stringify(user, null, 2);
+
+      // Change password & logout
+      const domain = document.querySelector('meta[name="auth0-domain"]').content.trim();
+      const clientId = document.querySelector('meta[name="auth0-client-id"]').content.trim();
+      const returnTo = window.location.origin + '/';
+      $('pwdLink').href = `https://${domain}/u/reset-password/request/index?client_id=${encodeURIComponent(clientId)}&returnTo=${encodeURIComponent(returnTo)}`;
+
+      $('signOutBtn').addEventListener('click', async () => {
+        try { await window.auth.logout(); }
+        catch { window.location.href = `https://${domain}/v2/logout?client_id=${encodeURIComponent(clientId)}&returnTo=${encodeURIComponent(returnTo)}`; }
+      });
+    })();
+  </script>
+</body>
+</html>
