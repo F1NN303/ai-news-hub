@@ -10,6 +10,7 @@
   <!-- Auth0 (unchanged) -->
   <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK">
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
+  <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api">
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
 
@@ -66,6 +67,15 @@
     @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
     .tag{transition:transform .2s}.tag:hover{transform:translateY(-2px)}
   </style>
+
+  <script>
+    // restore theme early to avoid flash
+    (function(){
+      const html = document.documentElement;
+      const saved = localStorage.getItem('theme');
+      if (saved === 'dark') html.classList.add('dark');
+    })();
+  </script>
 </head>
 
 <body class="bg-light dark:bg-dark">
@@ -81,7 +91,7 @@
   <header class="sticky-nav bg-white/80 dark:bg-dark/80 py-4 border-b border-slate-200 dark:border-slate-800 shadow-sm">
     <div class="max-w-6xl mx-auto px-4">
       <div class="flex items-center justify-between">
-        <!-- Brand (kept, but slightly larger and consistent) -->
+        <!-- Brand -->
         <a class="flex items-center min-w-0" href="/">
           <span class="w-11 h-11 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center mr-3 shrink-0">
             <i class="fa-solid fa-brain text-white text-lg md:text-xl"></i>
@@ -99,27 +109,18 @@
 
         <!-- Auth / Theme -->
         <div class="flex items-center gap-3 md:gap-4">
-          <!-- PROFILE CHIP (shown when signed in) -->
+          <!-- PROFILE AVATAR ONLY (no label, no sign-out/dashboard) -->
           <a id="profile-chip" href="/profile.html"
-             class="hidden items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">
-            <img id="nav-avatar" alt="Profile" class="w-7 h-7 rounded-full object-cover bg-slate-300" />
-            <span class="text-sm font-medium">Profile</span>
+             class="hidden items-center gap-2 pl-1 pr-1.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <img id="nav-avatar" alt="Profile" class="w-8 h-8 rounded-full object-cover bg-slate-300" />
           </a>
 
-          <!-- Fallback auth buttons (shown when signed out) -->
+          <!-- Sign in (visible when logged out) -->
           <button id="sign-in-btn"
                   class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800"
-                  onclick="(sessionStorage.setItem('postLoginRedirect', location.pathname+location.search), auth.login())">
+                  onclick="(sessionStorage.setItem('postLoginRedirect', location.pathname+location.search), window.auth?.login?.())">
             Sign in
           </button>
-          <button id="sign-out-btn"
-                  class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800"
-                  onclick="auth.logout()">
-            Sign out
-          </button>
-
-          <!-- Optional dashboard link you already had -->
-          <a id="dashboard-link" href="/profile.html" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Dashboard</a>
 
           <!-- Dark/Light -->
           <button id="theme-toggle" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700">
@@ -127,7 +128,7 @@
             <i class="fa-solid fa-moon hidden dark:block text-slate-200"></i>
           </button>
 
-          <button class="md:hidden text-slate-700 dark:text-slate-300">
+          <button class="md:hidden text-slate-700 dark:text-slate-300" aria-label="Open menu">
             <i class="fa-solid fa-bars text-xl"></i>
           </button>
         </div>
@@ -204,7 +205,7 @@
           <section class="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6">
             <h3 class="text-xl font-bold mb-4">Connect With Us</h3>
             <div class="flex gap-4">
-              <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-primary hover:text-white transition"><i class="fa-brands fa-twitter"></i></a>
+              <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-primary hover:text-white transition"><i class="fa-brands fa-x-twitter"></i></a>
               <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-blue-700 hover:text-white transition"><i class="fa-brands fa-linkedin-in"></i></a>
               <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition"><i class="fa-brands fa-facebook-f"></i></a>
               <a href="#" class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-gradient-to-r from-purple-500 to-pink-500 hover:text-white transition"><i class="fa-brands fa-instagram"></i></a>
@@ -284,8 +285,8 @@
     const industryGrid = byId('industry-grid');
     const researchGrid = byId('research-grid');
     const trendingList = byId('trending-list');
-    const searchInput  = byId('search-input');
-    const searchResults= byId('search-results');
+    const searchInput  = byId('search-input');      // optional; safe-guarded below
+    const searchResults= byId('search-results');    // optional
     const grids = [openaiGrid, chatgptGrid, industryGrid, researchGrid];
 
     const fmtDate = (iso) => new Date(iso || Date.now()).toISOString().slice(0,10);
@@ -383,10 +384,10 @@
         const groups = { 'OpenAI News':[], 'ChatGPT Updates':[], 'AI Industry':[], 'Research & Innovation':[] };
         posts.forEach(p => { const cat = deriveCategory(p); p.category = cat; groups[cat].push(p); });
 
-        openaiGrid.innerHTML   = groups['OpenAI News'].map(renderMasonryPost).join('') || '<p class="text-slate-500">No posts yet.</p>';
-        chatgptGrid.innerHTML  = groups['ChatGPT Updates'].map(renderCardPost).join('') || '<p class="text-slate-500">No updates yet.</p>';
-        industryGrid.innerHTML = groups['AI Industry'].map(renderCardPost).join('') || '<p class="text-slate-500">No news yet.</p>';
-        researchGrid.innerHTML = groups['Research & Innovation'].map(renderCardPost).join('') || '<p class="text-slate-500">No research yet.</p>';
+        openaiGrid.innerHTML   = groups['OpenAI News'].length   ? groups['OpenAI News'].map(renderMasonryPost).join('') : '<p class="text-slate-500">No posts yet.</p>';
+        chatgptGrid.innerHTML  = groups['ChatGPT Updates'].length? groups['ChatGPT Updates'].map(renderCardPost).join('') : '<p class="text-slate-500">No updates yet.</p>';
+        industryGrid.innerHTML = groups['AI Industry'].length   ? groups['AI Industry'].map(renderCardPost).join('')    : '<p class="text-slate-500">No news yet.</p>';
+        researchGrid.innerHTML = groups['Research & Innovation'].length ? groups['Research & Innovation'].map(renderCardPost).join('') : '<p class="text-slate-500">No research yet.</p>';
 
         const trending = computeTrendingByCategory(groups);
         trendingList.innerHTML = trending.length
@@ -397,13 +398,12 @@
                </li>`).join('')
           : '<li class="text-slate-500">No data yet.</li>';
 
-        // Simple client-side search
-        if (searchInput) {
+        // Optional client-side search (only if inputs exist on this page)
+        if (searchInput && searchResults) {
           searchInput.addEventListener('input', () => {
             const q = searchInput.value.trim().toLowerCase();
-            if (!searchResults) return;
             if (q.length < 2) { searchResults.classList.add('hidden'); return; }
-            const matches = posts.filter(p => p.title?.toLowerCase().includes(q)).slice(0,8);
+            const matches = posts.filter(p => (p.title||'').toLowerCase().includes(q)).slice(0,8);
             searchResults.innerHTML = matches.length
               ? matches.map(m => `
                 <a class="block p-3 hover:bg-slate-100 dark:hover:bg-slate-700 border-b border-slate-200 dark:border-slate-700 last:border-0" href="/post.html?slug=${encodeURIComponent(m.slug)}">
@@ -431,31 +431,30 @@
     document.addEventListener('DOMContentLoaded', loadAll);
   </script>
 
-  <!-- Auth-driven header UI (avatar + buttons) -->
+  <!-- Auth-driven header UI (avatar + sign-in) -->
   <script>
     window.addEventListener('DOMContentLoaded', async () => {
-      try { await auth.ready; } catch {}
-      const signInBtn = document.getElementById('sign-in-btn');
-      const signOutBtn = document.getElementById('sign-out-btn');
-      const dashboardLink = document.getElementById('dashboard-link');
+      try { await (window.auth?.ready); } catch {}
+      const signInBtn   = document.getElementById('sign-in-btn');
       const profileChip = document.getElementById('profile-chip');
-      const navAvatar = document.getElementById('nav-avatar');
+      const navAvatar   = document.getElementById('nav-avatar');
 
-      const authed = await auth.isAuthenticated();
+      // If the helper isn't loaded, just show Sign in to avoid a dead header.
+      if (!window.auth || !window.auth.isAuthenticated || !window.auth.getUser) {
+        signInBtn?.classList.remove('hidden');
+        profileChip?.classList.add('hidden');
+        return;
+      }
+
+      const authed = await window.auth.isAuthenticated();
       if (authed) {
-        const user = await auth.getUser();
-        // avatar + label “Profile”
+        const user = await window.auth.getUser();
         if (user?.picture) navAvatar.src = user.picture;
         profileChip.classList.remove('hidden');
-        // buttons
         signInBtn.classList.add('hidden');
-        signOutBtn.classList.remove('hidden');
-        dashboardLink?.classList.remove('hidden');
       } else {
         profileChip.classList.add('hidden');
         signInBtn.classList.remove('hidden');
-        signOutBtn.classList.add('hidden');
-        dashboardLink?.classList.add('hidden');
       }
     });
   </script>
