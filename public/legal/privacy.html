@@ -10,43 +10,10 @@
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
   <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api">
   <!-- 1) Auth0 SPA SDK -->
-<script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
-<!-- 2) Your helper that wires up login/logout -->
-<script src="/auth/auth.js" defer></script>
-
-  <script>
-    document.documentElement.dataset.theme = localStorage.theme || 'light';
-    if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: { primary:'#0ea5e9', secondary:'#06b6d4', dark:'#0f172a', light:'#f8fafc', accent:'#818cf8' },
-          fontFamily: { inter: ['Inter','system-ui','sans-serif'] }
-        }
-   <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Privacy Policy - AI News Hub</title>
-
-  <!-- Auth0: DO NOT CHANGE -->
-  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK">
-  <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
-  <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api">
-  <!-- 1) Auth0 SPA SDK -->
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
   <!-- 2) Your helper -->
   <script src="/auth/auth.js" defer></script>
-
-  <script>
-    document.documentElement.dataset.theme = localStorage.theme || 'light';
-    if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
-  </script>
+  <script src="/scripts/theme.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -63,48 +30,17 @@
   <link rel="stylesheet" href="/resources/site.css" />
   <script src="/public/js/cookie-banner.js" defer></script>
 </head>
-
 <body class="bg-light dark:bg-dark text-slate-900 dark:text-slate-100 font-inter">
-  <!-- Header -->
-  <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
-      <!-- Left side -->
-      <div class="flex items-center gap-8">
-        <a href="/" class="flex items-center gap-2 text-xl font-bold">
-          <span class="text-primary">AI</span> News Hub
-        </a>
-        <nav class="hidden md:flex gap-6 text-sm">
-          <a href="/news.html" class="hover:text-primary">OpenAI News</a>
-          <a href="/updates.html" class="hover:text-primary">ChatGPT Updates</a>
-          <a href="/industry.html" class="hover:text-primary">AI Industry</a>
-          <a href="/research.html" class="hover:text-primary">Research & Innovation</a>
-        </nav>
-      </div>
-
-      <!-- Right side -->
-      <div class="flex items-center gap-4">
-        <div id="authSection" class="flex items-center gap-3">
-          <!-- Default: signed out -->
-          <a id="signInBtn" href="/login" class="hover:underline">Sign in</a>
-          <a id="signUpBtn" href="/signup" class="hover:underline">Sign up</a>
-
-          <!-- Signed in -->
-          <div id="profileMenu" class="hidden flex items-center gap-2">
-            <img id="navAvatar" class="w-8 h-8 rounded-full border border-slate-600" alt="Avatar" />
-            <a href="/profile.html" class="hover:underline">Profile</a>
-          </div>
-        </div>
-
-        <!-- Dashboard -->
-        <a href="/dashboard.html" class="px-3 py-1 rounded-md bg-primary hover:bg-secondary text-white text-sm">Dashboard</a>
-
-        <!-- Theme toggle -->
-        <button id="themeToggle" class="p-2 rounded-full bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700">
-          🌙
-        </button>
-      </div>
-    </div>
+  <header>
+    <div id="site-header"></div>
   </header>
+  <script src="/scripts/include-header.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await window.mountHeader('#site-header');
+      window.initHeaderAuth();
+    });
+  </script>
 <!-- Privacy Policy Content -->
   <main class="max-w-3xl mx-auto p-6">
     <div class="flex items-center justify-between mb-3">
@@ -201,6 +137,10 @@
   <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12">
     <div class="max-w-7xl mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-slate-500">
       <div>
+        <a href="/" class="brand mb-2 inline-flex" aria-label="AI News Hub — Home">
+          <img class="brand__img" src="/assets/brand/logo-full.svg" alt="AI News Hub logo">
+          <span class="brand__text hidden sm:inline">AI News Hub</span>
+        </a>
         <h3 class="text-slate-800 dark:text-slate-200 font-semibold mb-2">Resources</h3>
         <ul class="space-y-1">
           <li><a href="/resources/glossary.html" class="hover:underline">AI Glossary</a></li>
@@ -226,24 +166,6 @@
       document.getElementById('printBtn').onclick = () => window.print();
       document.getElementById('copyLink')?.addEventListener("click", async () => {
         try { await navigator.clipboard.writeText(location.href); alert('Link copied'); } catch {}
-      });
-
-      // Auth check for nav
-      document.addEventListener("DOMContentLoaded", async () => {
-        if (!window.auth || !window.auth.ready) return;
-        try {
-          await window.auth.ready;
-          const isAuthed = await window.auth.isAuthenticated();
-          const user = isAuthed ? await window.auth.getUser() : null;
-          if (user) {
-            document.getElementById("signInBtn").style.display = "none";
-            document.getElementById("signUpBtn").style.display = "none";
-            const navAvatar = document.getElementById("navAvatar");
-            navAvatar.src = user.picture || "";
-            navAvatar.alt = user.name || user.email || "Avatar";
-            document.getElementById("profileMenu").classList.remove("hidden");
-          }
-        } catch (e) { console.error("Auth check failed:", e); }
       });
     </script>
   </footer>

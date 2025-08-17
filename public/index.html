@@ -17,10 +17,12 @@
   <meta property="og:description" content="Your source for the latest AI news and developments." />
   <meta property="og:type" content="website" />
 
+  <script src="/scripts/theme.js"></script>
   <!-- Tailwind & Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/resources/site.css" />
 
   <script>
     tailwind.config = {
@@ -94,49 +96,16 @@
   </div>
 
   <!-- Header -->
-  <header class="sticky-nav bg-white/80 dark:bg-dark/80 py-4 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-    <div class="max-w-6xl mx-auto px-4">
-      <div class="flex items-center justify-between">
-        <a class="flex items-center" href="#">
-          <span class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center mr-3">
-            <i class="fa-solid fa-brain text-white text-lg"></i>
-          </span>
-          <span class="text-2xl font-bold bg-clip-text text-transparent gradient-bg">AI News Hub</span>
-        </a>
-
-        <nav class="hidden md:flex items-center gap-1">
-          <a href="#openai"   class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">OpenAI News</a>
-          <a href="#chatgpt"  class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">ChatGPT Updates</a>
-          <a href="#industry" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">AI Industry</a>
-          <a href="#research" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Research & Innovation</a>
-        </nav>
-
-        <div class="flex items-center gap-4">
-          <div class="relative">
-            <input id="search-input" type="text" placeholder="Search…" class="pl-10 pr-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-sm w-40 md:w-64 focus:outline-none focus:ring-2 focus:ring-primary" />
-            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <div id="search-results" class="absolute left-0 mt-2 w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl z-20 hidden"></div>
-          </div>
-
-          <div id="auth-area" class="flex items-center gap-2">
-            <span id="user-name" class="font-medium hidden"></span>
-            <button id="sign-in-btn" onclick="(sessionStorage.setItem('postLoginRedirect', location.pathname+location.search), auth.login())" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</button>
-            <button id="sign-out-btn" onclick="auth.logout()" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign out</button>
-            <a id="dashboard-link" href="/profile.html" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Dashboard</a>
-          </div>
-
-          <button id="theme-toggle" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700">
-            <i class="fa-solid fa-sun block dark:hidden text-yellow-500"></i>
-            <i class="fa-solid fa-moon hidden dark:block text-slate-200"></i>
-          </button>
-
-          <button class="md:hidden text-slate-700 dark:text-slate-300">
-            <i class="fa-solid fa-bars text-xl"></i>
-          </button>
-        </div>
-      </div>
-    </div>
+  <header>
+    <div id="site-header"></div>
   </header>
+  <script src="/scripts/include-header.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await window.mountHeader('#site-header');
+      window.initHeaderAuth();
+    });
+  </script>
 
   <!-- Hero -->
   <section class="relative py-16 md:py-24 bg-gradient-to-r from-blue-900 to-indigo-900 dark:from-slate-900 dark:to-slate-900 text-white overflow-hidden">
@@ -148,7 +117,7 @@
         Enhanced reasoning, multimodal understanding, and unprecedented context length. Stay ahead with the latest updates from the AI world.
       </p>
       <div class="flex justify-center gap-4 fade-in">
-        <a href="#openai" class="px-6 md:px-8 py-3 bg-primary hover:bg-sky-600 rounded-full font-semibold shadow-lg hover:shadow-xl transition">Read OpenAI News</a>
+        <a href="/category.html?tag=openai-news" class="px-6 md:px-8 py-3 bg-primary hover:bg-sky-600 rounded-full font-semibold shadow-lg hover:shadow-xl transition">Read OpenAI News</a>
         <a href="#trending" class="px-6 md:px-8 py-3 bg-white/20 hover:bg-white/30 rounded-full font-semibold backdrop-blur-sm transition">See Trending</a>
       </div>
     </div>
@@ -167,25 +136,33 @@
       <div class="w-full lg:w-2/3">
         <!-- OpenAI (dynamic) -->
         <section class="mb-12">
-          <h2 id="openai" class="text-3xl font-bold mb-6 pb-2 border-b-2 border-primary inline-block">OpenAI News</h2>
+          <h2 id="openai" class="text-3xl font-bold mb-6 pb-2 border-b-2 border-primary inline-block">
+            <a class="hover:underline" href="/category.html?tag=openai-news">OpenAI News</a>
+          </h2>
           <div id="openai-grid" class="masonry-grid"><!-- filled by JS --></div>
         </section>
 
         <!-- ChatGPT (dynamic filter) -->
         <section class="mb-12">
-          <h2 id="chatgpt" class="text-3xl font-bold mb-6 pb-2 border-b-2 border-secondary inline-block">ChatGPT Updates</h2>
+          <h2 id="chatgpt" class="text-3xl font-bold mb-6 pb-2 border-b-2 border-secondary inline-block">
+            <a class="hover:underline" href="/category.html?tag=chatgpt-updates">ChatGPT Updates</a>
+          </h2>
           <div id="chatgpt-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"><!-- filled by JS --></div>
         </section>
 
         <!-- Industry (dynamic) -->
         <section class="mb-12" id="industry">
-          <h2 class="text-3xl font-bold mb-6 pb-2 border-b-2 border-indigo-500 inline-block">AI Industry</h2>
+          <h2 class="text-3xl font-bold mb-6 pb-2 border-b-2 border-indigo-500 inline-block">
+            <a class="hover:underline" href="/category.html?tag=ai-industry">AI Industry</a>
+          </h2>
           <div id="industry-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"><!-- filled by JS --></div>
         </section>
 
         <!-- Research (dynamic) -->
         <section class="mb-12" id="research">
-          <h2 class="text-3xl font-bold mb-6 pb-2 border-b-2 border-fuchsia-500 inline-block">Research & Innovation</h2>
+          <h2 class="text-3xl font-bold mb-6 pb-2 border-b-2 border-fuchsia-500 inline-block">
+            <a class="hover:underline" href="/category.html?tag=research-innovation">Research &amp; Innovation</a>
+          </h2>
           <div id="research-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"><!-- filled by JS --></div>
         </section>
       </div>
@@ -238,22 +215,20 @@
     <div class="max-w-6xl mx-auto px-4">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div>
-          <div class="flex items-center mb-4">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center mr-3">
-              <i class="fa-solid fa-brain text-white text-lg"></i>
-            </div>
-            <h2 class="text-2xl font-bold">AI News Hub</h2>
-          </div>
+          <a href="/" class="brand mb-4 inline-flex" aria-label="AI News Hub — Home">
+            <img class="brand__img" src="/assets/brand/logo-full.svg" alt="AI News Hub logo">
+            <span class="brand__text hidden sm:inline">AI News Hub</span>
+          </a>
           <p class="text-slate-400">Your trusted source for the latest developments in artificial intelligence.</p>
         </div>
 
         <div>
           <h3 class="text-lg font-semibold mb-3">Categories</h3>
           <ul class="space-y-2 text-slate-400">
-            <li><a href="#openai"   class="hover:text-white">OpenAI News</a></li>
-            <li><a href="#chatgpt"  class="hover:text-white">ChatGPT Updates</a></li>
-            <li><a href="#industry" class="hover:text-white">AI Industry News</a></li>
-            <li><a href="#research" class="hover:text-white">Research & Innovation</a></li>
+            <li><a href="/category.html?tag=openai-news" class="hover:text-white">OpenAI News</a></li>
+            <li><a href="/category.html?tag=chatgpt-updates" class="hover:text-white">ChatGPT Updates</a></li>
+            <li><a href="/category.html?tag=ai-industry" class="hover:text-white">AI Industry News</a></li>
+            <li><a href="/category.html?tag=research-innovation" class="hover:text-white">Research & Innovation</a></li>
           </ul>
         </div>
 
@@ -285,17 +260,6 @@
 
   <!-- Scripts -->
   <script>
-    // -------- Theme toggle --------
-    const htmlEl = document.documentElement;
-    const themeToggle = document.getElementById('theme-toggle');
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') htmlEl.classList.add('dark');
-
-    themeToggle.addEventListener('click', () => {
-      htmlEl.classList.toggle('dark');
-      localStorage.setItem('theme', htmlEl.classList.contains('dark') ? 'dark' : 'light');
-    });
-
     // -------- Helpers --------
     const byId = id => document.getElementById(id);
     const openaiGrid   = byId('openai-grid');
@@ -303,8 +267,8 @@
     const industryGrid = byId('industry-grid');
     const researchGrid = byId('research-grid');
     const trendingList = byId('trending-list');
-    const searchInput  = byId('search-input');
-    const searchResults= byId('search-results');
+      const searchInput  = byId('search-input');
+      const searchResults= byId('search-results');
     const grids = [openaiGrid, chatgptGrid, industryGrid, researchGrid];
 
     const fmtDate = (iso) => new Date(iso || Date.now()).toISOString().slice(0,10);
@@ -428,24 +392,26 @@
                </li>`).join('')
           : '<li class="text-slate-500">No data yet.</li>';
 
-        searchInput.addEventListener('input', () => {
-          const q = searchInput.value.trim().toLowerCase();
-          if (q.length < 2) { searchResults.classList.add('hidden'); return; }
-          const matches = posts.filter(p => p.title?.toLowerCase().includes(q)).slice(0,8);
-          searchResults.innerHTML = matches.length
-            ? matches.map(m => `
-              <a class="block p-3 hover:bg-slate-100 dark:hover:bg-slate-700 border-b border-slate-200 dark:border-slate-700 last:border-0" href="/post.html?slug=${encodeURIComponent(m.slug)}">
-                <div class="font-semibold">${m.title}</div>
-                <div class="text-xs text-slate-500">${m.category}</div>
-              </a>`).join('')
-            : '<div class="p-3 text-slate-500 text-sm">No results</div>';
-          searchResults.classList.remove('hidden');
-        });
-        document.addEventListener('click', (e) => {
-          if (!searchResults.contains(e.target) && e.target !== searchInput) {
-            searchResults.classList.add('hidden');
-          }
-        });
+        if (searchInput && searchResults) {
+          searchInput.addEventListener('input', () => {
+            const q = searchInput.value.trim().toLowerCase();
+            if (q.length < 2) { searchResults.classList.add('hidden'); return; }
+            const matches = posts.filter(p => p.title?.toLowerCase().includes(q)).slice(0,8);
+            searchResults.innerHTML = matches.length
+              ? matches.map(m => `
+                <a class="block p-3 hover:bg-slate-100 dark:hover:bg-slate-700 border-b border-slate-200 dark:border-slate-700 last:border-0" href="/post.html?slug=${encodeURIComponent(m.slug)}">
+                  <div class="font-semibold">${m.title}</div>
+                  <div class="text-xs text-slate-500">${m.category}</div>
+                </a>`).join('')
+              : '<div class="p-3 text-slate-500 text-sm">No results</div>';
+            searchResults.classList.remove('hidden');
+          });
+          document.addEventListener('click', (e) => {
+            if (!searchResults.contains(e.target) && e.target !== searchInput) {
+              searchResults.classList.add('hidden');
+            }
+          });
+        }
 
       } catch (err) {
         console.error('Load error:', err);
@@ -458,28 +424,6 @@
     byId('year').textContent = new Date().getFullYear();
 
     document.addEventListener('DOMContentLoaded', loadAll);
-  </script>
-  <script>
-    window.addEventListener('DOMContentLoaded', async () => {
-      await auth.ready;
-      const signInBtn = document.getElementById('sign-in-btn');
-      const signOutBtn = document.getElementById('sign-out-btn');
-      const userName = document.getElementById('user-name');
-      const dashboardLink = document.getElementById('dashboard-link');
-      if (await auth.isAuthenticated()) {
-        const user = await auth.getUser();
-        userName.textContent = user.name || user.email;
-        userName.classList.remove('hidden');
-        signInBtn.classList.add('hidden');
-        signOutBtn.classList.remove('hidden');
-        if (dashboardLink) dashboardLink.classList.remove('hidden');
-      } else {
-        userName.classList.add('hidden');
-        signInBtn.classList.remove('hidden');
-        signOutBtn.classList.add('hidden');
-        if (dashboardLink) dashboardLink.classList.add('hidden');
-      }
-    });
   </script>
 </body>
 </html>

@@ -63,3 +63,25 @@
   padding: 0.75rem 1rem;
   min-height: 44px;
 }
+
+/* === Brand logo sizing (header + footer) === */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+.brand__img {
+  height: 28px;
+  width: auto;
+  display: block;
+}
+@media (min-width: 640px) {
+  .brand__img {
+    height: 32px;
+  }
+}
+.brand__text {
+  font-weight: 700;
+  letter-spacing: .2px;
+  line-height: 1;
+}
