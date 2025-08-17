@@ -94,49 +94,18 @@
   </div>
 
   <!-- Header -->
-  <header class="sticky-nav bg-white/80 dark:bg-dark/80 py-4 border-b border-slate-200 dark:border-slate-800 shadow-sm">
-    <div class="max-w-6xl mx-auto px-4">
-      <div class="flex items-center justify-between">
-        <a class="flex items-center" href="#">
-          <span class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center mr-3">
-            <i class="fa-solid fa-brain text-white text-lg"></i>
-          </span>
-          <span class="text-2xl font-bold bg-clip-text text-transparent gradient-bg">AI News Hub</span>
-        </a>
-
-        <nav class="hidden md:flex items-center gap-1">
-          <a href="#openai"   class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">OpenAI News</a>
-          <a href="#chatgpt"  class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">ChatGPT Updates</a>
-          <a href="#industry" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">AI Industry</a>
-          <a href="#research" class="px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Research & Innovation</a>
-        </nav>
-
-        <div class="flex items-center gap-4">
-          <div class="relative">
-            <input id="search-input" type="text" placeholder="Search…" class="pl-10 pr-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 text-sm w-40 md:w-64 focus:outline-none focus:ring-2 focus:ring-primary" />
-            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            <div id="search-results" class="absolute left-0 mt-2 w-full bg-white dark:bg-slate-800 rounded-lg shadow-xl z-20 hidden"></div>
-          </div>
-
-          <div id="auth-area" class="flex items-center gap-2">
-            <span id="user-name" class="font-medium hidden"></span>
-            <button id="sign-in-btn" onclick="(sessionStorage.setItem('postLoginRedirect', location.pathname+location.search), auth.login())" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</button>
-            <button id="sign-out-btn" onclick="auth.logout()" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Sign out</button>
-            <a id="dashboard-link" href="/profile.html" class="hidden px-4 py-2 rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-slate-800">Dashboard</a>
-          </div>
-
-          <button id="theme-toggle" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700">
-            <i class="fa-solid fa-sun block dark:hidden text-yellow-500"></i>
-            <i class="fa-solid fa-moon hidden dark:block text-slate-200"></i>
-          </button>
-
-          <button class="md:hidden text-slate-700 dark:text-slate-300">
-            <i class="fa-solid fa-bars text-xl"></i>
-          </button>
-        </div>
-      </div>
-    </div>
+  <header>
+    <div id="site-header"></div>
   </header>
+  <script src="/scripts/include-header.js" defer></script>
+  <script src="/scripts/theme.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await window.mountHeader('#site-header');
+      window.initHeaderAuth();
+      window.initThemeToggle();
+    });
+  </script>
 
   <!-- Hero -->
   <section class="relative py-16 md:py-24 bg-gradient-to-r from-blue-900 to-indigo-900 dark:from-slate-900 dark:to-slate-900 text-white overflow-hidden">
@@ -285,17 +254,6 @@
 
   <!-- Scripts -->
   <script>
-    // -------- Theme toggle --------
-    const htmlEl = document.documentElement;
-    const themeToggle = document.getElementById('theme-toggle');
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') htmlEl.classList.add('dark');
-
-    themeToggle.addEventListener('click', () => {
-      htmlEl.classList.toggle('dark');
-      localStorage.setItem('theme', htmlEl.classList.contains('dark') ? 'dark' : 'light');
-    });
-
     // -------- Helpers --------
     const byId = id => document.getElementById(id);
     const openaiGrid   = byId('openai-grid');
@@ -303,8 +261,8 @@
     const industryGrid = byId('industry-grid');
     const researchGrid = byId('research-grid');
     const trendingList = byId('trending-list');
-    const searchInput  = byId('search-input');
-    const searchResults= byId('search-results');
+      const searchInput  = byId('search-input');
+      const searchResults= byId('search-results');
     const grids = [openaiGrid, chatgptGrid, industryGrid, researchGrid];
 
     const fmtDate = (iso) => new Date(iso || Date.now()).toISOString().slice(0,10);
@@ -428,24 +386,26 @@
                </li>`).join('')
           : '<li class="text-slate-500">No data yet.</li>';
 
-        searchInput.addEventListener('input', () => {
-          const q = searchInput.value.trim().toLowerCase();
-          if (q.length < 2) { searchResults.classList.add('hidden'); return; }
-          const matches = posts.filter(p => p.title?.toLowerCase().includes(q)).slice(0,8);
-          searchResults.innerHTML = matches.length
-            ? matches.map(m => `
-              <a class="block p-3 hover:bg-slate-100 dark:hover:bg-slate-700 border-b border-slate-200 dark:border-slate-700 last:border-0" href="/post.html?slug=${encodeURIComponent(m.slug)}">
-                <div class="font-semibold">${m.title}</div>
-                <div class="text-xs text-slate-500">${m.category}</div>
-              </a>`).join('')
-            : '<div class="p-3 text-slate-500 text-sm">No results</div>';
-          searchResults.classList.remove('hidden');
-        });
-        document.addEventListener('click', (e) => {
-          if (!searchResults.contains(e.target) && e.target !== searchInput) {
-            searchResults.classList.add('hidden');
-          }
-        });
+        if (searchInput && searchResults) {
+          searchInput.addEventListener('input', () => {
+            const q = searchInput.value.trim().toLowerCase();
+            if (q.length < 2) { searchResults.classList.add('hidden'); return; }
+            const matches = posts.filter(p => p.title?.toLowerCase().includes(q)).slice(0,8);
+            searchResults.innerHTML = matches.length
+              ? matches.map(m => `
+                <a class="block p-3 hover:bg-slate-100 dark:hover:bg-slate-700 border-b border-slate-200 dark:border-slate-700 last:border-0" href="/post.html?slug=${encodeURIComponent(m.slug)}">
+                  <div class="font-semibold">${m.title}</div>
+                  <div class="text-xs text-slate-500">${m.category}</div>
+                </a>`).join('')
+              : '<div class="p-3 text-slate-500 text-sm">No results</div>';
+            searchResults.classList.remove('hidden');
+          });
+          document.addEventListener('click', (e) => {
+            if (!searchResults.contains(e.target) && e.target !== searchInput) {
+              searchResults.classList.add('hidden');
+            }
+          });
+        }
 
       } catch (err) {
         console.error('Load error:', err);
@@ -458,28 +418,6 @@
     byId('year').textContent = new Date().getFullYear();
 
     document.addEventListener('DOMContentLoaded', loadAll);
-  </script>
-  <script>
-    window.addEventListener('DOMContentLoaded', async () => {
-      await auth.ready;
-      const signInBtn = document.getElementById('sign-in-btn');
-      const signOutBtn = document.getElementById('sign-out-btn');
-      const userName = document.getElementById('user-name');
-      const dashboardLink = document.getElementById('dashboard-link');
-      if (await auth.isAuthenticated()) {
-        const user = await auth.getUser();
-        userName.textContent = user.name || user.email;
-        userName.classList.remove('hidden');
-        signInBtn.classList.add('hidden');
-        signOutBtn.classList.remove('hidden');
-        if (dashboardLink) dashboardLink.classList.remove('hidden');
-      } else {
-        userName.classList.add('hidden');
-        signInBtn.classList.remove('hidden');
-        signOutBtn.classList.add('hidden');
-        if (dashboardLink) dashboardLink.classList.add('hidden');
-      }
-    });
   </script>
 </body>
 </html>

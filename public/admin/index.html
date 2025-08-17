@@ -10,8 +10,12 @@
   <meta name="auth0-domain"     content="dev-zi3ojkfg51ob4f3c.eu.auth0.com" />
   <meta name="auth0-audience"   content="https://ai-news-hub-eta.vercel.app/api" />
 
-  <!-- Site Styles (falls vorhanden) -->
-  <link rel="stylesheet" href="/resources/site.css" />
+    <!-- Site Styles (falls vorhanden) -->
+    <link rel="stylesheet" href="/resources/site.css" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
   <!-- Auth0 SDK zuerst, dann dein Helper -->
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
@@ -34,6 +38,18 @@
   </style>
 </head>
 <body>
+  <header>
+    <div id="site-header"></div>
+  </header>
+  <script src="/scripts/include-header.js" defer></script>
+  <script src="/scripts/theme.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await window.mountHeader('#site-header');
+      window.initHeaderAuth();
+      window.initThemeToggle();
+    });
+  </script>
   <div class="wrap">
     <h1>Admin Dashboard</h1>
 
