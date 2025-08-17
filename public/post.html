@@ -9,16 +9,13 @@
   <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID injected at build time -->
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com"><!-- Auth0 Domain injected at build time -->
   <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api" />
-  <script type="module">
-    document.documentElement.dataset.theme = localStorage.theme || 'light';
-    if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
-  </script>
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
   <!-- Tailwind & Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/resources/site.css" />
   <style>
     :root {
       --primary:#0ea5e9; --secondary:#06b6d4; --dark:#0f172a; --light:#f8fafc; --accent:#818cf8;
@@ -26,9 +23,35 @@
     body{font-family:'Inter',sans-serif;background:#f8fafc;color:#0f172a;transition:background-color .3s,color .3s}
     .dark body{background:#0f172a;color:#e2e8f0}
   </style>
+  <script>
+    (function(){
+      const root = document.documentElement;
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      root.dataset.theme = theme;
+      root.classList.toggle('dark', theme === 'dark');
+      window.toggleTheme = function(){
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        root.classList.toggle('dark', next === 'dark');
+        localStorage.setItem('theme', next);
+      };
+    })();
+  </script>
 </head>
-<body class="bg-light dark:bg-dark">
-  <main id="post-container" class="max-w-3xl mx-auto p-6"></main>
+  <body class="bg-light dark:bg-dark">
+    <header>
+      <div id="site-header"></div>
+    </header>
+    <script src="/scripts/include-header.js" defer></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        await window.mountHeader('#site-header');
+        window.initHeaderAuth();
+      });
+    </script>
+    <main id="post-container" class="max-w-3xl mx-auto p-6"></main>
   <script>
     let currentUser = null;
     let currentPostId = null;

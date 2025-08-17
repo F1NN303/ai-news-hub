@@ -1,16 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sign in</title>
-  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID injected at build time -->
-  <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com"><!-- Auth0 Domain injected at build time -->
+  <title>OpenAI News - AI News Hub</title>
+  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK">
+  <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
   <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api" />
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { colors: { primary:'#0ea5e9', secondary:'#06b6d4', dark:'#0f172a', light:'#f8fafc', accent:'#818cf8' }, fontFamily:{ inter:['Inter','sans-serif'] } } }
+    };
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/resources/site.css" />
   <script>
@@ -30,7 +35,7 @@
     })();
   </script>
 </head>
-<body>
+<body class="bg-light dark:bg-dark font-inter text-slate-900 dark:text-slate-100">
   <header>
     <div id="site-header"></div>
   </header>
@@ -41,21 +46,19 @@
       window.initHeaderAuth();
     });
   </script>
-  <p id="login-status">Redirecting…</p>
-  <script type="module">
-    try {
-      await window.authReady;
-      sessionStorage.setItem('postLoginRedirect', '/profile.html');
-      auth.login();
-    } catch (e) {
-      const p = document.getElementById('login-status');
-      p.textContent = 'Auth0 init failed — missing domain/client/audience';
-      const link = document.createElement('a');
-      link.href = '/';
-      link.textContent = 'Back to Home';
-      document.body.appendChild(document.createTextNode(' '));
-      document.body.appendChild(link);
-    }
-  </script>
+
+  <main class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">OpenAI News</h1>
+    <div class="flex flex-wrap gap-2 mb-6">
+      <button data-category="All" class="px-3 py-1 rounded-full border">All</button>
+      <button data-category="OpenAI" class="px-3 py-1 rounded-full border">OpenAI</button>
+      <button data-category="ChatGPT" class="px-3 py-1 rounded-full border">ChatGPT</button>
+      <button data-category="Research" class="px-3 py-1 rounded-full border">Research</button>
+      <button data-category="Policy" class="px-3 py-1 rounded-full border">Policy</button>
+    </div>
+    <div id="news-list" class="grid gap-4"></div>
+  </main>
+
+  <script src="/scripts/news.js" defer></script>
 </body>
 </html>

@@ -10,8 +10,12 @@
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
   <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api">
 
-  <!-- Site-wide resources (if present) -->
-  <link rel="stylesheet" href="/resources/site.css" />
+    <!-- Site-wide resources (if present) -->
+    <link rel="stylesheet" href="/resources/site.css" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
   <!-- Load Auth0 SDK first, then your helper -->
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
@@ -102,8 +106,34 @@
     .copy{margin-left:8px; padding:4px 8px; border-radius:8px; border:1px solid var(--border); background:#0b1428; color:#cbd5e1; font-size:.8rem}
     .copy.ok{border-color:rgba(16,185,129,.5); color:#bbf7d0}
   </style>
+  <script>
+    (function(){
+      const root = document.documentElement;
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = saved || (prefersDark ? 'dark' : 'light');
+      root.dataset.theme = theme;
+      root.classList.toggle('dark', theme === 'dark');
+      window.toggleTheme = function(){
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        root.dataset.theme = next;
+        root.classList.toggle('dark', next === 'dark');
+        localStorage.setItem('theme', next);
+      };
+    })();
+  </script>
 </head>
 <body>
+  <header>
+    <div id="site-header"></div>
+  </header>
+  <script src="/scripts/include-header.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await window.mountHeader('#site-header');
+      window.initHeaderAuth();
+    });
+  </script>
   <div class="wrap">
     <div class="page-head">
       <div class="title"><span class="dot"></span><h1>Profile</h1></div>
