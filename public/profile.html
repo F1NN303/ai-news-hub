@@ -114,7 +114,10 @@
   </div>
 
 <script>
-  (async () => {
+  window.addEventListener('DOMContentLoaded', () => {
+    (async () => {
+      // ... dein bestehender Code unverändert ...
+      // (beginnt aktuell mit:  if (typeof window.createAuth0Client !== 'function') { ... }
     // 1) Warte ausschließlich auf deine Helfer-API
     if (!window.auth || !window.auth.ready) {
       // Falls /auth/auth.js nicht geladen wurde
@@ -207,5 +210,10 @@
       const el = document.getElementById(id);
       if (el) el.textContent = value;
     }
-  })();
+    })().catch(e => {
+      console.error(e);
+      const el = document.getElementById('authError');
+      if (el) el.style.display = 'block';
+    });
+  });
 </script>
