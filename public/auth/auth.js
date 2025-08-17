@@ -58,7 +58,7 @@
         authorizationParams: {
           redirect_uri: CALLBACK,
           audience: AUDIENCE,
-          scope: 'openid profile email offline_access'
+          scope: 'openid profile email manage:site'
          },
          cacheLocation: 'localstorage',  // critical for iOS Safari
          useRefreshTokens: true
@@ -120,7 +120,7 @@
    authorizationParams: {
      redirect_uri: CALLBACK,
      audience: AUDIENCE,
-     scope: 'openid profile email offline_access'
+     scope: 'openid profile email manage:site'
    }
  });
 
