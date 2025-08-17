@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Center - AI News Hub</title>
+
+  <!-- Auth0 (UNCHANGED) -->
+  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK">
+  <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
+  <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api">
+  <!-- 1) SPA SDK first, 2) your helper -->
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
+  <script src="/auth/auth.js" defer></script>
+
+  <!-- Tailwind + fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: { primary:'#0ea5e9', secondary:'#06b6d4', dark:'#0f172a', light:'#f8fafc', accent:'#818cf8' },
+          fontFamily: { inter:['Inter','system-ui','sans-serif'] }
+        }
+      }
+    };
+    // apply saved theme
+    (()=>{
+      const t = localStorage.getItem('theme') || 'light';
+      if (t === 'dark') document.documentElement.classList.add('dark');
+    })();
+  </script>
+  <style>
+    body{font-family:'Inter',system-ui,sans-serif}
+    .chip{display:inline-flex;align-items:center;gap:.5rem;border:1px solid rgba(148,163,184,.35);padding:.25rem .6rem;border-radius:999px}
+  </style>
+</head>
+<body class="bg-light dark:bg-dark text-slate-900 dark:text-slate-100">
+
+  <!-- Header (keeps your look; profile chip when signed in) -->
+  <header class="bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 backdrop-blur">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <a href="/" class="flex items-center min-w-0">
+        <span class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center mr-3">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm1 17.93V20a1 1 0 0 1-2 0v-.07A8.016 8.016 0 0 1 4.07 13H4a1 1 0 0 1 0-2h.07A8.016 8.016 0 0 1 11 4.07V4a1 1 0 0 1 2 0v.07A8.016 8.016 0 0 1 19.93 11H20a1 1 0 0 1 0 2h-.07A8.016 8.016 0 0 1 13 19.93Z"/></svg>
+        </span>
+        <span class="text-2xl font-extrabold bg-clip-text text-transparent" style="background-image:linear-gradient(135deg,#0ea5e9,#06b6d4,#818cf8);background-size:200% 200%">AI News Hub</span>
+      </a>
+
+      <nav class="hidden md:flex gap-4 text-sm">
+        <a href="/#openai" class="hover:underline">OpenAI News</a>
+        <a href="/#chatgpt" class="hover:underline">ChatGPT Updates</a>
+        <a href="/#industry" class="hover:underline">AI Industry</a>
+        <a href="/#research" class="hover:underline">Research</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a id="profile-chip" href="/profile.html" class="hidden items-center gap-2 pl-1 pr-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <img id="nav-avatar" alt="Profile" class="w-7 h-7 rounded-full object-cover bg-slate-300"/>
+          <span class="text-sm font-medium">Profile</span>
+        </a>
+        <button id="sign-in-btn"  class="hidden text-sm px-3 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Sign in</button>
+        <button id="sign-out-btn" class="hidden text-sm px-3 py-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Sign out</button>
+        <button id="theme-toggle" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+          <span id="sun"  class="block dark:hidden">☀️</span>
+          <span id="moon" class="hidden dark:block">🌙</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-8">
+    <div id="authError" class="hidden mb-4 rounded border border-red-300 bg-red-50 text-red-700 px-4 py-3">
+      Authentication is currently unavailable. Please try again later.
+    </div>
+
+    <h1 class="text-3xl font-bold mb-2">Privacy Center</h1>
+    <p class="text-slate-600 dark:text-slate-400 mb-8">Manage your privacy on AI News Hub: request your data, delete your account, and review consent.</p>
+
+    <!-- Account summary -->
+    <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-4">Your Account</h2>
+      <div class="flex items-center gap-4 mb-4">
+        <img id="pc-avatar" class="w-14 h-14 rounded-full object-cover bg-slate-200" alt="Avatar">
+        <div>
+          <div class="font-semibold" id="pc-name">—</div>
+          <div class="text-sm text-slate-500 dark:text-slate-400" id="pc-email">—</div>
+          <div class="mt-2">
+            <span id="pc-verified" class="chip text-xs hidden">✓ Verified</span>
+            <span id="pc-admin" class="chip text-xs hidden">🛡 Admin</span>
+          </div>
+        </div>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4 text-sm">
+        <div><span class="text-slate-500">User ID:</span> <span id="pc-sub" class="font-mono break-all">—</span></div>
+        <div><span class="text-slate-500">Updated:</span> <span id="pc-updated">—</span></div>
+      </div>
+    </section>
+
+    <!-- DSAR: Export -->
+    <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-2">Download your data</h2>
+      <p class="text-slate-600 dark:text-slate-400 mb-4">Get a machine-readable export (JSON) of the data we store or receive from your identity provider.</p>
+      <div class="flex gap-3">
+        <button id="btn-export" class="px-4 py-2 rounded bg-primary text-white hover:opacity-90">Generate export</button>
+        <a id="dl-link" class="hidden px-4 py-2 rounded border border-slate-300 dark:border-slate-700">Download</a>
+      </div>
+      <p id="export-note" class="text-xs text-slate-500 mt-2">If the backend route <code>/api/privacy/export</code> isn’t available yet, you’ll still get a local export of your Auth0 profile.</p>
+    </section>
+
+    <!-- Deletion -->
+    <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-2">Delete your account</h2>
+      <p class="text-slate-600 dark:text-slate-400 mb-4">Request erasure of your account and associated content. This is permanent.</p>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button id="btn-delete" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700">Request deletion</button>
+        <a id="mailto-delete" href="mailto:service.ainews.hub@gmail.com?subject=Account%20Deletion%20Request" class="px-4 py-2 rounded border border-slate-300 dark:border-slate-700">Email request</a>
+      </div>
+      <p id="delete-note" class="text-xs text-slate-500 mt-2">If <code>/api/privacy/delete</code> is not configured, use the email link above.</p>
+    </section>
+
+    <!-- Consents -->
+    <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-2">Your consent</h2>
+      <p class="text-slate-600 dark:text-slate-400 mb-4">Manage optional consents (none are required for basic login).</p>
+      <div class="space-y-3">
+        <label class="flex items-center gap-3">
+          <input id="consent-newsletter" type="checkbox" class="w-4 h-4">
+          <span>AI Insights Newsletter (occasional emails)</span>
+        </label>
+        <label class="flex items-center gap-3">
+          <input id="consent-product" type="checkbox" class="w-4 h-4">
+          <span>Product updates (rare)</span>
+        </label>
+      </div>
+      <div class="mt-4 flex gap-3">
+        <button id="btn-save-consent" class="px-4 py-2 rounded bg-primary text-white hover:opacity-90">Save</button>
+        <span id="consent-status" class="text-sm text-slate-500"></span>
+      </div>
+      <p class="text-xs text-slate-500 mt-2">Stored via <code>/api/privacy/consents</code> if available; otherwise in your browser (local fallback).</p>
+    </section>
+
+    <!-- Security quick links -->
+    <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6">
+      <h2 class="text-xl font-semibold mb-3">Security</h2>
+      <div class="flex flex-wrap gap-3">
+        <a id="pwd-link" class="px-4 py-2 rounded border border-slate-300 dark:border-slate-700">Change password</a>
+        <button id="btn-signout" class="px-4 py-2 rounded border border-slate-300 dark:border-slate-700">Sign out</button>
+        <a href="/legal/privacy.html" class="px-4 py-2 rounded border border-slate-300 dark:border-slate-700">Privacy Policy</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12">
+    <div class="max-w-7xl mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-slate-500">
+      <div>
+        <h3 class="text-slate-800 dark:text-slate-200 font-semibold mb-2">Resources</h3>
+        <ul class="space-y-1">
+          <li><a href="/resources/glossary.html" class="hover:underline">AI Glossary</a></li>
+          <li><a href="/resources/research.html" class="hover:underline">Research Papers</a></li>
+          <li><a href="/resources/tutorials.html" class="hover:underline">Tutorials</a></li>
+          <li><a href="/resources/events.html" class="hover:underline">Events Calendar</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-slate-800 dark:text-slate-200 font-semibold mb-2">Legal</h3>
+        <ul class="space-y-1">
+          <li><a href="/legal/privacy.html" class="hover:underline">Privacy Policy</a></li>
+          <li><a href="/legal/terms.html" class="hover:underline">Terms of Service</a></li>
+          <li><a href="/legal/cookie-policy.html" class="hover:underline">Cookie Policy</a></li>
+        </ul>
+      </div>
+      <div class="md:text-right flex items-end">
+        <p class="w-full text-center md:text-right">© <span id="year"></span> AI News Hub</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Page logic -->
+  <script src="/public/js/privacy-center.js"></script>
+  <script>
+    // header auth UI + theme
+    (async () => {
+      const html = document.documentElement;
+      document.getElementById('theme-toggle')?.addEventListener('click', () => {
+        html.classList.toggle('dark');
+        localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+      });
+
+      try { await window.auth.ready; } catch {}
+      const signInBtn = document.getElementById('sign-in-btn');
+      const signOutBtn = document.getElementById('sign-out-btn');
+      const profileChip = document.getElementById('profile-chip');
+      const navAvatar = document.getElementById('nav-avatar');
+
+      const authed = await window.auth.isAuthenticated();
+      if (authed) {
+        const user = await window.auth.getUser();
+        if (user?.picture) navAvatar.src = user.picture;
+        profileChip.classList.remove('hidden');
+        signInBtn.classList.add('hidden');
+        signOutBtn.classList.remove('hidden');
+        signOutBtn.onclick = () => window.auth.logout();
+      } else {
+        profileChip.classList.add('hidden');
+        signInBtn.classList.remove('hidden');
+        signOutBtn.classList.add('hidden');
+        signInBtn.onclick = () => window.auth.login();
+      }
+    })();
+  </script>
+</body>
+</html>
