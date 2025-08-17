@@ -34,7 +34,6 @@
     a{color:var(--link); text-decoration:none}
     .wrap{max-width:1100px; margin:28px auto; padding:0 20px}
 
-    /* Page header */
     .page-head{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px}
     .title{display:flex; align-items:center; gap:10px}
     .title .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,#60a5fa,#22d3ee)}
@@ -42,7 +41,6 @@
     .back{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid var(--border); border-radius:10px; background:#0b1428}
     .back:hover{border-color:#2b3a55}
 
-    /* Layout */
     .layout{display:grid; grid-template-columns: 1.35fr .9fr; gap:18px}
     @media (max-width:920px){ .layout{grid-template-columns:1fr} }
 
@@ -56,7 +54,6 @@
     }
     .card h2{font-size:1.05rem; margin:0 0 12px; color:#cbd5e1; letter-spacing:.2px}
 
-    /* Profile header block */
     .profile{
       display:flex; gap:18px; align-items:center; flex-wrap:wrap;
       border-bottom:1px dashed rgba(148,163,184,.18); padding-bottom:14px; margin-bottom:14px;
@@ -86,19 +83,10 @@
     .btn.danger{background:#1d1b22; border-color:#3b1f25; color:#fecaca}
     .btn:disabled{opacity:.6; cursor:not-allowed}
 
-    /* Secondary blocks */
     .list{display:grid; gap:6px; margin-top:6px}
     .pill{display:inline-block; padding:6px 10px; border-radius:999px; background:#0b1428; border:1px solid var(--border); font-size:.85rem}
     .muted{color:var(--muted)}
 
-    /* JSON viewer */
-    details summary{cursor:pointer; color:#cbd5e1}
-    pre{
-      margin:10px 0 0; padding:12px; border-radius:12px; background:#0b1428; border:1px solid var(--border);
-      max-height:360px; overflow:auto; font-size:.9rem;
-    }
-
-    /* Error + skeleton */
     .banner{
       display:none; padding:10px 14px; border:1px solid rgba(239,68,68,.35);
       background:rgba(239,68,68,.08); color:#fecaca; border-radius:12px; margin:0 0 16px;
@@ -111,7 +99,6 @@
     }
     @keyframes shimmer{100%{transform:translateX(100%)}}
 
-    /* Copy button */
     .copy{margin-left:8px; padding:4px 8px; border-radius:8px; border:1px solid var(--border); background:#0b1428; color:#cbd5e1; font-size:.8rem}
     .copy.ok{border-color:rgba(16,185,129,.5); color:#bbf7d0}
   </style>
@@ -181,27 +168,16 @@
           <div><span class="label">Permissions:</span> <span id="perms" class="muted">—</span></div>
         </div>
       </section>
-
-      <!-- Raw JSON -->
-      <section class="card">
-        <h2>Account details (raw)</h2>
-        <details>
-          <summary>Show JSON</summary>
-          <pre id="rawJson" aria-live="polite"></pre>
-        </details>
-      </section>
     </div>
   </div>
 
   <script>
-  // Run only after all deferred scripts (incl. /auth/auth.js) are executed
   window.addEventListener('load', () => {
     (async () => {
       const $ = (id) => document.getElementById(id);
       const showErr = (msg) => { const b = $('authError'); if (b) { b.textContent = msg || b.textContent; b.style.display = 'block'; } };
       const set = (id, v) => { const el = $(id); if (!el) return; el.textContent = v; el.classList.remove('skeleton'); };
 
-      // Wait up to 6s for /auth/auth.js to attach window.auth.ready
       async function waitForAuthHelper(timeoutMs = 6000) {
         const start = Date.now();
         while (!(window.auth && window.auth.ready)) {
@@ -212,7 +188,7 @@
 
       try {
         await waitForAuthHelper();
-        await window.auth.ready; // promise set by /auth/auth.js
+        await window.auth.ready;
       } catch (e) {
         console.error(e);
         showErr('Auth helper not available');
@@ -223,7 +199,6 @@
       const user = isAuthed ? await window.auth.getUser() : null;
       if (!isAuthed || !user) { showErr('Signed out'); set('authStatus','Signed out'); return; }
 
-      // Fill identity
       const avatar = $('avatar');
       avatar.classList.remove('skeleton');
       avatar.src = user.picture || '';
@@ -232,7 +207,6 @@
       set('email', user.email || '—');
       if (user.email_verified) $('verifiedChip').style.display = 'inline-flex';
 
-      // Roles via custom claim or array
       const claim = user['https://ai-news-hub/roles'] || user['https://ai-news-hub/roles/'] || user.roles || [];
       const roles = Array.isArray(claim) ? claim : (typeof claim === 'string' ? claim.split(' ') : []);
       if (roles.includes('admin')) $('adminChip').style.display = 'inline-flex';
@@ -246,7 +220,6 @@
       set('authStatus', 'Signed in');
       $('roles').textContent = roles.length ? roles.join(', ') : '—';
 
-      // Token info (scope/permissions) from ID token if available
       let scopeText = '—';
       try {
         const idc = await window.auth.getIdTokenClaims?.();
@@ -259,10 +232,6 @@
       } catch {}
       set('tokenScope', scopeText);
 
-      // Raw JSON
-      $('rawJson').textContent = JSON.stringify(user, null, 2);
-
-      // Change password & logout
       const domain   = document.querySelector('meta[name="auth0-domain"]').content.trim();
       const clientId = document.querySelector('meta[name="auth0-client-id"]').content.trim();
       const returnTo = window.location.origin + '/';
