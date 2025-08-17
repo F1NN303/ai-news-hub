@@ -4,63 +4,126 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin Dashboard</title>
-  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID injected at build time -->
-  <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com"><!-- Auth0 Domain injected at build time -->
+
+  <!-- DO NOT CHANGE: injected by your build step -->
+  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK">
+  <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
   <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api" />
+
   <script>
     document.documentElement.dataset.theme = localStorage.theme || 'light';
     if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
   </script>
+
+  <!-- SDK zuerst, dann dein Helper -->
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js" defer></script>
   <script src="/auth/auth.js" defer></script>
+
+  <!-- UI (wie bisher) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="/resources/site.css">
   <script src="/resources/site.js" defer></script>
+
+  <style>
+    .guard { display:none }
+    .forbidden {
+      max-width: 720px; margin: 64px auto; padding: 24px;
+      border-radius: 14px; border:1px solid rgba(239,68,68,.35);
+      background: rgba(239,68,68,.08); color:#fecaca;
+      font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif;
+    }
+  </style>
 </head>
 <body class="p-6 bg-light dark:bg-dark">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold flex items-center gap-2"><i class="fa-solid fa-lock"></i> Admin Dashboard</h1>
-    <button id="theme-toggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700" aria-label="Toggle theme">
-      <i class="fa-solid fa-sun block dark:hidden text-yellow-500"></i>
-      <i class="fa-solid fa-moon hidden dark:block text-slate-200"></i>
-    </button>
+  <!-- 403 Platzhalter (wird nur bei Nicht-Admins gezeigt) -->
+  <div id="forbidden" class="forbidden" style="display:none">
+    <h1 class="text-2xl font-semibold mb-2">403 — Admins only</h1>
+    <p class="mb-4">Du hast keine Berechtigung, dieses Dashboard zu sehen.</p>
+    <p class="opacity-80">Wir leiten dich gleich zu deinem Profil weiter …</p>
+    <p class="mt-3"><a class="underline" href="/profile.html?unauthorized=1">Jetzt wechseln</a></p>
   </div>
-  <nav class="mb-8">
-    <ul class="flex flex-wrap gap-4 text-blue-600">
-      <li><a href="#posts" class="hover:underline flex items-center gap-1"><i class="fa-solid fa-newspaper"></i> Posts</a></li>
-      <li><a href="#comments" class="hover:underline flex items-center gap-1"><i class="fa-solid fa-comments"></i> Comments</a></li>
-      <li><a href="#users" class="hover:underline flex items-center gap-1"><i class="fa-solid fa-users"></i> Users</a></li>
-    </ul>
-  </nav>
 
-  <section id="posts" class="mb-10">
-    <h2 class="text-xl font-semibold mb-3">Posts</h2>
-    <div class="p-4 bg-white dark:bg-slate-800 rounded shadow">
-      <p class="text-slate-500">Post management coming soon…</p>
+  <!-- Eigentlicher Inhalt ist hinter einer Guard versteckt -->
+  <div id="adminApp" class="guard">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold flex items-center gap-2">
+        <i class="fa-solid fa-lock"></i> Admin Dashboard
+      </h1>
+      <button id="theme-toggle" class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700" aria-label="Toggle theme">
+        <i class="fa-solid fa-sun block dark:hidden text-yellow-500"></i>
+        <i class="fa-solid fa-moon hidden dark:block text-slate-200"></i>
+      </button>
     </div>
-  </section>
 
-  <section id="comments" class="mb-10">
-    <h2 class="text-xl font-semibold mb-3">Comments</h2>
-    <div class="p-4 bg-white dark:bg-slate-800 rounded shadow">
-      <p class="text-slate-500">Comment moderation coming soon…</p>
-    </div>
-  </section>
+    <nav class="mb-8">
+      <ul class="flex flex-wrap gap-4 text-blue-600">
+        <li><a href="#posts" class="hover:underline flex items-center gap-1"><i class="fa-solid fa-newspaper"></i> Posts</a></li>
+        <li><a href="#comments" class="hover:underline flex items-center gap-1"><i class="fa-solid fa-comments"></i> Comments</a></li>
+        <li><a href="#users" class="hover:underline flex items-center gap-1"><i class="fa-solid fa-users"></i> Users</a></li>
+      </ul>
+    </nav>
 
-  <section id="users" class="mb-10">
-    <h2 class="text-xl font-semibold mb-3">Users</h2>
-    <div class="p-4 bg-white dark:bg-slate-800 rounded shadow">
-      <p class="text-slate-500">User management coming soon…</p>
-    </div>
-  </section>
+    <section id="posts" class="mb-10">
+      <h2 class="text-xl font-semibold mb-3">Posts</h2>
+      <div class="p-4 bg-white dark:bg-slate-800 rounded shadow">
+        <p class="text-slate-500">Post management coming soon…</p>
+      </div>
+    </section>
 
-  <script type="module">
-    await window.authReady;
-    updateAuthUI();
-    if (document.documentElement.dataset.admin !== 'true') {
-      window.location.replace('/profile.html?unauthorized=1');
-    }
+    <section id="comments" class="mb-10">
+      <h2 class="text-xl font-semibold mb-3">Comments</h2>
+      <div class="p-4 bg-white dark:bg-slate-800 rounded shadow">
+        <p class="text-slate-500">Comment moderation coming soon…</p>
+      </div>
+    </section>
+
+    <section id="users" class="mb-10">
+      <h2 class="text-xl font-semibold mb-3">Users</h2>
+      <div class="p-4 bg-white dark:bg-slate-800 rounded shadow">
+        <p class="text-slate-500">User management coming soon…</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (async () => {
+      const app = document.getElementById('adminApp');
+      const forbid = document.getElementById('forbidden');
+
+      // Helper vorhanden?
+      if (!window.auth || !window.auth.ready) {
+        forbid.style.display = 'block';
+        return;
+      }
+      try { await window.auth.ready; } catch { forbid.style.display = 'block'; return; }
+
+      // Status/Benutzer laden
+      const isAuthed = await window.auth.isAuthenticated();
+      const user = isAuthed ? await window.auth.getUser() : null;
+
+      // Rollen zusammensuchen (Custom-Claim oder plain array/string)
+      const claim =
+        user?.['https://ai-news-hub/roles'] ||
+        user?.['https://ai-news-hub/roles/'] ||
+        user?.roles || [];
+      const roles = Array.isArray(claim) ? claim : (typeof claim === 'string' ? claim.split(' ') : []);
+      const isAdmin = isAuthed && roles.includes('admin');
+
+      // Flag für globale UI (Nav etc.)
+      document.documentElement.dataset.admin = isAdmin ? 'true' : 'false';
+
+      if (!isAdmin) {
+        forbid.style.display = 'block';
+        // Sanfte Weiterleitung nach kurzer Zeit
+        setTimeout(() => { window.location.replace('/profile.html?unauthorized=1'); }, 1200);
+        return;
+      }
+
+      // Admin: Inhalt sichtbar machen
+      app.style.display = 'block';
+      app.classList.remove('guard');
+    })();
   </script>
 </body>
 </html>
