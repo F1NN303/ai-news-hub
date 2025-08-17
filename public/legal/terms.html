@@ -4,40 +4,116 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Terms of Service - AI News Hub</title>
-  <script>
-    document.documentElement.dataset.theme = localStorage.theme || 'light';
-    if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
-  </script>
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
-          colors: { primary: '#0ea5e9', secondary: '#06b6d4', dark: '#0f172a', light: '#f8fafc', accent: '#818cf8' },
-          fontFamily: { inter: ['Inter', 'sans-serif'] }
+          colors: { primary:'#0ea5e9', secondary:'#06b6d4', dark:'#0f172a', light:'#f8fafc', accent:'#818cf8' },
+          fontFamily: { inter: ['Inter','system-ui','sans-serif'] }
         }
       }
     };
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/resources/site.css" />
 </head>
 <body class="bg-light dark:bg-dark text-slate-900 dark:text-slate-100 font-inter">
+
+  <!-- HEADER -->
   <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
       <a href="/" class="text-xl font-bold">AI News Hub</a>
       <nav class="flex gap-4 text-sm">
-        <a href="/login" class="hover:underline">Sign in</a>
-        <a href="/signup" class="hover:underline">Sign up</a>
+        <a href="/legal/privacy.html" class="hover:underline">Privacy</a>
+        <a href="/legal/terms.html" class="hover:underline">Terms</a>
+        <a href="/legal/cookie-policy.html" class="hover:underline">Cookies</a>
       </nav>
     </div>
   </header>
+
+  <!-- MAIN -->
   <main class="max-w-3xl mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-4">Terms of Service</h1>
-    <section class="space-y-4 text-slate-700 dark:text-slate-300">
-      <p>These are the terms of service. Replace with real content.</p>
+    <div class="flex items-center justify-between mb-3">
+      <h1 class="text-3xl font-bold">Terms of Service</h1>
+      <button id="printBtn" class="text-sm px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">Print / Save PDF</button>
+    </div>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-8">Last updated: 2025-01-01</p>
+
+    <!-- Table of contents -->
+    <nav class="mb-8 p-4 border border-slate-200 dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800">
+      <h2 class="font-semibold mb-2">Contents</h2>
+      <ul class="list-disc pl-6 text-slate-700 dark:text-slate-300 text-sm space-y-1">
+        <li><a href="#use" class="hover:underline">1) Use of Service</a></li>
+        <li><a href="#accounts" class="hover:underline">2) Accounts & Security</a></li>
+        <li><a href="#content" class="hover:underline">3) User Content</a></li>
+        <li><a href="#ip" class="hover:underline">4) Intellectual Property</a></li>
+        <li><a href="#disclaimers" class="hover:underline">5) Disclaimers & Liability</a></li>
+        <li><a href="#termination" class="hover:underline">6) Termination</a></li>
+        <li><a href="#law" class="hover:underline">7) Governing Law</a></li>
+        <li><a href="#changes" class="hover:underline">8) Changes</a></li>
+        <li><a href="#contact" class="hover:underline">9) Contact</a></li>
+      </ul>
+    </nav>
+
+    <!-- Terms sections -->
+    <section class="space-y-6 text-slate-700 dark:text-slate-300 leading-relaxed">
+      <h2 id="use" class="text-xl font-semibold">1) Use of Service</h2>
+      <p>You agree to use AI News Hub for lawful purposes only. You must not misuse the Service by attempting to interfere, hack, or disrupt access.</p>
+
+      <h2 id="accounts" class="text-xl font-semibold">2) Accounts & Security</h2>
+      <p>You are responsible for keeping your login credentials secure. We use Auth0 for authentication and rely on their security model.</p>
+
+      <h2 id="content" class="text-xl font-semibold">3) User Content</h2>
+      <p>You may post comments or other content. By doing so, you grant us a non-exclusive license to display that content within the Service. You must not post unlawful, abusive, or harmful material.</p>
+
+      <h2 id="ip" class="text-xl font-semibold">4) Intellectual Property</h2>
+      <p>All site design, text, graphics, and code are © AI News Hub. Unauthorized copying or redistribution is prohibited.</p>
+
+      <h2 id="disclaimers" class="text-xl font-semibold">5) Disclaimers & Liability</h2>
+      <div class="p-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20 dark:border-red-400 rounded">
+        <p><strong>No Warranty:</strong> The Service is provided “as is.” We do not guarantee accuracy or availability of content.</p>
+        <p class="mt-2"><strong>Limitation of Liability:</strong> To the maximum extent permitted by law, we are not liable for damages arising from use of the Service.</p>
+      </div>
+
+      <h2 id="termination" class="text-xl font-semibold">6) Termination</h2>
+      <p>We reserve the right to suspend or terminate your account if you breach these Terms or misuse the Service.</p>
+
+      <h2 id="law" class="text-xl font-semibold">7) Governing Law</h2>
+      <p>These Terms are governed by the laws of Germany and/or the United States (depending on your location and applicable law).</p>
+
+      <h2 id="changes" class="text-xl font-semibold">8) Changes</h2>
+      <p>We may update these Terms from time to time. Continued use of the Service after updates means you accept the new Terms.</p>
+
+      <h2 id="contact" class="text-xl font-semibold">9) Contact</h2>
+      <p>For questions about these Terms, contact: <a href="mailto:service.ainews.hub@gmail.com" class="text-primary">service.ainews.hub@gmail.com</a></p>
     </section>
+
+    <!-- FAQ -->
+    <section class="mt-10">
+      <h2 class="text-xl font-semibold mb-3">FAQ</h2>
+      <div class="space-y-2">
+        <details class="border border-slate-200 dark:border-slate-700 rounded p-3">
+          <summary class="cursor-pointer font-semibold">Can I repost content from AI News Hub?</summary>
+          <p class="mt-2 text-slate-600 dark:text-slate-400">Not without prior permission. You may link to articles but cannot copy or redistribute them.</p>
+        </details>
+        <details class="border border-slate-200 dark:border-slate-700 rounded p-3">
+          <summary class="cursor-pointer font-semibold">What happens if I violate the Terms?</summary>
+          <p class="mt-2 text-slate-600 dark:text-slate-400">We may suspend or permanently remove your account and delete your content.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <div class="mt-8 flex gap-3">
+      <button id="copyLink" class="px-4 py-2 rounded border border-slate-300 dark:border-slate-700">Copy page link</button>
+    </div>
   </main>
+
+  <!-- FOOTER -->
   <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12">
     <div class="max-w-7xl mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-slate-500">
       <div>
@@ -61,8 +137,13 @@
         <p class="w-full text-center md:text-right">© <span id="year"></span> AI News Hub</p>
       </div>
     </div>
-    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById('printBtn').onclick = () => window.print();
+      document.getElementById('copyLink').onclick = async () => {
+        try { await navigator.clipboard.writeText(location.href); alert('Link copied'); } catch {}
+      };
+    </script>
   </footer>
 </body>
 </html>
-
