@@ -37,3 +37,18 @@ We secure `/api` routes with Auth0 JWTs (audience: `https://ai-news-hub-eta.verc
 
 1. Sign in to [Neon](https://neon.tech) and open your project.
 2. Launch the **SQL Editor**.
+
+## Deploy Checklist
+
+Before deploying, ensure the following environment variables are configured:
+
+- `DATABASE_URL`
+- `AUTH0_SECRET`
+- `AUTH0_BASE_URL`
+- `AUTH0_CLIENT_ID`
+- `AUTH0_CLIENT_SECRET`
+- `AUTH0_DOMAIN`
+- `AUTH0_ISSUER_BASE_URL`
+- `AUTH0_AUDIENCE`
+
+After setting these variables, run `npm run inject:auth0` to inject the Auth0 meta tags into all public HTML pages.

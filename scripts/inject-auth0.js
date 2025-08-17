@@ -31,10 +31,30 @@ const files = getHtmlFiles(publicDir);
 
 for (const file of files) {
   const filePath = path.join(rootDir, file);
-  const src = fs.readFileSync(filePath, 'utf8');
-  const updated = src
-    .replace(/\$\{AUTH0_CLIENT_ID\}/g, clientId)
-    .replace(/\$\{AUTH0_DOMAIN\}/g, domain)
-    .replace(/__INJECTED__/g, audience);
-  fs.writeFileSync(filePath, updated);
+  let html = fs.readFileSync(filePath, 'utf8');
+
+  const headRegex = /<head[^>]*>/i;
+  if (!headRegex.test(html)) continue;
+
+  const metas = {
+    'auth0-domain': domain,
+    'auth0-client-id': clientId,
+    'auth0-audience': audience
+  };
+
+  const inserts = [];
+  for (const [name, value] of Object.entries(metas)) {
+    const metaRegex = new RegExp(`<meta[^>]+name=["']${name}["'][^>]*>`, 'i');
+    if (metaRegex.test(html)) {
+      html = html.replace(metaRegex, `<meta name="${name}" content="${value}">`);
+    } else {
+      inserts.push(`  <meta name="${name}" content="${value}">`);
+    }
+  }
+
+  if (inserts.length) {
+    html = html.replace(headRegex, match => match + '\n' + inserts.join('\n'));
+  }
+
+  fs.writeFileSync(filePath, html);
 }

@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sign in</title>
-  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID injected at build time -->
+  <meta name="auth0-client-id" content="a2MdQnWFC2HQqBY09V4EZ7KOFjj3fXNK"><!-- Auth0 Client ID injected at build time -->
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com"><!-- Auth0 Domain injected at build time -->
-  <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api" />
+  <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api">
   <script>
     document.documentElement.dataset.theme = localStorage.theme || 'light';
     if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
@@ -17,18 +17,19 @@
 <body>
   <p id="login-status">Redirecting…</p>
   <script type="module">
-    try {
-      await window.authReady;
+    const status = document.getElementById('login-status');
+    const ok = await window.authReady;
+    if (ok) {
       sessionStorage.setItem('postLoginRedirect', '/profile.html');
-      auth.login();
-    } catch (e) {
-      const p = document.getElementById('login-status');
-      p.textContent = 'Auth0 init failed — missing domain/client/audience';
+      window.auth.login();
+    } else {
+      status.textContent = 'Auth0 init failed — missing domain/client/audience';
+      status.className = 'bg-red-100 text-red-700 p-4 text-center';
       const link = document.createElement('a');
       link.href = '/';
       link.textContent = 'Back to Home';
-      document.body.appendChild(document.createTextNode(' '));
-      document.body.appendChild(link);
+      status.appendChild(document.createElement('br'));
+      status.appendChild(link);
     }
   </script>
 </body>
