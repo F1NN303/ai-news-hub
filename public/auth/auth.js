@@ -295,7 +295,12 @@
         }
       }
 
-      window.__auth = { user, isAuthenticated, isAdmin, getApiToken };
+      window.__auth = {
+        user,
+        isAuthenticated,
+        isAdmin,
+        getApiToken: window.auth.getApiToken
+      };
       document.documentElement.dataset.admin = isAdmin ? 'true' : 'false';
       document.documentElement.dataset.auth = isAuthenticated ? 'true' : 'false';
       document.dispatchEvent(new CustomEvent('auth:ready', { detail: window.__auth }));
