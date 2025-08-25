@@ -5,7 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Terms of Service - AI News Hub</title>
 
-  <!-- Tailwind -->
+  <!-- Auth0: DO NOT CHANGE -->
+  <meta name="auth0-client-id" content="a2MdQnWFC2HOqBY09V4EZ7KOFjj3fXNK">
+  <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
+  <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api">
+  <!-- 1) Auth0 SPA SDK -->
+  <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
+  <!-- 2) Your helper that wires up login/logout -->
+  <script src="/auth/auth.js" defer></script>
+
+  <script>
+    document.documentElement.dataset.theme = localStorage.theme || 'light';
+    if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -23,7 +35,7 @@
 </head>
 <body class="bg-light dark:bg-dark text-slate-900 dark:text-slate-100 font-inter">
 
-  <!-- HEADER -->
+  <!-- HEADER (identical to Privacy) -->
   <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
       <a href="/" class="text-xl font-bold">AI News Hub</a>
@@ -31,6 +43,8 @@
         <a href="/legal/privacy.html" class="hover:underline">Privacy</a>
         <a href="/legal/terms.html" class="hover:underline">Terms</a>
         <a href="/legal/cookie-policy.html" class="hover:underline">Cookies</a>
+        <a href="/login" class="hover:underline">Sign in</a>
+        <a href="/signup" class="hover:underline">Sign up</a>
       </nav>
     </div>
   </header>
@@ -59,7 +73,7 @@
       </ul>
     </nav>
 
-    <!-- Terms sections -->
+    <!-- Terms sections (your original text preserved) -->
     <section class="space-y-6 text-slate-700 dark:text-slate-300 leading-relaxed">
       <h2 id="use" class="text-xl font-semibold">1) Use of Service</h2>
       <p>You agree to use AI News Hub for lawful purposes only. You must not misuse the Service by attempting to interfere, hack, or disrupt access.</p>
@@ -92,28 +106,13 @@
       <p>For questions about these Terms, contact: <a href="mailto:service.ainews.hub@gmail.com" class="text-primary">service.ainews.hub@gmail.com</a></p>
     </section>
 
-    <!-- FAQ -->
-    <section class="mt-10">
-      <h2 class="text-xl font-semibold mb-3">FAQ</h2>
-      <div class="space-y-2">
-        <details class="border border-slate-200 dark:border-slate-700 rounded p-3">
-          <summary class="cursor-pointer font-semibold">Can I repost content from AI News Hub?</summary>
-          <p class="mt-2 text-slate-600 dark:text-slate-400">Not without prior permission. You may link to articles but cannot copy or redistribute them.</p>
-        </details>
-        <details class="border border-slate-200 dark:border-slate-700 rounded p-3">
-          <summary class="cursor-pointer font-semibold">What happens if I violate the Terms?</summary>
-          <p class="mt-2 text-slate-600 dark:text-slate-400">We may suspend or permanently remove your account and delete your content.</p>
-        </details>
-      </div>
-    </section>
-
     <!-- Actions -->
     <div class="mt-8 flex gap-3">
       <button id="copyLink" class="px-4 py-2 rounded border border-slate-300 dark:border-slate-700">Copy page link</button>
     </div>
   </main>
 
-  <!-- FOOTER -->
+  <!-- FOOTER (same as Privacy) -->
   <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12">
     <div class="max-w-7xl mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-slate-500">
       <div>
