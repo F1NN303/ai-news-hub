@@ -10,17 +10,15 @@
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
   <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api">
 
-  <!-- 1) Auth0 SPA SDK + your helper -->
+  <!-- 1) Auth0 SPA SDK -->
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
+  <!-- 2) Your helper that wires up login/logout -->
   <script src="/auth/auth.js" defer></script>
 
-  <!-- Theme bootstrap -->
   <script>
     document.documentElement.dataset.theme = localStorage.theme || 'light';
     if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
   </script>
-
-  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -35,13 +33,12 @@
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/resources/site.css" />
-
-  <!-- (Optional) cookie banner script to keep parity with privacy page -->
+  <!-- keep as in privacy.html -->
+  <script src="/auth/auth.js" defer></script>
   <script src="/public/js/cookie-banner.js" defer></script>
 </head>
 
 <body class="bg-light dark:bg-dark text-slate-900 dark:text-slate-100 font-inter">
-  <!-- HEADER (exactly like privacy page) -->
   <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
       <a href="/" class="text-xl font-bold">AI News Hub</a>
@@ -52,61 +49,44 @@
     </div>
   </header>
 
-  <!-- MAIN -->
   <main class="max-w-3xl mx-auto p-6">
     <div class="flex items-center justify-between mb-3">
       <h1 class="text-3xl font-bold">Terms of Service</h1>
       <button id="printBtn" class="text-sm px-3 py-1.5 rounded border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">Print / Save PDF</button>
     </div>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mb-8">Last updated: <span id="tos-date">2025-01-01</span></p>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-8">Last updated: <span id="pp-date">2025-01-01</span></p>
 
-    <!-- Table of contents (kept like privacy style) -->
-    <nav class="mb-8 p-4 border border-slate-200 dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-800">
-      <h2 class="font-semibold mb-2">Contents</h2>
-      <ul class="list-disc pl-6 text-slate-700 dark:text-slate-300 text-sm space-y-1">
-        <li><a href="#use" class="hover:underline">1) Use of Service</a></li>
-        <li><a href="#accounts" class="hover:underline">2) Accounts & Security</a></li>
-        <li><a href="#content" class="hover:underline">3) User Content</a></li>
-        <li><a href="#ip" class="hover:underline">4) Intellectual Property</a></li>
-        <li><a href="#disclaimers" class="hover:underline">5) Disclaimers & Liability</a></li>
-        <li><a href="#termination" class="hover:underline">6) Termination</a></li>
-        <li><a href="#law" class="hover:underline">7) Governing Law</a></li>
-        <li><a href="#changes" class="hover:underline">8) Changes</a></li>
-        <li><a href="#contact" class="hover:underline">9) Contact</a></li>
-      </ul>
-    </nav>
-
-    <!-- Terms content -->
+    <!-- CONTENT ONLY CHANGED BELOW -->
     <section class="space-y-6 text-slate-700 dark:text-slate-300 leading-relaxed">
       <h2 id="use" class="text-xl font-semibold">1) Use of Service</h2>
-      <p>You agree to use AI News Hub for lawful purposes only and in compliance with these Terms and applicable law. You must not interfere with, disrupt, or attempt to gain unauthorized access to the Service or its infrastructure.</p>
+      <p>You agree to use AI News Hub only for lawful purposes and in compliance with these Terms. You must not attempt to interfere with, hack, or disrupt the Service or other users.</p>
 
       <h2 id="accounts" class="text-xl font-semibold">2) Accounts & Security</h2>
-      <p>Authentication is provided by Auth0. You are responsible for maintaining the confidentiality of your credentials and for all activity under your account. Notify us promptly of any suspected unauthorized use.</p>
+      <p>You’re responsible for maintaining the confidentiality of your login credentials and all activities under your account. We use Auth0 for authentication and rely on their security model.</p>
 
       <h2 id="content" class="text-xl font-semibold">3) User Content</h2>
-      <p>You may submit comments or other content. By submitting content, you grant us a non‑exclusive, worldwide license to host, display, and distribute your content within the Service. Do not post unlawful, abusive, infringing, or harmful material.</p>
+      <p>By submitting comments or other content, you grant us a non-exclusive, worldwide license to host, display, and distribute that content within the Service. You must not submit unlawful, harmful, or infringing material.</p>
 
       <h2 id="ip" class="text-xl font-semibold">4) Intellectual Property</h2>
-      <p>All site design, text, graphics, and code are © AI News Hub or its licensors. You may not copy, modify, or distribute content except as expressly permitted by us.</p>
+      <p>All site design, text, graphics, and code are © AI News Hub. You may not copy, modify, or redistribute content without permission, except as allowed by law (e.g., fair use, quotations with attribution).</p>
 
       <h2 id="disclaimers" class="text-xl font-semibold">5) Disclaimers & Liability</h2>
       <div class="p-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-900/20 dark:border-red-400 rounded">
-        <p><strong>No Warranty:</strong> The Service is provided “as is” and “as available.” We do not warrant accuracy, completeness, or uptime.</p>
-        <p class="mt-2"><strong>Limitation of Liability:</strong> To the maximum extent permitted by law, we are not liable for indirect, incidental, or consequential damages arising from use of the Service.</p>
+        <p><strong>No Warranty.</strong> The Service is provided “as is” and “as available” without warranties of any kind.</p>
+        <p class="mt-2"><strong>Limitation of Liability.</strong> To the maximum extent permitted by law, we are not liable for any indirect, incidental, or consequential damages arising from or related to your use of the Service.</p>
       </div>
 
-      <h2 id="termination" class="text-xl font-semibold">6) Termination</h2>
-      <p>We may suspend or terminate your access if you breach these Terms, misuse the Service, or as required by law.</p>
+      <h2 id="termination" class="text-xl font-semibold">6) Suspension & Termination</h2>
+      <p>We may suspend or terminate access if you breach these Terms, misuse the Service, or if required by law or security considerations.</p>
 
       <h2 id="law" class="text-xl font-semibold">7) Governing Law</h2>
-      <p>These Terms are governed by the laws of Germany and/or the United States, as applicable to your location and mandatory law.</p>
+      <p>These Terms are governed by applicable laws (including Germany/EU or the United States, as relevant). Venue and jurisdiction will follow applicable consumer law rules.</p>
 
-      <h2 id="changes" class="text-xl font-semibold">8) Changes</h2>
-      <p>We may update these Terms from time to time. Your continued use after an update means you accept the changes.</p>
+      <h2 id="changes" class="text-xl font-semibold">8) Changes to Terms</h2>
+      <p>We may update these Terms from time to time. Continued use of the Service after updates constitutes acceptance of the revised Terms.</p>
 
       <h2 id="contact" class="text-xl font-semibold">9) Contact</h2>
-      <p>Questions: <a href="mailto:service.ainews.hub@gmail.com" class="text-primary">service.ainews.hub@gmail.com</a></p>
+      <p>Questions about these Terms: <a href="mailto:service.ainews.hub@gmail.com" class="text-primary">service.ainews.hub@gmail.com</a></p>
     </section>
 
     <div class="mt-8 flex gap-3">
@@ -114,7 +94,6 @@
     </div>
   </main>
 
-  <!-- FOOTER (exactly like privacy page) -->
   <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12">
     <div class="max-w-7xl mx-auto p-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-slate-500">
       <div>
@@ -148,4 +127,3 @@
   </footer>
 </body>
 </html>
-
