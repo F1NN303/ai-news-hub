@@ -10,13 +10,12 @@
   <meta name="auth0-domain" content="dev-zi3ojkfg51ob4f3c.eu.auth0.com">
   <meta name="auth0-audience" content="https://ai-news-hub-eta.vercel.app/api">
 
-  <!-- 1) Auth0 SPA SDK -->
+  <!-- Auth0 SDK + Helper -->
   <script src="https://cdn.auth0.com/js/auth0-spa-js/2.1/auth0-spa-js.production.js"></script>
-  <!-- 2) Your helper that wires up login/logout (already used on other pages) -->
   <script src="/auth/auth.js" defer></script>
 
+  <!-- Theme + Tailwind -->
   <script>
-    // Theme bootstrap (same as other pages)
     document.documentElement.dataset.theme = localStorage.theme || 'light';
     if (document.documentElement.dataset.theme === 'dark') document.documentElement.classList.add('dark');
   </script>
@@ -34,11 +33,12 @@
   </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/resources/site.css" />
-  <script src="/public/js/cookie-banner.js" defer></script>
+  <!-- FIX: kein /public Prefix -->
+  <script src="/js/cookie-banner.js" defer></script>
 </head>
 
 <body class="bg-light dark:bg-dark text-slate-900 dark:text-slate-100 font-inter">
-  <!-- Header (same skeleton as privacy page; nav avatar will be injected by the small script below) -->
+  <!-- Header -->
   <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
       <a href="/" class="text-xl font-bold">AI News Hub</a>
@@ -57,7 +57,7 @@
       </div>
     </div>
     <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
-      Enter a BattleTag (format <code>Name#12345</code>). We’ll query the public <span class="font-semibold">ow-api.com</span> endpoint and display available stats.
+      Enter a BattleTag (<code>Name#12345</code>). We try <span class="font-semibold">ow-api.com</span> first and fall back to OverFast if needed.
     </p>
 
     <!-- Search form -->
@@ -82,8 +82,8 @@
         <label class="flex flex-col">
           <span class="text-sm mb-1">Region</span>
           <select id="region" class="rounded-md px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700">
-            <option value="us" selected>US</option>
-            <option value="eu">EU</option>
+            <option value="eu" selected>EU</option>
+            <option value="us">US</option>
             <option value="asia">Asia</option>
           </select>
         </label>
@@ -185,14 +185,13 @@
       </div>
     </div>
     <script>
-      // Footer helpers (same pattern as privacy page)
       document.getElementById('year').textContent = new Date().getFullYear();
       document.getElementById('printBtn').onclick = () => window.print();
     </script>
   </footer>
 
   <script>
-    // Replace header auth links with profile avatar when signed-in (same behavior you asked for)
+    // Auth avatar injection
     document.addEventListener('DOMContentLoaded', async () => {
       try {
         if (window.auth && window.auth.ready) {
@@ -212,11 +211,9 @@
       } catch {}
     });
 
-    // Simple local history (recent lookups)
+    // Recent lookups
     const RECENT_KEY = 'ow:recent';
-    const getRecent = () => {
-      try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch { return []; }
-    }
+    const getRecent = () => { try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch { return []; } }
     const addRecent = (tag, plat, reg) => {
       const list = getRecent().filter(x => x.tag !== tag || x.plat !== plat || x.reg !== reg);
       list.unshift({ tag, plat, reg });
@@ -244,58 +241,53 @@
       });
     };
 
-    // Demo button
+    // Demo
     document.getElementById('demoBtn').addEventListener('click', () => {
-      const demo = 'Player-1234'; // Replace with a known public tag if you have one
-      document.getElementById('btag').value = 'Player#1234';
+      document.getElementById('btag').value = 'xQc#11273';
       document.getElementById('platform').value = 'pc';
       document.getElementById('region').value = 'us';
     });
 
-    // Core fetch logic
+    // ------- Robust fetch with fallback -------
     const $ = (id) => document.getElementById(id);
     const showError = (msg) => {
       const box = $('formError');
       box.textContent = msg || 'Something went wrong.';
       box.classList.remove('hidden');
+      console.error(msg);
     };
     const clearError = () => $('formError').classList.add('hidden');
-
     const fmt = (v, d='—') => (v === 0 ? '0' : (v ? v : d));
     const safeNum = (v) => (typeof v === 'number' && isFinite(v)) ? v : null;
 
     const fillProfile = (data) => {
       $('card-skel').classList.add('hidden');
       $('card').classList.remove('hidden');
-
       $('p-icon').src = data?.icon || '';
       $('p-name').textContent = data?.name || 'Unknown';
       $('p-privacy').textContent = data?.private ? 'Private profile' : '';
-
-      $('p-level').textContent = fmt(data?.level);
-      $('p-endorse').textContent = fmt(data?.endorsement);
-      $('p-rating').textContent = fmt(data?.rating);
-
-      // Games won (try quickplay first, then competitive)
-      const qpWon = data?.quickPlayStats?.games?.won;
-      const compWon = data?.competitiveStats?.games?.won;
+      $('p-level').textContent = fmt(data?.level ?? data?.summary?.level);
+      $('p-endorse').textContent = fmt(data?.endorsement ?? data?.summary?.endorsement);
+      $('p-rating').textContent = fmt(data?.rating ?? data?.summary?.rating);
+      const qpWon = data?.quickPlayStats?.games?.won ?? data?.modes?.quickplay?.games_won;
+      const compWon = data?.competitiveStats?.games?.won ?? data?.modes?.competitive?.games_won;
       $('p-won').textContent = fmt(qpWon ?? compWon);
     };
 
     const fillQuickPlay = (data) => {
       const root = $('qp-body');
-      const games = data?.quickPlayStats?.games || {};
+      const games = data?.quickPlayStats?.games || data?.modes?.quickplay || {};
       const awards = data?.quickPlayStats?.awards || {};
       root.innerHTML = `
         <div><span class="text-slate-500 dark:text-slate-400">Games:</span>
-          Won ${fmt(games.won)}${games.played ? ` / Played ${games.played}` : ''}</div>
+          Won ${fmt(games?.won)}${games?.played ? ` / Played ${games.played}` : ''}</div>
         <div><span class="text-slate-500 dark:text-slate-400">Medals:</span>
           Gold ${fmt(awards?.medalsGold)} • Silver ${fmt(awards?.medalsSilver)} • Bronze ${fmt(awards?.medalsBronze)}</div>`;
     };
 
     const fillCompetitive = (data) => {
       const root = $('comp-body');
-      const games = data?.competitiveStats?.games || {};
+      const games = data?.competitiveStats?.games || data?.modes?.competitive || {};
       const awards = data?.competitiveStats?.awards || {};
       const win = safeNum(games.won), lost = safeNum(games.lost), played = safeNum(games.played);
       const wr = (win != null && played) ? Math.round((win/played)*100) + '%' : '—';
@@ -307,48 +299,61 @@
           Gold ${fmt(awards?.medalsGold)} • Silver ${fmt(awards?.medalsSilver)} • Bronze ${fmt(awards?.medalsBronze)}</div>`;
     };
 
+    async function fetchJSON(url) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 10000);
+      const r = await fetch(url, { headers:{Accept:'application/json'}, signal: ctrl.signal });
+      clearTimeout(t);
+      const text = await r.text();
+      if (!r.ok) throw new Error(`HTTP ${r.status}: ${text || r.statusText}`);
+      return text ? JSON.parse(text) : null;
+    }
+
+    const dashTag = (raw) => raw.trim().replace('#','-');
+
+    async function queryOW(platform, region, btagRaw) {
+      // primary
+      const url1 = `https://ow-api.com/v1/stats/${platform}/${region}/${encodeURIComponent(dashTag(btagRaw))}/profile`;
+      try {
+        return await fetchJSON(url1);
+      } catch (e) {
+        // fallback
+        console.warn('Primary failed, fallback → OverFast', e);
+        const url2 = `https://overfast-api.tekrop.fr/players/${platform}/${dashTag(btagRaw)}`;
+        return await fetchJSON(url2);
+      }
+    }
+
     document.getElementById('ow-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       clearError();
 
-      const raw = $('btag').value.trim();
+      const raw = document.getElementById('btag').value.trim();
       if (!raw || !/#/.test(raw)) return showError('Please enter BattleTag as Name#1234');
 
-      const platform = $('platform').value;
-      const region = $('region').value;
+      const platform = document.getElementById('platform').value;
+      const region = document.getElementById('region').value;
 
-      // OW API expects hyphen instead of '#'
-      const btag = encodeURIComponent(raw.replace('#', '-'));
-      const url = `https://ow-api.com/v1/stats/${platform}/${region}/${btag}/profile`;
-
-      // Reset UI
-      $('card').classList.add('hidden');
-      $('card-skel').classList.remove('hidden');
-      $('qp-body').innerHTML = `<div class="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>`;
-      $('comp-body').innerHTML = `<div class="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>`;
+      // reset UI
+      document.getElementById('card').classList.add('hidden');
+      document.getElementById('card-skel').classList.remove('hidden');
+      document.getElementById('qp-body').innerHTML = `<div class="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>`;
+      document.getElementById('comp-body').innerHTML = `<div class="h-4 w-40 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>`;
 
       try {
-        const res = await fetch(url, { headers: { 'Accept':'application/json' } });
-        if (!res.ok) {
-          if (res.status === 404) throw new Error('Profile not found (or BattleTag invalid).');
-          throw new Error(`Request failed (${res.status}).`);
-        }
-        const data = await res.json();
-
-        // Some profiles are private or return minimal data
-        if (!data || data.error) throw new Error(data.error || 'No data returned.');
+        const data = await queryOW(platform, region, raw);
+        if (!data || data.error) throw new Error(data?.error || 'No data returned.');
         fillProfile(data);
         fillQuickPlay(data);
         fillCompetitive(data);
-
         addRecent(raw, platform, region);
       } catch (err) {
-        $('card-skel').classList.add('hidden');
+        document.getElementById('card-skel').classList.add('hidden');
         showError(err?.message || 'Failed to fetch profile.');
       }
     });
 
-    // Boot recent on load
+    // Init
     renderRecent();
   </script>
 </body>
